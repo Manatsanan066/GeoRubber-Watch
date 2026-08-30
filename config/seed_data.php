@@ -23,7 +23,7 @@ function seedDatabase($pdo) {
 
             CREATE TABLE IF NOT EXISTS farmers (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                user_id INTEGER,
                 farmer_code VARCHAR(30) UNIQUE NOT NULL,
                 prefix VARCHAR(20) DEFAULT 'นาย',
                 first_name VARCHAR(50) NOT NULL,
