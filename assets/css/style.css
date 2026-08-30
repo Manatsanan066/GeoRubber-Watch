@@ -1,0 +1,953 @@
+/* ==========================================================================
+   GeoRubber Watch - Clean Eco-Minimalist GIS & DSS Design System
+   Typography: Open Sans / Google Sans + Sarabun & Kanit
+   Palette: Nordic Pine (#153224), Warm Sage (#3b7a57), Clean Linen (#f7f9f6)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+
+:root {
+  /* Brand Tokens (Nordic Pine & Sage Nature) */
+  --pine-900: #0e2017;
+  --pine-800: #153224;
+  --pine-700: #1c4532;
+  --pine-600: #245840;
+  
+  --sage-600: #2e6930;
+  --sage-500: #3b7a57;
+  --sage-400: #5c9777;
+  --sage-300: #8bbfa3;
+  --sage-200: #c2e2d0;
+  --sage-100: #e2f0e8;
+  --sage-50: #f1f8f4;
+
+  /* Surfaces & Backgrounds */
+  --bg-main: #f7f9f6;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  
+  /* Text Colors */
+  --text-dark: #122218;
+  --text-body: #3c4f43;
+  --text-muted: #6b7f73;
+  --text-light: #94a59b;
+  
+  /* Borders & Dividers */
+  --border-subtle: #e6ede6;
+  --border-medium: #d4e0d4;
+  --border-focus: #3b7a57;
+
+  /* Status Colors */
+  --success: #2e7d32;
+  --success-bg: #e8f5e9;
+  --success-text: #1b5e20;
+
+  --danger: #c62828;
+  --danger-bg: #ffebee;
+  --danger-text: #b71c1c;
+
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --warning-text: #92400e;
+
+  /* Shadows (Soft & Organic) */
+  --shadow-sm: 0 2px 6px rgba(18, 34, 24, 0.04);
+  --shadow-md: 0 8px 20px -4px rgba(18, 34, 24, 0.06), 0 4px 8px -2px rgba(18, 34, 24, 0.03);
+  --shadow-lg: 0 20px 35px -8px rgba(18, 34, 24, 0.09), 0 8px 16px -4px rgba(18, 34, 24, 0.04);
+  --shadow-float: 0 25px 50px -12px rgba(18, 34, 24, 0.15);
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 9999px;
+
+  --transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Google Sans', 'Open Sans', 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif;
+  color: var(--text-dark);
+  letter-spacing: -0.015em;
+}
+
+/* ==========================================================================
+   Floating Pill Navigation Bar
+   ========================================================================== */
+.top-navbar {
+  position: sticky;
+  top: 14px;
+  z-index: 1000;
+  margin: 0 auto;
+  max-width: 1520px;
+  padding: 0 1rem;
+}
+
+.nav-pill-container {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 224, 212, 0.85);
+  border-radius: var(--radius-pill);
+  padding: 0.55rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+.nav-pill-container:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-medium);
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--text-dark);
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+  background: var(--pine-800);
+  color: white;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  box-shadow: 0 4px 12px rgba(21, 50, 36, 0.25);
+}
+
+.brand-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--pine-900);
+  line-height: 1.1;
+}
+
+.brand-subtitle {
+  font-size: 0.7rem;
+  color: var(--sage-500);
+  font-weight: 600;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  list-style: none;
+}
+
+.nav-item {
+  text-decoration: none;
+  color: var(--text-body);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nav-item:hover {
+  color: var(--pine-900);
+  background-color: var(--sage-50);
+}
+
+.nav-item.active {
+  color: #ffffff;
+  background-color: var(--pine-800);
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(21, 50, 36, 0.2);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.role-badge {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.role-admin {
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid #fde68a;
+}
+
+.role-farmer {
+  background-color: var(--sage-100);
+  color: var(--sage-600);
+  border: 1px solid var(--sage-200);
+}
+
+/* ==========================================================================
+   Clean Minimalist Cards & Containers
+   ========================================================================== */
+.main-container {
+  padding: 1.75rem 1.5rem;
+  max-width: 1520px;
+  margin: 0 auto;
+}
+
+.clean-card, .chart-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  transition: var(--transition);
+}
+
+.clean-card:hover, .chart-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-medium);
+}
+
+/* ==========================================================================
+   GIS Workspace & Interactive Map
+   ========================================================================== */
+.gis-workspace {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 1.5rem;
+  height: calc(100vh - 120px);
+}
+
+@media (max-width: 1024px) {
+  .gis-workspace {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+
+.map-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.map-toolbar {
+  padding: 0.75rem 1.25rem;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+#map-view {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  background-color: #e8eee8;
+}
+
+.map-floating-panel {
+  position: absolute;
+  top: 75px;
+  right: 18px;
+  z-index: 1001;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1.15rem 1.25rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-medium);
+  box-shadow: 0 12px 36px rgba(21, 50, 36, 0.12), 0 2px 8px rgba(0,0,0,0.04);
+  font-size: 0.85rem;
+  max-width: 290px;
+  pointer-events: auto;
+}
+
+.layer-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border-radius: 18px;
+  background: #f7faf8;
+  border: 1.5px solid #e2ebe4;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.layer-toggle-row:hover {
+  background: #edf5f0;
+  border-color: #c5dccb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(21, 50, 36, 0.06);
+}
+
+.layer-toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.layer-toggle-info .toggle-label-text {
+  font-weight: 700;
+  color: #153224;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
+/* Minimalist Modern Pill Toggle Switch (Exact Match to User Image) */
+.toggle-switch-btn {
+  width: 50px;
+  height: 28px;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 3px;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggle-switch-btn:hover {
+  background-color: #dbe0e6;
+}
+
+.toggle-switch-btn.active {
+  background-color: #153224 !important; /* Deep Nordic Pine Green when active */
+}
+
+.toggle-switch-btn .toggle-knob {
+  width: 22px;
+  height: 22px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: block;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.08);
+  transform: translateX(0px);
+  pointer-events: none;
+}
+
+.toggle-switch-btn.active .toggle-knob {
+  transform: translateX(22px) !important;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+  color: var(--text-body);
+}
+
+.legend-color {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Sidebar & Plots List
+   ========================================================================== */
+.sidebar-panel {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 1.15rem 1.35rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+}
+
+.panel-body {
+  padding: 1.1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.plot-card {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.1rem;
+  margin-bottom: 0.85rem;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.plot-card:hover {
+  border-color: var(--sage-400);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.plot-card.active {
+  border-color: var(--sage-500);
+  background-color: var(--sage-50);
+  box-shadow: 0 0 0 1px var(--sage-400);
+}
+
+.plot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.plot-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--pine-900);
+}
+
+.plot-code {
+  font-size: 0.75rem;
+  color: var(--sage-500);
+  font-family: monospace;
+  font-weight: 700;
+}
+
+.plot-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.6rem;
+}
+
+.plot-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ==========================================================================
+   Badges & Status Tags
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+}
+
+.badge-compliant {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+.badge-non_compliant {
+  background-color: var(--danger-bg);
+  color: var(--danger-text);
+  border: 1px solid rgba(198, 40, 40, 0.2);
+}
+
+.badge-under_review {
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+/* ==========================================================================
+   Buttons & Form Controls
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--pine-800);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(21, 50, 36, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: var(--pine-700);
+  box-shadow: 0 6px 18px rgba(21, 50, 36, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background-color: #ffffff;
+  border-color: var(--border-medium);
+  color: var(--text-body);
+}
+
+.btn-outline:hover {
+  background-color: var(--sage-50);
+  border-color: var(--sage-400);
+  color: var(--pine-900);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+.form-group {
+  margin-bottom: 1.1rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: var(--pine-900);
+  margin-bottom: 0.4rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.65rem 0.95rem;
+  background: #ffffff;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--sage-500);
+  box-shadow: 0 0 0 3px rgba(59, 122, 87, 0.15);
+}
+
+/* ==========================================================================
+   Modals
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 34, 24, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition);
+  padding: 1rem;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.96);
+  transition: var(--transition);
+}
+
+.modal-overlay.active .modal-card {
+  transform: scale(1);
+}
+
+.modal-header {
+  padding: 1.35rem 1.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+}
+
+.modal-body {
+  padding: 1.75rem;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 1.1rem 1.75rem;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background-color: var(--bg-main);
+}
+
+/* ==========================================================================
+   Dashboard KPIs
+   ========================================================================== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: var(--transition);
+}
+
+.kpi-card:hover {
+  border-color: var(--sage-300);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.kpi-title {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kpi-value {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: var(--pine-900);
+  margin: 0.4rem 0;
+  letter-spacing: -0.03em;
+}
+
+.kpi-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-header {
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ==========================================================================
+   Traceability Passport
+   ========================================================================== */
+.passport-container {
+  max-width: 920px;
+  margin: 2rem auto;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.passport-header {
+  background: linear-gradient(135deg, var(--pine-900), var(--pine-700));
+  color: white;
+  padding: 2.5rem;
+  position: relative;
+}
+
+.passport-badge-certified {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid #8bbfa3;
+  backdrop-filter: blur(12px);
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Toast Notifications
+   ========================================================================== */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toast {
+  background: #ffffff;
+  color: var(--text-dark);
+  padding: 0.95rem 1.35rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--sage-500);
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: slideIn 0.3s ease;
+  min-width: 300px;
+}
+
+.toast.toast-error {
+  border-left-color: var(--danger);
+}
+
+.toast.toast-success {
+  border-left-color: var(--success);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Leaflet Customization */
+.leaflet-control-layers {
+  display: none !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* ==========================================================================
+   Spatial Monitoring Workbench (3-Column Layout)
+   ========================================================================== */
+.spatial-workbench-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr 340px;
+  gap: 1rem;
+  height: calc(100vh - 195px);
+  min-height: 640px;
+  margin-top: 1rem;
+}
+
+@media (max-width: 1280px) {
+  .spatial-workbench-grid {
+    grid-template-columns: 270px 1fr 300px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .spatial-workbench-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: auto;
+  }
+  .spatial-col-center {
+    height: 520px;
+  }
+}
+
+.spatial-panel {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.spatial-panel-header {
+  padding: 0.9rem 1.15rem;
+  background: var(--bg-main);
+  border-bottom: 1px solid var(--border-subtle);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--pine-900);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.spatial-panel-body {
+  padding: 1.15rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.spatial-stat-badge {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: #f7f9f7;
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 0.85rem;
+}
+
+.spatial-alert-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.spatial-alert-pill:hover {
+  transform: translateX(3px);
+}
+
+.spatial-alert-pill.critical {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.spatial-alert-pill.warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.spatial-alert-pill.compliant {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.spatial-legend-floating {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 8px 20px;
+  border-radius: 9999px;
+  border: 1px solid var(--border-medium);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+.pulsing-station-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+}
