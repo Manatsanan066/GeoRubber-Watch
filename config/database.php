@@ -10,6 +10,7 @@ define('APP_VERSION', '1.0.0');
 define('PILOT_LOCATION', 'มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี');
 
 // Supabase Cloud Configuration
+define('SUPABASE_REF', 'qwiuddkgdnfcaostzbov');
 define('SUPABASE_URL', 'https://qwiuddkgdnfcaostzbov.supabase.co');
 define('SUPABASE_KEY', 'sb_publishable_BOjpqFPvzbOXbbd5lJUong_9Az-aSXR');
 
