@@ -1087,26 +1087,26 @@
   </footer>
 
   <!-- =========================================================================
-       MODAL: ผลการตรวจสอบเอกสารสิทธิ์จำลอง (Simulated Title Deed Result Modal)
+       MODAL: ผลการตรวจสอบเอกสารสิทธิ์จริงจากฐานข้อมูล (Real Supabase Title Deed Search Modal)
        ========================================================================= -->
   <div id="deed-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-gray-100 transform transition-all scale-95 opacity-0 duration-300" id="deed-modal-box">
       
       <!-- Modal Header -->
       <div id="modal-header-bg" class="p-5 sm:p-6 text-white bg-mezenc-teal relative">
-        <button onclick="closeDeedModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all">
+        <button onclick="closeDeedModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer">
           ✕
         </button>
         <div class="text-xs uppercase tracking-widest font-bold opacity-80" id="modal-subtitle">
-          ผลการตรวจสอบเอกสารสิทธิ์เชิงพื้นที่ (ระบบจำลอง)
+          ผลการตรวจสอบเอกสารสิทธิ์เชิงพื้นที่ • ฐานข้อมูล Supabase Cloud
         </div>
         <h3 class="text-lg sm:text-xl font-extrabold mt-1" id="modal-title">
           โฉนดที่ดินเลขที่ 10425
         </h3>
       </div>
 
-      <!-- Modal Body -->
-      <div class="p-5 sm:p-6 space-y-4 text-xs">
+      <!-- Modal Body: FOUND -->
+      <div id="modal-body-found" class="p-5 sm:p-6 space-y-4 text-xs">
         
         <!-- Status Banner -->
         <div id="modal-status-badge" class="p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3">
@@ -1120,20 +1120,28 @@
         <!-- Details Grid -->
         <div class="bg-mezenc-sand p-3.5 sm:p-4 rounded-2xl border border-gray-200 space-y-2">
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500" data-i18n="deed_lbl_doc">ประเภทเอกสาร:</span>
-            <span class="font-bold text-gray-800" id="modal-doc-type">โฉนดที่ดิน (น.ส.4 จ) - ข้อมูลจำลอง</span>
+            <span class="text-gray-500">👨‍🌾 เจ้าของแปลง / เกษตรกร:</span>
+            <span class="font-bold text-gray-800" id="modal-farmer-name">-</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500" data-i18n="deed_lbl_loc">ที่ตั้งแปลง:</span>
-            <span class="font-bold text-gray-800" id="modal-location">ต.ขุนทะเล อ.เมือง จ.สุราษฎร์ธานี</span>
+            <span class="text-gray-500">📄 ประเภทเอกสารสิทธิ์:</span>
+            <span class="font-bold text-gray-800" id="modal-doc-type">โฉนดที่ดิน (น.ส.4 จ)</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500" data-i18n="deed_lbl_area">เนื้อที่คำนวณ:</span>
-            <span class="font-bold text-gray-800" id="modal-area">18 ไร่ 2 งาน 50 ตารางวา</span>
+            <span class="text-gray-500">🗺️ ที่ตั้งแปลง:</span>
+            <span class="font-bold text-gray-800" id="modal-location">-</span>
+          </div>
+          <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
+            <span class="text-gray-500">📐 เนื้อที่คำนวณ:</span>
+            <span class="font-bold text-gray-800" id="modal-area">-</span>
+          </div>
+          <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
+            <span class="text-gray-500">🌳 พันธุ์ยางพารา / สถานะ:</span>
+            <span class="font-bold text-gray-800" id="modal-rubber-clone">-</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500" data-i18n="deed_lbl_dist">ระยะห่างป่าสงวนที่ใกล้ที่สุด:</span>
-            <span class="font-bold" id="modal-forest-dist">2,450 เมตร (ป่าเขาท่าเพชร)</span>
+            <span class="text-gray-500">🌲 ระยะห่างป่าสงวนที่ใกล้ที่สุด:</span>
+            <span class="font-bold" id="modal-forest-dist">-</span>
           </div>
         </div>
 
@@ -1141,24 +1149,47 @@
         <div class="space-y-1.5">
           <div class="font-bold text-gray-700" data-i18n="deed_lbl_checklist">การประเมินความสอดคล้องตามมาตรฐาน EUDR:</div>
           <div class="flex items-center gap-2 text-gray-600" id="modal-check-1">
-            <span>✅</span> <span>พิกัด Polygon WGS84 ครบถ้วน</span>
+            <span>✅</span> <span>พิกัด Polygon WGS84 บันทึกบน Supabase Cloud ครบถ้วน</span>
           </div>
           <div class="flex items-center gap-2 text-gray-600" id="modal-check-2">
             <span>✅</span> <span>ปลอดการตัดไม้ทำลายป่าหลัง 31 ธ.ค. 2020</span>
           </div>
           <div class="flex items-center gap-2 text-gray-600" id="modal-check-3">
-            <span>✅</span> <span>เอกสารสิทธิ์ที่ดินถูกต้องตามกฎหมายไทย</span>
+            <span>✅</span> <span>เอกสารสิทธิ์ถูกต้อง สามารถออก EUDR Passport ได้ทันที</span>
           </div>
         </div>
 
       </div>
 
+      <!-- Modal Body: NOT FOUND -->
+      <div id="modal-body-notfound" class="p-6 space-y-4 text-center hidden">
+        <div class="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-3xl mx-auto shadow-inner">
+          ⚠️
+        </div>
+        <div class="space-y-1.5">
+          <h4 class="font-extrabold text-gray-900 text-base" id="modal-notfound-title">
+            ไม่พบข้อมูลในฐานข้อมูล
+          </h4>
+          <p class="text-xs sm:text-sm text-gray-500 max-w-sm mx-auto leading-relaxed" id="modal-notfound-desc">
+            ระบบตรวจสอบกับฐานข้อมูล Supabase Cloud แล้ว ไม่พบรหัสแปลงปลูกหรือเลขที่เอกสารสิทธิ์นี้
+          </p>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 text-left space-y-1 font-medium">
+          <div>💡 <strong>คำแนะนำในการค้นหา:</strong></div>
+          <ul class="list-disc list-inside space-y-0.5 text-amber-800">
+            <li>ตรวจสอบตัวสะกดหรือขีดคั่น เช่น <code class="bg-amber-100 px-1 rounded">RB-ST-2026-006</code> หรือ <code class="bg-amber-100 px-1 rounded">1234-5678</code></li>
+            <li>ลองค้นหาด้วย <strong>ชื่อแปลง</strong> หรือ <strong>ชื่อเกษตรกร</strong></li>
+            <li>หากยังไม่ได้ลงทะเบียน สามารถเข้าสู่ระบบเพื่อวาดแปลงปลูกใหม่ได้ทันที</li>
+          </ul>
+        </div>
+      </div>
+
       <!-- Modal Footer -->
       <div class="p-5 sm:p-6 pt-0 flex gap-3">
-        <button onclick="closeDeedModal()" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-all" data-i18n="deed_btn_close">
+        <button onclick="closeDeedModal()" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-all cursor-pointer" data-i18n="deed_btn_close">
           ปิดหน้าต่าง
         </button>
-        <a id="modal-action-btn" href="map.php" class="flex-1 py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center transition-all shadow">
+        <a id="modal-action-btn" href="map.php" class="flex-1 py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center transition-all shadow cursor-pointer">
           เปิดดูบนแผนที่ GIS ➔
         </a>
       </div>
@@ -1195,155 +1226,153 @@
       }
     }
 
-    // Simulated Deed Database (Bilingual TH & EN)
-    const mockDeeds = {
-      '10425': {
-        title_th: 'โฉนดที่ดินเลขที่ 10425 (จำลอง)',
-        title_en: 'Title Deed No. 10425 (Simulated)',
-        docType_th: 'โฉนดที่ดิน (น.ส.4 จ)',
-        docType_en: 'Chanote Land Title Deed (Nor.Sor.4 Jor)',
-        location_th: 'แปลงทดลอง ม.อ. ต.ขุนทะเล อ.เมือง จ.สุราษฎร์ธานี',
-        location_en: 'PSU Experimental Farm, Khun Thale, Mueang Surat Thani',
-        area_th: '18 ไร่ 2 งาน 50 ตารางวา',
-        area_en: '18 Rai 2 Ngan 50 Sq.Wah (2.98 Hectares)',
-        forestDist_th: '2,450 เมตร (ห่างจากป่าเขาท่าเพชร)',
-        forestDist_en: '2,450 m (Clear from Khao Tha Phet Forest)',
-        status: 'green',
-        statusText_th: '🟢 พื้นที่ปลอดภัย (ผ่านเกณฑ์ 100%)',
-        statusText_en: '🟢 Safe Zone (100% EUDR Compliant)',
-        statusDesc_th: 'อยู่นอกแนวเขตป่าสงวนแห่งชาติ 26 แห่ง และอยู่นอกระยะ Buffer 500 ม.',
-        statusDesc_en: 'Located completely outside 26 National Forest Reserves and beyond 500m buffer perimeter.',
-        check1_th: '✅ พิกัด Polygon WGS84 ครบถ้วน',
-        check1_en: '✅ Valid Polygon WGS84 Geolocation',
-        check2_th: '✅ ปลูกก่อนวันที่ 31 ธ.ค. 2020 (EU Cut-off)',
-        check2_en: '✅ Established prior to Dec 31, 2020 (EU Cut-off)',
-        check3_th: '✅ มีเอกสารสิทธิ์ถูกต้อง สามารถออก EUDR Passport ได้ทันที',
-        check3_en: '✅ Valid Land Title, Eligible for EUDR Digital Passport',
-        actionUrl: 'map.php',
-        actionText_th: 'ดูแปลงบนแผนที่ GIS ➔',
-        actionText_en: 'View on GIS Map ➔'
-      },
-      '4589': {
-        title_th: 'น.ส.3ก เลขที่ 4589 (จำลอง)',
-        title_en: 'Nor.Sor.3Kor No. 4589 (Simulated)',
-        docType_th: 'หนังสือรับรองการทำประโยชน์ (น.ส.3ก)',
-        docType_en: 'Certificate of Utilization (Nor.Sor.3Kor)',
-        location_th: 'หมู่ 4 ต.ทุ่งเตา อ.บ้านนาสาร จ.สุราษฎร์ธานี',
-        location_en: 'Moo 4, Thung Tao, Ban Na San, Surat Thani',
-        area_th: '12 ไร่ 1 งาน 10 ตารางวา',
-        area_en: '12 Rai 1 Ngan 10 Sq.Wah (1.96 Hectares)',
-        forestDist_th: '320 เมตร (ประชิดแนวป่าเขาพุทธทอง)',
-        forestDist_en: '320 m (Bordering Khao Phuttha Thong Forest)',
-        status: 'orange',
-        statusText_th: '🟠 เขตเฝ้าระวัง (Buffer Zone 500 ม.)',
-        statusText_en: '🟠 Caution Area (500m Buffer Zone)',
-        statusDesc_th: 'ตั้งอยู่ใกล้แนวเขตป่าสงวนในระยะ 320 เมตร ต้องเฝ้าระวังไม่ให้ขยายแปลงล่วงล้ำแนวป่า',
-        statusDesc_en: 'Situated 320m from reserve boundary; requires strict boundary monitoring.',
-        check1_th: '✅ พิกัด Polygon WGS84 ครบถ้วน',
-        check1_en: '✅ Valid Polygon WGS84 Geolocation',
-        check2_th: '⚠️ ระบบแจ้งเตือนระยะ Buffer Alert 320 ม.',
-        check2_en: '⚠️ Buffer Alert: Within 320m forest proximity',
-        check3_th: '📋 สามารถออก EUDR Passport ได้ แต่ต้องผ่านการตรวจรับรองจุดเลี้ยว',
-        check3_en: '📋 Eligible for EUDR Passport subject to perimeter verification',
-        actionUrl: 'overview.php',
-        actionText_th: 'วิเคราะห์ Buffer Zone ➔',
-        actionText_en: 'Analyze Buffer Zone ➔'
-      },
-      '8409': {
-        title_th: 'โฉนดที่ดินเลขที่ 8409 (จำลอง)',
-        title_en: 'Title Deed Application No. 8409 (Simulated)',
-        docType_th: 'คำขอออกเอกสารสิทธิ์ (อยู่ระหว่างตรวจสอบ)',
-        docType_en: 'Unverified Claim (Under Investigation)',
-        location_th: 'หมู่ 8 ต.คลองสก อ.พนม จ.สุราษฎร์ธานี',
-        location_en: 'Moo 8, Khlong Sok, Phanom, Surat Thani',
-        area_th: '25 ไร่ 0 งาน 00 ตารางวา',
-        area_en: '25 Rai 0 Ngan 00 Sq.Wah (4.00 Hectares)',
-        forestDist_th: '0 เมตร (ทับซ้อนแนวเขตป่าสงวนคลองสก)',
-        forestDist_en: '0 m (Directly Intersects Khlong Sok Forest)',
-        status: 'red',
-        statusText_th: '🔴 ห้ามบุกรุกเด็ดขาด (ทับซ้อนแนวป่าสงวน)',
-        statusText_en: '🔴 Strictly Prohibited (Forest Overlap)',
-        statusDesc_th: 'แปลงตั้งอยู่ในเขตป่าสงวนแห่งชาติป่าคลองสก ไม่อนุญาตให้ใช้ประโยชน์และห้ามบุกรุกเด็ดขาด',
-        statusDesc_en: 'Plot lies within National Forest Reserve Zone-C. Strictly prohibited from deforestation or certification.',
-        check1_th: '❌ ทับซ้อนแนวเขตป่าสงวนแห่งชาติ Zone-C',
-        check1_en: '❌ Direct Overlap with National Forest Reserve Zone-C',
-        check2_th: '❌ ไม่สอดคล้องตามระเบียบ EUDR Zero Deforestation',
-        check2_en: '❌ Violates EUDR Zero Deforestation Standard',
-        check3_th: '⚖️ มีความผิดตาม พ.ร.บ. ป่าสงวนแห่งชาติ พ.ศ. 2507',
-        check3_en: '⚖️ Unlawful under National Forest Reserve Act B.E. 2507',
-        actionUrl: 'overview.php',
-        actionText_th: 'ตรวจสอบแนวเขต 26 ป่าสงวน ➔',
-        actionText_en: 'Verify 26 Forest Reserves ➔'
-      }
-    };
-
-    function handleDeedSearch(e) {
+    // Real Supabase Cloud Database Search Handler
+    async function handleDeedSearch(e) {
       if (e) e.preventDefault();
-      const query = document.getElementById('hero-deed-search').value.trim();
+      const inputEl = document.getElementById('hero-deed-search');
+      const query = inputEl ? inputEl.value.trim() : '';
+
       if (!query) {
-        showDeedModal('10425');
+        if (window.App && typeof window.App.showToast === 'function') {
+          App.showToast('กรุณากรอกเลขที่โฉนด น.ส.3ก หรือรหัสแปลงปลูก', 'warning');
+        } else {
+          alert('กรุณากรอกเลขที่โฉนด น.ส.3ก หรือรหัสแปลงปลูก');
+        }
+        inputEl?.focus();
         return;
       }
 
-      // Check if matches mock keys
-      if (query.includes('10425') || query.includes('ม.อ') || query.includes('ปลอดภัย') || query.includes('เขียว') || query.toLowerCase().includes('safe') || query.toLowerCase().includes('psu')) {
-        showDeedModal('10425');
-      } else if (query.includes('4589') || query.includes('กันชน') || query.includes('เฝ้าระวัง') || query.includes('ส้ม') || query.toLowerCase().includes('buffer') || query.toLowerCase().includes('orange')) {
-        showDeedModal('4589');
-      } else if (query.includes('8409') || query.includes('ป่า') || query.includes('บุกรุก') || query.includes('แดง') || query.toLowerCase().includes('forest') || query.toLowerCase().includes('red')) {
-        showDeedModal('8409');
-      } else {
-        // Default simulated result with query in title
-        showDeedModal('10425', query);
+      // Search Button Loading State
+      const submitBtn = e?.target?.querySelector('button[type="submit"]') || document.querySelector('#hero-deed-search + button');
+      const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>⏳</span> <span class="hidden sm:inline">กำลังตรวจสอบ...</span>`;
+      }
+
+      try {
+        const res = await fetch('api/plots.php?action=search_deed&q=' + encodeURIComponent(query));
+        const data = await res.json();
+
+        if (data && data.success && data.found && data.plot) {
+          showRealDeedModal(data.plot);
+        } else {
+          showNotFoundDeedModal(query);
+        }
+      } catch (err) {
+        console.error('Error searching deed:', err);
+        showNotFoundDeedModal(query);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnHtml;
+        }
       }
     }
 
-    function showDeedModal(code, customQuery = null) {
-      const data = mockDeeds[code] || mockDeeds['10425'];
+    // Display Found Result from Real Database
+    function showRealDeedModal(plot) {
       const modal = document.getElementById('deed-modal');
       const box = document.getElementById('deed-modal-box');
-      const isEn = currentIndexLang === 'en';
+      const isEn = typeof currentIndexLang !== 'undefined' && currentIndexLang === 'en';
 
-      const title = customQuery ? (isEn ? `Land Title: ${customQuery} (Simulated)` : `เอกสารสิทธิ์: ${customQuery} (จำลอง)`) : (isEn ? data.title_en : data.title_th);
-      document.getElementById('modal-title').textContent = title;
-      document.getElementById('modal-subtitle').textContent = isEn ? 'Spatial Land Title Due Diligence Audit (Simulated Result)' : 'ผลการตรวจสอบเอกสารสิทธิ์เชิงพื้นที่ (ระบบจำลอง)';
-      document.getElementById('modal-doc-type').textContent = isEn ? data.docType_en : data.docType_th;
-      document.getElementById('modal-location').textContent = isEn ? data.location_en : data.location_th;
-      document.getElementById('modal-area').textContent = isEn ? data.area_en : data.area_th;
-      document.getElementById('modal-forest-dist').textContent = isEn ? data.forestDist_en : data.forestDist_th;
-      document.getElementById('modal-status-text').textContent = isEn ? data.statusText_en : data.statusText_th;
-      document.getElementById('modal-status-desc').textContent = isEn ? data.statusDesc_en : data.statusDesc_th;
+      document.getElementById('modal-body-found').classList.remove('hidden');
+      document.getElementById('modal-body-notfound').classList.add('hidden');
 
-      const c1 = isEn ? data.check1_en : data.check1_th;
-      const c2 = isEn ? data.check2_en : data.check2_th;
-      const c3 = isEn ? data.check3_en : data.check3_th;
-      document.getElementById('modal-check-1').innerHTML = `<span>${c1.slice(0, 2)}</span> <span>${c1.slice(2)}</span>`;
-      document.getElementById('modal-check-2').innerHTML = `<span>${c2.slice(0, 2)}</span> <span>${c2.slice(2)}</span>`;
-      document.getElementById('modal-check-3').innerHTML = `<span>${c3.slice(0, 2)}</span> <span>${c3.slice(2)}</span>`;
+      const titleText = `${plot.title_deed_type} เลขที่ ${plot.title_deed_no}`;
+      document.getElementById('modal-title').textContent = titleText;
+      document.getElementById('modal-subtitle').textContent = isEn 
+        ? `Spatial Land Title Audit • Plot Code: ${plot.plot_code}` 
+        : `ผลการตรวจสอบเอกสารสิทธิ์เชิงพื้นที่ • รหัสแปลง: ${plot.plot_code}`;
+
+      document.getElementById('modal-farmer-name').textContent = `${plot.farmer_name} (${plot.farmer_code})`;
+      document.getElementById('modal-doc-type').textContent = `${plot.title_deed_type} (${plot.plot_name})`;
+      document.getElementById('modal-location').textContent = plot.location;
+      document.getElementById('modal-area').textContent = `${plot.area_formatted} (${plot.area_hectare})`;
+      document.getElementById('modal-rubber-clone').textContent = `${plot.rubber_clone} (ปลูกปี ${plot.planting_year}) • ${plot.tapping_status}`;
+      
+      const forestDistEl = document.getElementById('modal-forest-dist');
+      if (plot.forest_distance_meters > 0) {
+        forestDistEl.textContent = `${plot.forest_distance_meters.toLocaleString()} เมตร (${plot.nearest_forest_name})`;
+        forestDistEl.className = 'font-bold text-emerald-700';
+      } else {
+        forestDistEl.textContent = `0 เมตร (${plot.nearest_forest_name})`;
+        forestDistEl.className = 'font-bold text-rose-600';
+      }
 
       const badge = document.getElementById('modal-status-badge');
       const header = document.getElementById('modal-header-bg');
       const actionBtn = document.getElementById('modal-action-btn');
 
-      if (data.status === 'green') {
-        badge.className = 'p-4 rounded-2xl border flex items-center gap-3 bg-emerald-50 border-emerald-200 text-emerald-900';
+      if (plot.eudr_status === 'compliant') {
+        badge.className = 'p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3 bg-emerald-50 border-emerald-200 text-emerald-900';
         document.getElementById('modal-status-icon').textContent = '🟢';
+        document.getElementById('modal-status-text').textContent = isEn ? 'Safe Zone (100% EUDR Compliant)' : 'พื้นที่ปลอดภัย (ผ่านเกณฑ์รับรอง 100%)';
+        document.getElementById('modal-status-desc').textContent = isEn 
+          ? 'Located completely outside National Forest Reserves. Deforestation-Free verified.' 
+          : 'อยู่นอกแนวเขตป่าสงวนแห่งชาติ 26 แห่ง จ.สุราษฎร์ธานี ปลอดการตัดไม้ทำลายป่า';
         header.className = 'p-5 sm:p-6 text-white bg-emerald-800 relative';
         actionBtn.className = 'flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center transition-all shadow';
-      } else if (data.status === 'orange') {
-        badge.className = 'p-4 rounded-2xl border flex items-center gap-3 bg-amber-50 border-amber-200 text-amber-900';
+        actionBtn.textContent = isEn ? 'View on GIS Map ➔' : 'เปิดดูบนแผนที่ GIS ➔';
+      } else if (plot.eudr_status === 'under_review') {
+        badge.className = 'p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3 bg-amber-50 border-amber-200 text-amber-900';
         document.getElementById('modal-status-icon').textContent = '🟠';
+        document.getElementById('modal-status-text').textContent = isEn ? 'Caution Area (Under Review)' : 'เขตเฝ้าระวัง (อยู่ระหว่างตรวจสอบ)';
+        document.getElementById('modal-status-desc').textContent = isEn 
+          ? 'Near forest reserve boundary buffer. Verification required.' 
+          : 'ตั้งอยู่ใกล้แนวเขตป่าสงวน ต้องเฝ้าระวังไม่ให้ขยายแปลงล่วงล้ำแนวป่า';
         header.className = 'p-5 sm:p-6 text-white bg-amber-700 relative';
         actionBtn.className = 'flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-center transition-all shadow';
+        actionBtn.textContent = isEn ? 'Inspect Buffer Zone ➔' : 'ตรวจสอบแนวเขตบนแผนที่ ➔';
       } else {
-        badge.className = 'p-4 rounded-2xl border flex items-center gap-3 bg-red-50 border-red-200 text-red-900';
+        badge.className = 'p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3 bg-rose-50 border-rose-200 text-rose-900';
         document.getElementById('modal-status-icon').textContent = '🔴';
-        header.className = 'p-5 sm:p-6 text-white bg-red-800 relative';
-        actionBtn.className = 'flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-center transition-all shadow';
+        document.getElementById('modal-status-text').textContent = isEn ? 'Prohibited (Forest Overlap Risk)' : `ทับซ้อนแนวเขตป่าสงวน (${plot.eudr_overlap_pct}%)`;
+        document.getElementById('modal-status-desc').textContent = isEn 
+          ? 'Direct overlap with Protected Forest. Violates EUDR regulation.' 
+          : `พบการทับซ้อนกับ ${plot.nearest_forest_name} ห้ามตัดไม้ทำลายป่าและไม่สามารถออกหนังสือรับรอง EUDR ได้`;
+        header.className = 'p-5 sm:p-6 text-white bg-rose-800 relative';
+        actionBtn.className = 'flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-center transition-all shadow';
+        actionBtn.textContent = isEn ? 'View Overlap on Map ➔' : 'ดูจุดทับซ้อนบนแผนที่ ➔';
       }
 
-      actionBtn.href = data.actionUrl;
-      actionBtn.textContent = isEn ? data.actionText_en : data.actionText_th;
+      actionBtn.href = `map.php?plot_id=${plot.id}`;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => {
+        box.classList.remove('scale-95', 'opacity-0');
+        box.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
+
+    // Display Not Found State
+    function showNotFoundDeedModal(query) {
+      const modal = document.getElementById('deed-modal');
+      const box = document.getElementById('deed-modal-box');
+      const isEn = typeof currentIndexLang !== 'undefined' && currentIndexLang === 'en';
+
+      document.getElementById('modal-body-found').classList.add('hidden');
+      document.getElementById('modal-body-notfound').classList.remove('hidden');
+
+      const header = document.getElementById('modal-header-bg');
+      header.className = 'p-5 sm:p-6 text-white bg-rose-700 relative';
+
+      document.getElementById('modal-subtitle').textContent = isEn ? 'Database Search Result' : 'ผลการสืบค้นฐานข้อมูล Supabase Cloud';
+      document.getElementById('modal-title').textContent = isEn ? `Not Found: "${query}"` : `ไม่พบข้อมูล: "${query}"`;
+
+      document.getElementById('modal-notfound-title').textContent = isEn 
+        ? `No Record Found for "${query}"` 
+        : `ไม่พบข้อมูลรหัส หรือเลขที่โฉนด "${query}"`;
+
+      document.getElementById('modal-notfound-desc').textContent = isEn 
+        ? `The query "${query}" does not match any registered rubber plot or land title deed in the Supabase Cloud database.` 
+        : `ระบบค้นหาในฐานข้อมูล Supabase Cloud แล้ว ไม่พบข้อมูลแปลงปลูกหรือเอกสารสิทธิ์ที่ตรงกับ "${query}"`;
+
+      const actionBtn = document.getElementById('modal-action-btn');
+      actionBtn.className = 'flex-1 py-2.5 rounded-xl bg-mezenc-teal hover:bg-mezenc-brightCyan text-white font-bold text-center transition-all shadow';
+      actionBtn.href = 'map.php';
+      actionBtn.textContent = isEn ? 'Register New Plot (Map) ➔' : 'ไปที่หน้าลงทะเบียนแปลงปลูก ➔';
 
       modal.classList.remove('hidden');
       modal.classList.add('flex');

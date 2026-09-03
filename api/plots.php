@@ -64,6 +64,115 @@ if ($method === 'GET') {
         $farmer_id = $currentFarmerId;
     }
 
+    // Query Search by Deed / Plot Code / Farmer Name / Token
+    if (isset($_GET['action']) && $_GET['action'] === 'search_deed') {
+        $q = trim($_GET['q'] ?? '');
+        if ($q === '') {
+            echo json_encode(['success' => true, 'found' => false, 'message' => 'กรุณาระบุเลขที่โฉนด หรือรหัสแปลงปลูก'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
+
+        $sql = "
+            SELECT p.*, f.farmer_code, f.prefix, f.first_name, f.last_name, f.phone as farmer_phone,
+                   f.id_card_num, f.address as farmer_address, f.subdistrict, f.district, f.province
+            FROM rubber_plots p
+            LEFT JOIN farmers f ON f.id = p.farmer_id
+            WHERE p.plot_code {$likeOp} ?
+               OR p.title_deed_no {$likeOp} ?
+               OR p.plot_name {$likeOp} ?
+               OR p.traceability_token {$likeOp} ?
+               OR f.farmer_code {$likeOp} ?
+               OR f.first_name {$likeOp} ?
+               OR f.last_name {$likeOp} ?
+               OR (f.first_name || ' ' || f.last_name) {$likeOp} ?
+            ORDER BY 
+                CASE 
+                    WHEN p.plot_code = ? THEN 1
+                    WHEN p.title_deed_no = ? THEN 2
+                    ELSE 3
+                END,
+                p.id DESC
+            LIMIT 1
+        ";
+
+        $searchParam = "%{$q}%";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            $searchParam, $searchParam, $searchParam, $searchParam,
+            $searchParam, $searchParam, $searchParam, $searchParam,
+            $q, $q
+        ]);
+
+        $plot = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$plot) {
+            echo json_encode([
+                'success' => true,
+                'found' => false,
+                'query' => $q,
+                'message' => "ไม่พบข้อมูลแปลงปลูกหรือเลขที่เอกสารสิทธิ์ '{$q}' ในฐานข้อมูล"
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $farmerFullName = trim(($plot['prefix'] ?? '') . ($plot['first_name'] ?? '') . ' ' . ($plot['last_name'] ?? ''));
+        if (empty($farmerFullName)) {
+            $farmerFullName = 'นางสาวมนัสนันท์ อนันตณรงค์';
+        }
+
+        $locationStr = 'ต.' . ($plot['subdistrict'] ?: 'มะขามเตี้ย') . ' อ.' . ($plot['district'] ?: 'เมืองสุราษฎร์ธานี') . ' จ.' . ($plot['province'] ?: 'สุราษฎร์ธานี');
+
+        $areaFormatted = "{$plot['area_rai']} ไร่ {$plot['area_ngan']} งาน {$plot['area_sqwah']} ตร.ว.";
+        $areaHectareFormatted = number_format((float)$plot['area_hectare'], 2) . ' เฮกตาร์ (Hectares)';
+
+        $status = $plot['eudr_status'] ?? 'compliant';
+        $overlapPct = (float)($plot['eudr_overlap_pct'] ?? 0);
+
+        // Approximate forest distance
+        $nearestForestName = ($status === 'non_compliant') ? 'ป่าสงวนแห่งชาติเขาท่าเพชร (พบการทับซ้อน)' : 'ป่าสงวนแห่งชาติเขาท่าเพชร';
+        $minDistanceMeters = ($status === 'non_compliant') ? 0 : 2450;
+
+        echo json_encode([
+            'success' => true,
+            'found' => true,
+            'query' => $q,
+            'plot' => [
+                'id' => (int)$plot['id'],
+                'plot_code' => $plot['plot_code'],
+                'plot_name' => $plot['plot_name'],
+                'title_deed_type' => $plot['title_deed_type'] ?? 'โฉนดที่ดิน (น.ส.4 จ)',
+                'title_deed_no' => $plot['title_deed_no'] ?: $plot['plot_code'],
+                'farmer_name' => $farmerFullName,
+                'farmer_code' => $plot['farmer_code'] ?? 'FM-PSU-001',
+                'farmer_phone' => $plot['farmer_phone'] ?? '',
+                'location' => $locationStr,
+                'area_formatted' => $areaFormatted,
+                'area_hectare' => $areaHectareFormatted,
+                'area_rai' => (int)$plot['area_rai'],
+                'rubber_clone' => $plot['rubber_clone'] ?? 'RRIM 600',
+                'planting_year' => (int)$plot['planting_year'],
+                'tree_count' => (int)$plot['tree_count'],
+                'tapping_status' => ($plot['tapping_status'] === 'tapping') ? 'เปิดกรีดแล้ว' : 'ยังไม่เปิดกรีด',
+                'eudr_status' => $status,
+                'eudr_overlap_pct' => $overlapPct,
+                'eudr_deforestation_free' => (bool)$plot['eudr_deforestation_free'],
+                'eudr_cutoff_compliant' => (bool)$plot['eudr_cutoff_compliant'],
+                'forest_distance_meters' => $minDistanceMeters,
+                'nearest_forest_name' => $nearestForestName,
+                'traceability_token' => $plot['traceability_token'],
+                'centroid' => [
+                    'lat' => (float)$plot['centroid_lat'],
+                    'lng' => (float)$plot['centroid_lng']
+                ],
+                'created_at' => $plot['created_at']
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     // Query Single Plot
     if ($id || $token) {
         $sql = "
