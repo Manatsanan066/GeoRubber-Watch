@@ -95,6 +95,8 @@ const GeoMap = {
       } else {
         btn.classList.remove('active');
       }
+    }
+
     if (!this.map || !this.forestLayerGroup) return;
 
     if (this.isForestVisible) {
