@@ -569,169 +569,264 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   </div>
 
   <!-- =========================================================================
-       2. MAIN INTERACTIVE GIS WORKSPACE (2 Top Columns: Left Controls | Right Large Map)
+       2. MAIN INTERACTIVE GIS WORKSPACE (Full-Width Map with Floating Slide-Out Layer Control Panel)
        ========================================================================= -->
   <main class="w-full max-w-[1520px] 2xl:max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 -mt-20 sm:-mt-28 lg:-mt-32 relative z-20 py-2 sm:py-4 flex-1">
     
-    <!-- TOP ROW: GIS Controls (4 Cols) & Interactive Map (8 Cols) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+    <!-- Main Full-Width GIS Map Card (Supports Fullscreen Mode) -->
+    <div id="gis-map-card-container" class="w-full bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] relative flex flex-col h-auto min-h-[660px] lg:h-[800px] xl:h-[840px] transition-all duration-300">
       
-      <!-- =====================================================================
-           1. LEFT COLUMN: Standalone GIS Layer Control Panel (Col-Span 4)
-           ===================================================================== -->
-      <div id="floatingLayerPanel" class="lg:col-span-4 xl:col-span-4 bg-white rounded-2xl sm:rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] p-4 sm:p-5 flex flex-col h-auto lg:h-[760px] overflow-y-auto space-y-4">
+      <!-- Top Map Toolbar (Title, Badges, and Action Buttons) -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3.5 mb-3.5 border-b border-gray-100">
         
-        <!-- Panel Header -->
-        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-          <div class="flex items-center gap-2">
-            <span class="text-xl">🎛️</span>
-            <div>
-              <h3 class="font-extrabold text-[16px] text-mezenc-teal leading-tight">แผงควบคุมซ้าย</h3>
-              <span class="text-[16px] text-gray-500 font-medium block mt-0.5">(Layer Control)</span>
-            </div>
-          </div>
-          <span class="text-[16px] font-bold text-mezenc-brightCyan px-2.5 py-0.5 rounded-full bg-mezenc-lightCyan border border-[#bee6e1] shrink-0">
-            GIS Toggles
+        <!-- Left: Title & Badges -->
+        <div class="flex flex-wrap items-center gap-2.5 sm:gap-3.5">
+          <!-- Title & Map Icon -->
+          <h2 class="text-[16px] sm:text-lg font-extrabold text-mezenc-teal tracking-tight flex items-center gap-2">
+            <img src="img/map_icon.png" alt="Map Icon" class="w-5 h-5 object-contain inline-block drop-shadow-xs" onerror="this.style.display='none'">
+            <span>แผนที่พิกัดแปลงปลูก &amp; แนวเขตป่าสงวน</span>
+          </h2>
+
+          <!-- Badges -->
+          <span class="inline-flex items-center px-3 py-0.5 rounded-full text-[14px] sm:text-[15px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]">
+            ม.อ. สุราษฎร์ธานี
           </span>
         </div>
 
-        <!-- Basemap Select -->
-        <div>
-          <label for="basemap-select" class="block text-[16px] font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
-            <span>🗺️</span> <span>แผนที่ฐาน (Basemap):</span>
-          </label>
-          <div class="relative">
-            <select 
-              id="basemap-select" 
-              class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[16px] rounded-xl px-3 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all cursor-pointer shadow-xs leading-relaxed"
-              onchange="GeoMap.setBaseMap(this.value)"
-            >
-              <option value="satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
-              <option value="osm">🗺️ แผนที่ถนน (OpenStreetMap)</option>
-              <option value="topo">⛰️ ภูมิประเทศ (Topographic)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Overlays Section -->
-        <div class="space-y-2">
-          <div class="text-[16px] font-bold text-gray-700 flex items-center gap-1.5">
-            <span>📂</span> <span>เปิด/ปิดชั้นข้อมูล (Layers):</span>
-          </div>
-
-          <!-- Toggle Row 1: Forest Reserves -->
-          <div 
-            class="flex items-center justify-between p-3 rounded-2xl bg-[#f4faf7] border border-[#e2ece7] cursor-pointer hover:bg-[#eef8f4] hover:border-mezenc-brightCyan/40 transition-all shadow-xs" 
-            onclick="GeoMap.toggleForestLayer()"
+        <!-- Right: Action Buttons -->
+        <div class="flex items-center gap-2">
+          <button 
+            type="button" 
+            onclick="GeoMap.map.flyTo([9.0805, 99.3515], 14, { duration: 1.2 })" 
+            class="px-4 py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-[14px] sm:text-[15px] border-2 border-[#bee6e1] shadow-xs hover:border-mezenc-brightCyan transition-all cursor-pointer"
           >
-            <div class="flex items-center gap-2.5">
-              <span style="width: 22px; height: 22px; background: #fee2e2; border: 2px dashed #ef4444; border-radius: 6px;" class="shrink-0 inline-block shadow-xs"></span>
-              <div>
-                <span class="font-bold text-gray-800 text-[16px] leading-tight block">แนวเขตป่าสงวนแห่งชาติ</span>
-                <span class="text-[16px] text-gray-500 font-medium block mt-0.5">(26 ผืนป่า จ.สุราษฎร์ฯ)</span>
-              </div>
-            </div>
-            <button 
-              type="button" 
-              class="toggle-switch-btn active" 
-              id="switch-forest" 
-              aria-label="เปิดปิดป่าสงวน" 
-              onclick="event.stopPropagation(); GeoMap.toggleForestLayer();"
-            >
-              <span class="toggle-knob"></span>
-            </button>
-          </div>
+            กลับจุดเริ่มต้น
+          </button>
 
-          <!-- Toggle Row 2: Rubber Plots -->
-          <div 
-            class="flex items-center justify-between p-3 rounded-2xl bg-[#f4faf7] border border-[#e2ece7] cursor-pointer hover:bg-[#eef8f4] hover:border-mezenc-brightCyan/40 transition-all shadow-xs" 
-            onclick="GeoMap.togglePlotsLayer()"
+          <button 
+            type="button" 
+            onclick="activateMapDrawDirect()" 
+            class="px-4 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[14px] sm:text-[15px] shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <div class="flex items-center gap-2.5">
-              <span style="width: 22px; height: 22px; background: #22c55e; border-radius: 6px;" class="shrink-0 inline-block shadow-xs"></span>
-              <div>
-                <span class="font-bold text-gray-800 text-[16px] leading-tight block">แปลงปลูกยางพารา</span>
-                <span class="text-[16px] text-gray-500 font-medium block mt-0.5">(แปลงทะเบียน EUDR)</span>
-              </div>
-            </div>
-            <button 
-              type="button" 
-              class="toggle-switch-btn active" 
-              id="switch-plots" 
-              aria-label="เปิดปิดแปลงยางพารา" 
-              onclick="event.stopPropagation(); GeoMap.togglePlotsLayer();"
-            >
-              <span class="toggle-knob"></span>
-            </button>
-          </div>
-
-        </div>
-
-        <!-- Status Legend Guide -->
-        <div class="mt-auto pt-3 border-t border-gray-100 text-[16px] text-gray-700 space-y-2 bg-[#f8faf9] p-3 rounded-2xl border border-gray-100">
-          <div class="font-bold text-mezenc-teal flex items-center gap-1.5 text-[16px]">
-            <span>🛡️</span> <span>สถานะความสอดคล้อง EUDR:</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span>
-            <span class="font-medium text-gray-800 text-[16px] leading-tight">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-rose-600 shrink-0"></span>
-            <span class="font-medium text-gray-800 text-[16px] leading-tight">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-amber-500 shrink-0"></span>
-            <span class="font-medium text-gray-800 text-[16px] leading-tight">โซนเฝ้าระวัง (Buffer &lt; 500 ม.)</span>
-          </div>
+            <span>✏️ วาดแปลงใหม่</span>
+          </button>
         </div>
 
       </div>
 
-      <!-- =====================================================================
-           2. RIGHT COLUMN: Interactive Web-GIS Map Viewport (Col-Span 8)
-           ===================================================================== -->
-      <div class="lg:col-span-8 xl:col-span-8 bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] relative flex flex-col h-auto lg:h-[760px]">
+      <!-- Map Viewport (Expanded Full Width & Height) -->
+      <div class="relative w-full flex-1 min-h-[550px] rounded-xl sm:rounded-2xl overflow-hidden shadow-inner border border-gray-200">
         
-        <!-- Top Toolbar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pb-3.5 mb-3.5 border-b border-gray-100">
+        <!-- Real Leaflet Map Container -->
+        <div id="map-view" class="w-full h-full z-10"></div>
+
+        <!-- =====================================================================
+             2. SLIDE-OUT / FLOATING GIS LAYER CONTROL PANEL (แผงควบคุมแผนที่)
+             ===================================================================== -->
+        <div 
+          id="floatingLayerPanel" 
+          class="absolute top-3 bottom-3 left-3 w-[360px] sm:w-[390px] max-w-[calc(100%-24px)] bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-[0_20px_50px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] p-4 sm:p-5 flex flex-col overflow-y-auto space-y-4 z-[450] transition-all duration-300 ease-in-out transform -translate-x-[120%] opacity-0 pointer-events-none"
+        >
           
-          <!-- Title & Study Area Badge -->
-          <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <h2 class="text-[16px] font-extrabold text-mezenc-teal tracking-tight flex items-center gap-2">
-              <img src="img/map_icon.png" alt="Map Icon" class="w-5 h-5 object-contain inline-block drop-shadow-xs" onerror="this.style.display='none'">
-              <span>แผนที่พิกัดแปลงปลูก &amp; แนวเขตป่าสงวน</span>
-            </h2>
-            <span class="inline-flex items-center px-3 py-0.5 rounded-full text-[16px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]">
-              ม.อ. สุราษฎร์ธานี
-            </span>
+          <!-- Panel Header with Close Button ✕ -->
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🎛️</span>
+              <div>
+                <h3 class="font-extrabold text-[16px] text-mezenc-teal leading-tight">แผงควบคุมแผนที่</h3>
+                <span class="text-[14px] text-gray-500 font-medium block mt-0.5">Layer Control &amp; Tools</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[13px] font-bold text-mezenc-brightCyan px-2.5 py-0.5 rounded-full bg-mezenc-lightCyan border border-[#bee6e1] shrink-0">
+                GIS Toggles
+              </span>
+              <button 
+                type="button" 
+                onclick="toggleLayerPanel(false)" 
+                class="w-7 h-7 rounded-full bg-gray-100 hover:bg-rose-50 hover:text-rose-600 text-gray-500 flex items-center justify-center text-xs font-bold transition-all cursor-pointer shadow-xs"
+                title="ปิดแผงควบคุม"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
-          <!-- Action Buttons -->
-          <div class="flex items-center gap-2">
-            <button 
-              type="button" 
-              onclick="GeoMap.map.flyTo([9.0805, 99.3515], 14)" 
-              class="px-4 py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-[16px] border-2 border-[#bee6e1] shadow-xs hover:border-mezenc-brightCyan transition-all cursor-pointer"
+          <!-- Basemap Select -->
+          <div>
+            <label for="basemap-select" class="block text-[15px] font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
+              <span>🗺️</span> <span>แผนที่ฐาน (Basemap):</span>
+            </label>
+            <div class="relative">
+              <select 
+                id="basemap-select" 
+                class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl px-3 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all cursor-pointer shadow-xs leading-relaxed"
+                onchange="GeoMap.setBaseMap(this.value)"
+              >
+                <option value="satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
+                <option value="osm">🗺️ แผนที่ถนน (OpenStreetMap)</option>
+                <option value="topo">⛰️ ภูมิประเทศ (Topographic)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Overlays Section -->
+          <div class="space-y-2">
+            <div class="text-[15px] font-bold text-gray-700 flex items-center gap-1.5">
+              <span>📂</span> <span>เปิด/ปิดชั้นข้อมูล (Layers):</span>
+            </div>
+
+            <!-- Toggle Row 1: Forest Reserves -->
+            <div 
+              class="flex items-center justify-between p-3 rounded-2xl bg-[#f4faf7] border border-[#e2ece7] cursor-pointer hover:bg-[#eef8f4] hover:border-mezenc-brightCyan/40 transition-all shadow-xs" 
+              onclick="GeoMap.toggleForestLayer()"
             >
-              กลับจุดเริ่มต้น
-            </button>
-            
-            <button 
-              type="button" 
-              onclick="if(GeoMap.drawControl && GeoMap.drawControl._toolbars && GeoMap.drawControl._toolbars.draw) { GeoMap.drawControl._toolbars.draw._modes.polygon.handler.enable(); } else { App.showToast('กรุณารอโหลดเครื่องมือวาดสักครู่', 'info'); }" 
-              class="px-4 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+              <div class="flex items-center gap-2.5">
+                <span style="width: 22px; height: 22px; background: #fee2e2; border: 2px dashed #dc2626; border-radius: 6px;" class="shrink-0 inline-block shadow-xs"></span>
+                <div>
+                  <span class="font-bold text-gray-800 text-[15px] leading-tight block">แนวเขตป่าสงวนแห่งชาติ</span>
+                  <span class="text-[13px] text-gray-500 font-medium block mt-0.5">(26 ผืนป่า จ.สุราษฎร์ฯ)</span>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                class="toggle-switch-btn active" 
+                id="switch-forest" 
+                aria-label="เปิดปิดป่าสงวน" 
+                onclick="event.stopPropagation(); GeoMap.toggleForestLayer();"
+              >
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+
+            <!-- Toggle Row 2: Rubber Plots -->
+            <div 
+              class="flex items-center justify-between p-3 rounded-2xl bg-[#f4faf7] border border-[#e2ece7] cursor-pointer hover:bg-[#eef8f4] hover:border-mezenc-brightCyan/40 transition-all shadow-xs" 
+              onclick="GeoMap.togglePlotsLayer()"
             >
-              <span>วาดแปลงใหม่</span>
-            </button>
+              <div class="flex items-center gap-2.5">
+                <span style="width: 22px; height: 22px; background: #22c55e; border-radius: 6px;" class="shrink-0 inline-block shadow-xs"></span>
+                <div>
+                  <span class="font-bold text-gray-800 text-[15px] leading-tight block">แปลงปลูกยางพารา</span>
+                  <span class="text-[13px] text-gray-500 font-medium block mt-0.5">(แปลงทะเบียน EUDR)</span>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                class="toggle-switch-btn active" 
+                id="switch-plots" 
+                aria-label="เปิดปิดแปลงยางพารา" 
+                onclick="event.stopPropagation(); GeoMap.togglePlotsLayer();"
+              >
+                <span class="toggle-knob"></span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Quick Drawing Tools & Actions -->
+          <div class="space-y-2">
+            <div class="text-[15px] font-bold text-gray-700 flex items-center gap-1.5">
+              <span>🛠️</span> <span>เครื่องมือจัดการแปลง:</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button 
+                type="button" 
+                onclick="activateMapDrawDirect()" 
+                class="py-2.5 px-3 rounded-2xl bg-mezenc-teal hover:bg-mezenc-brightCyan text-white font-bold text-[14px] shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>✏️ วาดแปลงใหม่</span>
+              </button>
+              <button 
+                type="button" 
+                onclick="locateUserDirect()" 
+                class="py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#d4f1ee] to-[#e8f7f5] hover:from-mezenc-brightCyan hover:to-mezenc-teal text-mezenc-teal hover:text-white font-bold text-[14px] border-2 border-[#bee6e1] shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>📍 GPS ของฉัน</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Status Legend Guide -->
+          <div class="mt-auto pt-3 border-t border-gray-100 text-[14px] text-gray-700 space-y-2 bg-[#f8faf9] p-3 rounded-2xl border border-gray-100">
+            <div class="font-bold text-mezenc-teal flex items-center gap-1.5 text-[14px]">
+              <span>🛡️</span> <span>สถานะความสอดคล้อง EUDR:</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+              <span class="font-medium text-gray-800 text-[14px] leading-tight">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-rose-600 shrink-0"></span>
+              <span class="font-medium text-gray-800 text-[14px] leading-tight">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-amber-500 shrink-0"></span>
+              <span class="font-medium text-gray-800 text-[14px] leading-tight">โซนเฝ้าระวัง (Buffer &lt; 500 ม.)</span>
+            </div>
+            <div class="flex items-center gap-2 pt-1.5 border-t border-gray-200/60">
+              <span class="w-3.5 h-3 rounded-xs border-2 border-red-600 bg-red-500/40 shrink-0"></span>
+              <span class="font-bold text-red-700 text-[13px] leading-tight">แนวเขตป่าสงวน (Zone C เขตหวงห้าม)</span>
+            </div>
           </div>
 
         </div>
 
-        <!-- Leaflet Map Container -->
-        <div class="relative w-full flex-1 min-h-[560px] rounded-xl sm:rounded-2xl overflow-hidden shadow-inner border border-gray-200">
-          <!-- Leaflet Viewport -->
-          <div id="map-view" class="w-full h-full z-10"></div>
+        <!-- Floating Map Overlay: ☰ Hamburger Toggle Button (Top-Left of Map) -->
+        <div class="absolute top-4 left-4 z-[400] flex flex-col gap-2">
+          <button 
+            type="button" 
+            id="btn-toggle-panel"
+            onclick="toggleLayerPanel()" 
+            title="เปิด/ปิด แผงควบคุมแผนที่ (Layer Control & Tools)" 
+            class="w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
+          >
+            <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Floating Map Overlay: Circular Top-Right Action Buttons (GPS, Draw & Fullscreen) -->
+        <div class="absolute top-4 right-4 z-[400] flex flex-col gap-2.5">
+          <!-- GPS Locate Button -->
+          <button 
+            type="button" 
+            onclick="locateUserDirect()" 
+            title="ระบุตำแหน่ง GPS ปัจจุบันของฉัน" 
+            class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
+          >
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:scale-110">
+              <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="3" r="3" fill="currentColor"/>
+              <line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="2" y1="12" x2="5" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="19" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+
+          <!-- Draw Polygon Button -->
+          <button 
+            type="button" 
+            onclick="activateMapDrawDirect()" 
+            title="คลิกเพื่อเริ่มวาดขอบเขตแปลงปลูก (Polygon)" 
+            class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
+          >
+            <span class="text-lg">✏️</span>
+          </button>
+
+          <!-- Fullscreen Toggle Button -->
+          <button 
+            type="button" 
+            onclick="toggleFullscreen()" 
+            title="ขยายแผนที่เต็มจอ / ย่อขนาด" 
+            class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
+          >
+            <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+            </svg>
+          </button>
         </div>
 
       </div>
@@ -1448,6 +1543,93 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   <script src="assets/js/map.js?v=<?= time() ?>"></script>
 
   <script>
+    // Toggle Slide-out Floating Layer Panel on map.php
+    function toggleLayerPanel(forceState = null) {
+      const panel = document.getElementById('floatingLayerPanel');
+      const btn = document.getElementById('btn-toggle-panel');
+      if (!panel) return;
+
+      const isCurrentlyOpen = panel.classList.contains('translate-x-0');
+      const shouldOpen = forceState !== null ? forceState : !isCurrentlyOpen;
+
+      if (shouldOpen) {
+        panel.classList.remove('-translate-x-[120%]', 'opacity-0', 'pointer-events-none');
+        panel.classList.add('translate-x-0', 'opacity-100', 'pointer-events-auto');
+        if (btn) {
+          btn.classList.add('bg-mezenc-brightCyan', 'text-white', 'border-mezenc-brightCyan');
+          btn.classList.remove('bg-white/95', 'text-mezenc-teal');
+        }
+      } else {
+        panel.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+        panel.classList.add('-translate-x-[120%]', 'opacity-0', 'pointer-events-none');
+        if (btn) {
+          btn.classList.remove('bg-mezenc-brightCyan', 'text-white', 'border-mezenc-brightCyan');
+          btn.classList.add('bg-white/95', 'text-mezenc-teal');
+        }
+      }
+
+      setTimeout(() => {
+        if (GeoMap && GeoMap.map) {
+          GeoMap.map.invalidateSize();
+        }
+      }, 320);
+    }
+
+    // Direct draw trigger
+    function activateMapDrawDirect() {
+      if (GeoMap && GeoMap.drawControl && GeoMap.drawControl._toolbars && GeoMap.drawControl._toolbars.draw) {
+        GeoMap.drawControl._toolbars.draw._modes.polygon.handler.enable();
+        App.showToast('เริ่มคลิกบนแผนที่ GIS เพื่อวาดแปลงยางพารา (Polygon)', 'info');
+      } else {
+        App.showToast('กรุณารอโหลดเครื่องมือวาดสักครู่', 'info');
+      }
+    }
+
+    // Direct GPS Locate trigger
+    function locateUserDirect() {
+      if (!navigator.geolocation) {
+        alert('เบราว์เซอร์ของคุณไม่รองรับการระบุพิกัด GPS');
+        return;
+      }
+      App.showToast('กำลังค้นหาพิกัด GPS ของคุณ...', 'info');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          if (GeoMap && GeoMap.map) {
+            GeoMap.map.flyTo([lat, lng], 16, { duration: 1.5 });
+            L.popup()
+              .setLatLng([lat, lng])
+              .setContent(`
+                <div style="padding: 4px; font-size: 14px; font-weight: bold; color: #0e4d4e;">
+                  📍 พิกัดปัจจุบันของคุณ<br>
+                  <span style="font-family: monospace; font-size: 12px; color: #00a699;">${lat.toFixed(5)}, ${lng.toFixed(5)}</span>
+                </div>
+              `)
+              .openOn(GeoMap.map);
+          }
+        },
+        (err) => {
+          alert('ไม่สามารถดึงพิกัด GPS ได้: ' + err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    // Fullscreen Toggle
+    function toggleFullscreen() {
+      const container = document.getElementById('gis-map-card-container');
+      if (!container) return;
+
+      if (!document.fullscreenElement) {
+        container.requestFullscreen().catch(err => {
+          console.warn('Fullscreen error:', err);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
     // Toggle Mobile Drawer
     function toggleMobileDrawer() {
       const drawer = document.getElementById('mobile-drawer');
