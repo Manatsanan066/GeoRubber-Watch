@@ -599,14 +599,16 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
               </span>
             </div>
 
-            <!-- Text Search Input with Clear button -->
+            <!-- Text Search Input with Clear button & Autocomplete Dropdown -->
             <div class="relative">
               <input 
                 type="text" 
                 id="forest-search-input" 
-                placeholder="พิมพ์ชื่อป่า, อำเภอ, รหัส..." 
+                placeholder="พิมพ์ชื่อป่า เช่น ป่าเขาพุทธทอง หรือรหัส R1.001..." 
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl pl-9 pr-8 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all shadow-xs"
                 oninput="GeoOverview.filterForestList(this.value)"
+                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); GeoOverview.handleSearchEnter(); }"
+                autocomplete="off"
               >
               <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -618,6 +620,9 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
                 class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 hidden text-[15px] font-bold w-4 h-4 rounded-full flex items-center justify-center cursor-pointer"
                 title="ล้างคำค้นหา"
               >✕</button>
+
+              <!-- Dynamic Autocomplete Suggestions List -->
+              <div id="forest-search-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white rounded-2xl shadow-xl border border-mezenc-brightCyan/30 max-h-60 overflow-y-auto z-50 p-1.5 space-y-1 divide-y divide-gray-100"></div>
             </div>
 
             <!-- Dropdown Select 26 Forest Reserves -->
@@ -627,7 +632,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl px-3 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all cursor-pointer shadow-xs leading-relaxed"
                 onchange="GeoOverview.zoomToForest(this.value)"
               >
-                <option value="">เลือกพื้นที่เขตป่าสงวนแห่งชาติ</option>
+                <option value="">เลือกพื้นที่เขตป่าสงวนแห่งชาติ (26 แห่ง)</option>
               </select>
             </div>
           </div>
@@ -895,7 +900,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
             <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-xs font-bold text-white">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-xs font-bold text-white">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
             <div class="text-[10px] text-white/70 mt-1 font-light">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
@@ -1117,17 +1122,17 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         const select = document.getElementById('forest-select-dropdown');
         if (!select) return;
 
-        select.innerHTML = '<option value="">เลือกพื้นที่เขตป่าสงวนแห่งชาติ</option>';
+        select.innerHTML = '<option value="">เลือกพื้นที่เขตป่าสงวนแห่งชาติ (26 แห่ง)</option>';
 
-        // Sort by Thai Alphabetical order
-        const sorted = [...features].sort((a, b) => (a.properties.name_th || '').localeCompare(b.properties.name_th || '', 'th'));
+        // Sort by forest code (R1.001 to R1.026)
+        const sorted = [...features].sort((a, b) => (a.properties.forest_code || '').localeCompare(b.properties.forest_code || ''));
 
-        sorted.forEach((f, idx) => {
+        sorted.forEach((f) => {
           const p = f.properties;
           const areaStr = p.area_rai ? ` (${parseFloat(p.area_rai).toLocaleString()} ไร่)` : '';
           const opt = document.createElement('option');
           opt.value = p.forest_code || p.id;
-          opt.textContent = `${idx + 1}. ${p.name_th}${areaStr}`;
+          opt.textContent = `${p.forest_code} - ${p.name_th}${areaStr}`;
           select.appendChild(opt);
         });
 
@@ -1137,7 +1142,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         }
       },
 
-      // 2. Filter forest list on search input
+      // 2. Filter forest list on search input and show dynamic suggestions
       filterForestList(query) {
         const q = (query || '').trim().toLowerCase();
         const clearBtn = document.getElementById('clear-search-btn');
@@ -1147,6 +1152,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
 
         if (!q) {
           this.populateDropdown(this.forestFeatures);
+          this.renderAutocomplete([]);
           return;
         }
 
@@ -1160,13 +1166,85 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         });
 
         this.populateDropdown(filtered);
+        this.renderAutocomplete(filtered, q);
+      },
 
-        // Auto zoom if exactly 1 match found
-        if (filtered.length === 1) {
-          const targetCode = filtered[0].properties.forest_code || filtered[0].properties.id;
-          const select = document.getElementById('forest-select-dropdown');
-          if (select) select.value = targetCode;
-          this.zoomToForest(targetCode);
+      // Render Autocomplete Suggestions Popover
+      renderAutocomplete(features, query = '') {
+        const container = document.getElementById('forest-search-suggestions');
+        if (!container) return;
+
+        if (!features || features.length === 0 || !query) {
+          container.classList.add('hidden');
+          container.innerHTML = '';
+          return;
+        }
+
+        let html = '';
+        features.slice(0, 6).forEach(f => {
+          const p = f.properties;
+          const targetCode = p.forest_code || p.id;
+          html += `
+            <div 
+              class="flex items-center justify-between p-2 hover:bg-[#e6f7f6] rounded-xl cursor-pointer transition-colors text-left group"
+              onclick="GeoOverview.selectSuggestedForest('${targetCode}')"
+            >
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base shrink-0">🌲</span>
+                <div class="truncate">
+                  <div class="font-extrabold text-gray-800 text-[14px] group-hover:text-mezenc-brightCyan truncate">
+                    ${p.name_th}
+                  </div>
+                  <div class="text-[12px] text-gray-400 font-mono">
+                    ${p.name_en || p.category || ''}
+                  </div>
+                </div>
+              </div>
+              <div class="text-right shrink-0 pl-2">
+                <span class="px-2 py-0.5 rounded-md bg-mezenc-lightCyan text-mezenc-teal font-mono font-bold text-[12px]">
+                  ${p.forest_code}
+                </span>
+                <div class="text-[11px] text-gray-500 mt-0.5">
+                  ${parseFloat(p.area_rai || 0).toLocaleString()} ไร่
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+        container.classList.remove('hidden');
+      },
+
+      selectSuggestedForest(code) {
+        const input = document.getElementById('forest-search-input');
+        const select = document.getElementById('forest-select-dropdown');
+        const feat = this.forestFeatures.find(f => (f.properties.forest_code == code || f.properties.id == code));
+        if (feat && input) {
+          input.value = feat.properties.name_th;
+        }
+        if (select) select.value = code;
+        this.renderAutocomplete([]);
+        this.zoomToForest(code);
+      },
+
+      // Handle Enter Key Search
+      handleSearchEnter() {
+        const input = document.getElementById('forest-search-input');
+        const q = input ? input.value.trim().toLowerCase() : '';
+        if (!q) return;
+
+        const matched = this.forestFeatures.find(f => {
+          const p = f.properties;
+          const nameTh = (p.name_th || '').toLowerCase();
+          const nameEn = (p.name_en || '').toLowerCase();
+          const code = (p.forest_code || '').toLowerCase();
+          return code === q || nameTh === q || code.includes(q) || nameTh.includes(q) || nameEn.includes(q);
+        });
+
+        if (matched) {
+          const targetCode = matched.properties.forest_code || matched.properties.id;
+          this.selectSuggestedForest(targetCode);
         }
       },
 
@@ -1178,6 +1256,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         const clearBtn = document.getElementById('clear-search-btn');
         if (clearBtn) clearBtn.style.display = 'none';
 
+        this.renderAutocomplete([]);
         this.populateDropdown(this.forestFeatures);
         this.hideForestInfoCard();
 
