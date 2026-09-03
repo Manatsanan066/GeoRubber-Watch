@@ -1458,7 +1458,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                   </div>
                   <div class="flex justify-between py-1.5">
                     <span class="text-gray-500">สถานะ EUDR:</span>
-                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[16px]">🟢 ผ่านเกณฑ์ 100% (Compliant)</span>
+                    <span id="modal-sum-eudr-badge" class="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[16px]">🟢 ผ่านเกณฑ์ 100% (Compliant)</span>
                   </div>
                 </div>
               </div>
@@ -1468,7 +1468,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 <span class="text-[16px] text-gray-500">บันทึกข้อมูลแปลงเข้าสู่ระบบฐานข้อมูล GeoRubber Watch</span>
                 <button 
                   type="button" 
-                  onclick="submitPlotFromModal('compliant')" 
+                  onclick="submitPlotFromModal()" 
                   class="w-full sm:w-auto px-6 py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer uppercase"
                 >
                   <span>💾 บันทึกแปลงปลูกและเสร็จสิ้นกระบวนการ</span>
@@ -2138,6 +2138,22 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       document.getElementById("modal-sum-plot").innerText = plotName;
       document.getElementById("modal-sum-deed").innerText = `${deedType} เลขที่ ${deedNo}`;
       document.getElementById("modal-sum-coords").innerText = coords;
+
+      // Update EUDR Summary Badge in Step 4 dynamically
+      const eudrBadgeElem = document.getElementById("modal-sum-eudr-badge");
+      if (eudrBadgeElem) {
+        const check = window.currentDrawnSpatialCheck;
+        if (check && (check.has_overlap || check.eudr_status === 'non_compliant')) {
+          eudrBadgeElem.className = "font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200 text-[16px]";
+          eudrBadgeElem.innerHTML = "🔴 ไม่ผ่านเกณฑ์ (ทับซ้อนป่าสงวน)";
+        } else if (check && (check.eudr_status === 'under_review' || check.nearest_forest_distance_m < 500)) {
+          eudrBadgeElem.className = "font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 text-[16px]";
+          eudrBadgeElem.innerHTML = `🟡 โซนเฝ้าระวัง Buffer (${Math.round(check.nearest_forest_distance_m)} ม.)`;
+        } else {
+          eudrBadgeElem.className = "font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[16px]";
+          eudrBadgeElem.innerHTML = "🟢 ผ่านเกณฑ์ 100% (Compliant)";
+        }
+      }
     }
 
     async function submitPlotFromModal(status) {
@@ -2161,6 +2177,18 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         };
       }
 
+      const check = window.currentDrawnSpatialCheck;
+      let finalStatus = status;
+      if (!finalStatus) {
+        if (check && (check.has_overlap || check.eudr_status === 'non_compliant')) {
+          finalStatus = 'non_compliant';
+        } else if (check && (check.eudr_status === 'under_review' || check.nearest_forest_distance_m < 500)) {
+          finalStatus = 'under_review';
+        } else {
+          finalStatus = check?.eudr_status || modalPresetMode || 'compliant';
+        }
+      }
+
       const farmerNameVal = document.getElementById('form-farmer-name')?.value?.trim() || 'นางสาวมนัสนันท์ อนันตณรงค์';
       const plotNameVal = document.getElementById('form-plot-name')?.value?.trim() || 'แปลงยางพาราใหม่';
 
@@ -2174,7 +2202,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         tree_count: parseInt(document.getElementById('form-tree-count').value) || 500,
         tapping_status: document.getElementById('form-tapping-status').value,
         notes: document.getElementById('form-notes').value,
-        eudr_status: status,
+        eudr_status: finalStatus,
         geojson_geometry: geom
       };
 

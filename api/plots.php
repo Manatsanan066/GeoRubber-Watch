@@ -427,10 +427,10 @@ if ($method === 'POST') {
         $thaiArea = $spatial['area_thai'];
         $centroidLat = $spatial['centroid']['lat'];
         $centroidLng = $spatial['centroid']['lng'];
-        $eudr_status = $data['eudr_status'] ?? $spatial['eudr_status'];
+        $eudr_status = $spatial['eudr_status'] ?? 'compliant';
         $eudr_deforestation_free = $spatial['eudr_deforestation_free'] ? 1 : 0;
         $eudr_cutoff = $spatial['eudr_cutoff_compliant'] ? 1 : 0;
-        $overlapPct = $spatial['overlap_percentage'];
+        $overlapPct = $spatial['overlap_percentage'] ?? 0.0;
 
         // Generate guaranteed unique plot code & token (never fails on duplicates)
         $maxId = (int)$pdo->query("SELECT COALESCE(MAX(id), 0) FROM rubber_plots")->fetchColumn();

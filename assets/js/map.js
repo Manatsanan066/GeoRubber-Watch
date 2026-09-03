@@ -728,6 +728,7 @@ const GeoMap = {
 
   // Populate Add Plot Modal with calculated spatial properties
   populateNewPlotModal(geometry, check) {
+    window.currentDrawnSpatialCheck = check;
     const geoInput = document.getElementById('form-geojson-geometry');
     if (geoInput) geoInput.value = JSON.stringify(geometry);
     
