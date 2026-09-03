@@ -407,57 +407,148 @@ const GeoMap = {
     }
   },
 
-  // Render plots in the bottom grid container
+  // Render plots in the bottom table container (Matching Reference UI)
   renderSidebarPlotsList(features) {
     const listContainer = document.getElementById('plots-list-container');
     if (!listContainer) return;
 
     if (features.length === 0) {
-      listContainer.innerHTML = '<div class="col-span-full text-center text-gray-400 py-12 text-[16px]">ไม่พบข้อมูลแปลงปลูกที่ตรงกับเงื่อนไขการค้นหา</div>';
+      listContainer.innerHTML = '<tr><td colspan="7" class="text-center text-gray-400 py-12 text-[15px]">ไม่พบข้อมูลแปลงปลูกที่ตรงกับเงื่อนไขการค้นหา</td></tr>';
+      const countElem = document.getElementById('total-plots-count-badge');
+      if (countElem) countElem.textContent = '0 แปลง';
       return;
     }
 
+    const avatarGradients = [
+      'bg-gradient-to-br from-emerald-500 to-teal-700 text-white',
+      'bg-gradient-to-br from-teal-500 to-cyan-700 text-white',
+      'bg-gradient-to-br from-cyan-600 to-blue-700 text-white',
+      'bg-gradient-to-br from-blue-500 to-indigo-700 text-white',
+      'bg-gradient-to-br from-amber-500 to-orange-700 text-white',
+      'bg-gradient-to-br from-rose-500 to-red-700 text-white'
+    ];
+
     let html = '';
-    features.forEach(f => {
+    features.forEach((f, idx) => {
       const p = f.properties;
-      let badge = '<span class="badge badge-compliant" style="background:#d1fae5; color:#065f46; border:1px solid #34d399; font-weight:700;">🟢 ปลอดภัย</span>';
-      if (p.eudr_status === 'non_compliant') badge = '<span class="badge badge-non_compliant" style="background:#fee2e2; color:#991b1b; border:1px solid #f87171; font-weight:700;">🔴 ซ้อนทับเขตป่า</span>';
-      if (p.eudr_status === 'under_review') badge = '<span class="badge badge-under_review" style="background:#ffedd5; color:#9a3412; border:1px solid #fb923c; font-weight:700;">🟠 มีความเสี่ยง</span>';
+      const avatarStyle = avatarGradients[idx % avatarGradients.length];
+      const initial = (p.farmer_name || p.plot_name || 'ย').trim().substring(0, 1);
+
+      // Status Styling & Row Highlight matching reference image
+      let rowClass = 'bg-white hover:bg-slate-50/90 border-l-[4px] border-l-transparent transition-all cursor-pointer group';
+      let statusHtml = `
+        <div class="inline-flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+          <span class="font-bold text-emerald-700 text-[13px]">ผ่าน EUDR</span>
+        </div>
+      `;
+
+      if (p.eudr_status === 'non_compliant') {
+        rowClass = 'bg-rose-50/60 hover:bg-rose-50/95 border-l-[4px] border-l-rose-500 transition-all cursor-pointer group';
+        statusHtml = `
+          <div class="inline-flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0 animate-pulse"></span>
+            <span class="font-bold text-rose-700 text-[13px]">ซ้อนทับป่า</span>
+          </div>
+        `;
+      } else if (p.eudr_status === 'under_review') {
+        rowClass = 'bg-amber-50/40 hover:bg-amber-50/80 border-l-[4px] border-l-amber-500 transition-all cursor-pointer group';
+        statusHtml = `
+          <div class="inline-flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+            <span class="font-bold text-amber-700 text-[13px]">มีความเสี่ยง</span>
+          </div>
+        `;
+      }
 
       html += `
-        <div class="plot-card" id="plot-card-${p.id}" onclick="GeoMap.zoomToPlot(${p.centroid.lat}, ${p.centroid.lng}, ${p.id})">
-          <div class="plot-header">
-            <div>
-              <div class="plot-title">${p.plot_name}</div>
-              <div class="plot-code">${p.plot_code}</div>
+        <tr id="plot-row-${p.id}" class="${rowClass}" onclick="GeoMap.zoomToPlot(${p.centroid.lat}, ${p.centroid.lng}, ${p.id})">
+          <!-- 1. Selection Circle -->
+          <td class="py-4 pl-5 pr-2 text-center select-none">
+            <div class="w-4 h-4 rounded-full border-2 border-gray-300 mx-auto group-hover:border-mezenc-brightCyan group-hover:bg-mezenc-brightCyan/20 transition-all"></div>
+          </td>
+
+          <!-- 2. Avatar + Farmer Name & Plot Name / Code -->
+          <td class="py-4 px-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-xs shrink-0 ${avatarStyle}">
+                ${initial}
+              </div>
+              <div class="min-w-0">
+                <div class="font-extrabold text-gray-900 group-hover:text-mezenc-teal transition-colors text-[15px] truncate">
+                  ${p.plot_name}
+                </div>
+                <div class="text-[12px] text-gray-500 flex items-center gap-2 mt-0.5">
+                  <span class="font-mono font-bold text-mezenc-brightCyan">${p.plot_code}</span>
+                  <span>•</span>
+                  <span class="truncate">👨‍🌾 ${p.farmer_name}</span>
+                </div>
+              </div>
             </div>
-            ${badge}
-          </div>
-          <div class="plot-meta">
-            <div>📐 <strong>เนื้อที่:</strong> ${p.formatted_area}</div>
-            <div>👨‍🌾 <strong>เจ้าของ:</strong> ${p.farmer_name}</div>
-            <div>🌱 <strong>พันธุ์:</strong> ${p.rubber_clone} (${p.planting_year})</div>
-            <div>🌳 <strong>จำนวนต้น:</strong> ${p.tree_count ? p.tree_count.toLocaleString() : 0} ต้น</div>
-          </div>
-          <div class="plot-actions" style="display: flex; flex-direction: column; gap: 6px;">
-            <div style="display: flex; gap: 6px; width: 100%;">
-              <button type="button" onclick="event.stopPropagation(); App.showQRCodeModal('${p.traceability_token}', '${p.plot_name}', '${p.plot_code}')" class="btn btn-outline btn-sm" style="flex:1; font-size: 13px;">
-                📱 QR Code
+          </td>
+
+          <!-- 3. Area -->
+          <td class="py-4 px-4">
+            <div class="font-extrabold text-gray-900 text-[14px]">${p.formatted_area}</div>
+            <div class="text-[12px] text-gray-500 font-medium">${p.area_hectare} ha (${parseFloat(p.area_sqm || 0).toLocaleString()} ตร.ม.)</div>
+          </td>
+
+          <!-- 4. Rubber Clone & Planting Year -->
+          <td class="py-4 px-4">
+            <div class="font-extrabold text-gray-900 text-[14px]">${p.rubber_clone}</div>
+            <div class="text-[12px] text-gray-500 font-medium">ปลูกปี ${p.planting_year}</div>
+          </td>
+
+          <!-- 5. Tree Count -->
+          <td class="py-4 px-4">
+            <div class="font-extrabold text-gray-900 text-[14px]">${p.tree_count ? p.tree_count.toLocaleString() : '0'} ต้น</div>
+            <div class="text-[12px] text-gray-500 font-medium">${p.tapping_status === 'tapping' ? '⚡ กรีดได้แล้ว' : '🌱 ยังไม่เปิดกรีด'}</div>
+          </td>
+
+          <!-- 6. EUDR Status Badge (Dot Style from Reference) -->
+          <td class="py-4 px-4">
+            ${statusHtml}
+          </td>
+
+          <!-- 7. Actions (QR Code, Edit, Delete) -->
+          <td class="py-4 pr-6 pl-4 text-center select-none" onclick="event.stopPropagation();">
+            <div class="flex items-center justify-center gap-2">
+              <!-- QR Code / Passport Button -->
+              <button 
+                type="button" 
+                onclick="App.showQRCodeModal('${p.traceability_token}', '${p.plot_name}', '${p.plot_code}')" 
+                title="QR Code ตรวจสอบย้อนกลับ (Digital Passport)" 
+                class="w-9 h-9 rounded-full bg-slate-100 hover:bg-mezenc-lightCyan text-gray-600 hover:text-mezenc-teal flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+              >
+                <span class="text-sm">📱</span>
               </button>
-              <a href="trace.php?token=${p.traceability_token}" target="_blank" onclick="event.stopPropagation();" class="btn btn-outline btn-sm" style="flex:1; font-size: 13px;">
-                🛡️ Passport
-              </a>
+
+              <!-- Edit Button (Pastel Cyan Circle with Pencil matching screenshot) -->
+              <button 
+                type="button" 
+                onclick="GeoMap.openEditPlotModal(${p.id})" 
+                title="แก้ไขข้อมูลแปลงปลูก" 
+                class="w-9 h-9 rounded-full bg-[#dcf5f5] hover:bg-[#00a699] text-[#00a699] hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                </svg>
+              </button>
+
+              <!-- Delete Button (Trash Icon matching screenshot) -->
+              <button 
+                type="button" 
+                onclick="GeoMap.deletePlot(${p.id}, '${p.plot_name}')" 
+                title="ลบแปลงปลูก" 
+                class="w-9 h-9 rounded-full text-gray-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
             </div>
-            <div style="display: flex; gap: 6px; width: 100%;">
-              <button type="button" onclick="event.stopPropagation(); GeoMap.openEditPlotModal(${p.id})" class="btn btn-sm" style="flex:1; font-size: 13px; background-color: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd;">
-                ✏️ แก้ไข
-              </button>
-              <button type="button" onclick="event.stopPropagation(); GeoMap.deletePlot(${p.id}, '${p.plot_name}')" class="btn btn-sm" style="flex:1; font-size: 13px; background-color: #fff1f2; color: #e11d48; border: 1px solid #fecdd3;">
-                🗑️ ลบแปลง
-              </button>
-            </div>
-          </div>
-        </div>
+          </td>
+        </tr>
       `;
     });
 
@@ -653,10 +744,12 @@ const GeoMap = {
   },
 
   highlightPlotInList(plotId) {
-    document.querySelectorAll('.plot-card').forEach(card => card.classList.remove('active'));
-    const activeCard = document.getElementById(`plot-card-${plotId}`);
-    if (activeCard) {
-      activeCard.classList.add('active');
+    document.querySelectorAll('[id^="plot-row-"], [id^="plot-card-"]').forEach(el => {
+      el.classList.remove('ring-2', 'ring-mezenc-brightCyan', 'shadow-md');
+    });
+    const activeRow = document.getElementById(`plot-row-${plotId}`) || document.getElementById(`plot-card-${plotId}`);
+    if (activeRow) {
+      activeRow.classList.add('ring-2', 'ring-mezenc-brightCyan', 'shadow-md');
     }
   },
 

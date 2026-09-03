@@ -908,9 +908,28 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
       </div>
 
-      <!-- Plots Cards Grid Container (Responsive Multi-Column Grid) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5" id="plots-list-container">
-        <div class="col-span-full text-center text-gray-400 py-12 text-[16px]">กำลังโหลดข้อมูลแปลงปลูก...</div>
+      <!-- Modern Plots Table (Matching Reference Design) -->
+      <div class="overflow-x-auto rounded-2xl border border-gray-200/90 shadow-xs bg-white">
+        <table class="w-full text-left border-collapse min-w-[880px]">
+          <thead>
+            <tr class="border-b border-gray-200 bg-gray-50/80 text-[13px] font-bold text-gray-500 uppercase tracking-wider select-none">
+              <th class="py-3.5 pl-5 pr-2 w-12 text-center">
+                <span class="inline-block w-4 h-4 rounded-full border-2 border-gray-300"></span>
+              </th>
+              <th class="py-3.5 px-4 font-bold text-gray-600">รหัส / เกษตรกร & แปลงปลูก</th>
+              <th class="py-3.5 px-4 font-bold text-gray-600">เนื้อที่ยาง</th>
+              <th class="py-3.5 px-4 font-bold text-gray-600">พันธุ์ยาง & ปีปลูก</th>
+              <th class="py-3.5 px-4 font-bold text-gray-600">จำนวนต้น</th>
+              <th class="py-3.5 px-4 font-bold text-gray-600">สถานะ EUDR</th>
+              <th class="py-3.5 pr-6 pl-4 text-center font-bold text-gray-600 w-36">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="plots-list-container" class="divide-y divide-gray-100 text-[14px]">
+            <tr>
+              <td colspan="7" class="text-center text-gray-400 py-12 text-[15px]">กำลังโหลดข้อมูลแปลงปลูก...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
     </div>
