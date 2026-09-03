@@ -515,78 +515,38 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
     <!-- Main Full-Width GIS Map Card (Supports Fullscreen Mode) -->
     <div id="gis-map-card-container" class="w-full bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] relative flex flex-col h-auto min-h-[660px] lg:h-[800px] xl:h-[840px] transition-all duration-300">
       
-      <!-- Top Map Toolbar (Title, Badges, Search & Action Buttons) -->
-      <div class="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3.5 pb-3.5 mb-3.5 border-b border-gray-100">
+      <!-- Top Map Toolbar (Title, Badges, and Action Buttons) -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3.5 mb-3.5 border-b border-gray-100">
         
         <!-- Left: Title & Badges -->
-        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div class="flex flex-wrap items-center gap-2.5 sm:gap-3.5">
           <!-- Title & Map Icon -->
-          <h2 class="text-[15px] sm:text-lg font-extrabold text-mezenc-teal tracking-tight flex items-center gap-2">
+          <h2 class="text-[16px] sm:text-lg font-extrabold text-mezenc-teal tracking-tight flex items-center gap-2">
             <img src="img/map_icon.png" alt="Map Icon" class="w-5 h-5 object-contain inline-block drop-shadow-xs" onerror="this.style.display='none'">
-            <span>แผนที่ 26 เขตป่าสงวนแห่งชาติ จ.สุราษฎร์ธานี</span>
+            <span>แผนที่แนวเขตป่าสงวนแห่งชาติ จังหวัดสุราษฎร์ธานี</span>
           </h2>
 
           <!-- Badges -->
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs sm:text-[13px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]">
-            Zone C • 26 ผืนป่า
+          <span class="inline-flex items-center px-3 py-0.5 rounded-full text-[14px] sm:text-[15px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]">
+            ม.อ. สุราษฎร์ธานี
           </span>
         </div>
 
-        <!-- Middle / Right: Quick Search, Forest Layer Toggle & Navigation -->
-        <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-          <!-- Top Quick Search Bar -->
-          <div class="relative flex-1 sm:flex-initial sm:w-64 md:w-72">
-            <input 
-              type="text" 
-              id="toolbar-quick-search" 
-              placeholder="🔍 พิมพ์ชื่อป่า / รหัส R1.001..." 
-              class="w-full bg-[#f8faf9] text-gray-800 font-medium text-xs sm:text-[14px] rounded-full pl-8 pr-7 py-1.5 outline-none border-2 border-[#bee6e1] focus:border-mezenc-brightCyan focus:bg-white transition-all shadow-xs"
-              oninput="GeoOverview.syncAndFilterForest(this.value)"
-              onkeydown="if(event.key === 'Enter'){ event.preventDefault(); GeoOverview.handleSearchEnter(this.value); }"
-              autocomplete="off"
-            >
-            <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-            <button 
-              type="button" 
-              id="toolbar-clear-btn" 
-              onclick="GeoOverview.clearSearch()" 
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 hidden text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center cursor-pointer"
-              title="ล้างคำค้นหา"
-            >✕</button>
-
-            <!-- Toolbar Autocomplete Dropdown -->
-            <div id="toolbar-search-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white rounded-2xl shadow-xl border border-mezenc-brightCyan/30 max-h-60 overflow-y-auto z-50 p-1.5 space-y-1 divide-y divide-gray-100"></div>
-          </div>
-
-          <!-- Direct Forest Layer Toggle Switch Button -->
+        <!-- Right: Action Buttons -->
+        <div class="flex items-center gap-2">
           <button 
             type="button" 
-            id="toolbar-switch-forest" 
-            onclick="GeoMap.toggleForestLayer()" 
-            class="px-3 py-1.5 rounded-full border-2 border-emerald-300 bg-emerald-50 text-emerald-800 font-bold text-xs sm:text-[13px] flex items-center gap-1.5 shadow-xs cursor-pointer hover:bg-emerald-100 transition-all shrink-0"
-            title="กดเพื่อเปิด/ปิดการแสดงแนวเขตป่าสงวน 26 แห่งบนแผนที่"
+            onclick="GeoMap.map.flyTo([9.0805, 99.3515], 14, { duration: 1.2 })" 
+            class="px-4 py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-[14px] sm:text-[15px] border-2 border-[#bee6e1] shadow-xs hover:border-mezenc-brightCyan transition-all cursor-pointer"
           >
-            <span>🌲 เขตป่าสงวน:</span>
-            <span id="toolbar-forest-status-badge" class="text-emerald-700 font-extrabold">เปิด</span>
-          </button>
-
-          <!-- Zoom to All 26 Forests -->
-          <button 
-            type="button" 
-            onclick="GeoOverview.fitAllForests()" 
-            class="px-3 py-1.5 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-xs sm:text-[13px] border-2 border-[#bee6e1] shadow-xs hover:border-mezenc-brightCyan transition-all cursor-pointer shrink-0"
-            title="ขยายแผนที่ดูภาพรวมแนวเขตป่าสงวนทั้ง 26 แห่งทั่วสุราษฎร์ธานี"
-          >
-            🗺️ ภาพรวมทั้งจังหวัด
+            กลับจุดเริ่มต้น
           </button>
 
           <a 
             href="map.php" 
-            class="px-3.5 py-1.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-[13px] shadow-md hover:shadow-lg transition-all flex items-center gap-1 cursor-pointer shrink-0"
+            class="px-4 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[14px] sm:text-[15px] shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <span>📍 แปลงปลูก</span>
+            <span>ตรวจสอบ</span>
           </a>
         </div>
 
@@ -597,11 +557,6 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         
         <!-- Real Leaflet Map Container -->
         <div id="map-view" class="w-full h-full z-10"></div>
-
-        <!-- Real-time Forest Loading Indicator Banner -->
-        <div id="forest-loading-status" class="absolute top-4 left-16 z-[400] bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border-2 border-[#bee6e1] shadow-[0_10px_25px_-5px_rgba(14,77,78,0.2)] flex items-center gap-2 text-xs font-bold text-mezenc-teal transition-all duration-300 pointer-events-none">
-          <span class="animate-spin text-sm">⏳</span> <span>กำลังประมวลผล 26 แนวเขตป่าสงวน...</span>
-        </div>
 
         <!-- =====================================================================
              2. SLIDE-OUT / FLOATING GIS LAYER CONTROL PANEL (แผงควบคุมแผนที่ - เปิดไว้เริ่มต้น)
@@ -1211,22 +1166,11 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         }
       },
 
-      // Sync top toolbar search and sidebar search
-      syncAndFilterForest(query) {
-        const topInput = document.getElementById('toolbar-quick-search');
-        const sideInput = document.getElementById('forest-search-input');
-        if (topInput && topInput.value !== query) topInput.value = query;
-        if (sideInput && sideInput.value !== query) sideInput.value = query;
-        this.filterForestList(query);
-      },
-
       // 2. Filter forest list on search input and show dynamic suggestions
       filterForestList(query) {
         const q = (query || '').trim().toLowerCase();
         const clearBtn = document.getElementById('clear-search-btn');
-        const toolbarClearBtn = document.getElementById('toolbar-clear-btn');
         if (clearBtn) clearBtn.style.display = q ? 'flex' : 'none';
-        if (toolbarClearBtn) toolbarClearBtn.style.display = q ? 'flex' : 'none';
 
         if (!q) {
           this.populateDropdown(this.forestFeatures);
@@ -1247,68 +1191,60 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         this.renderAutocomplete(filtered, q);
       },
 
-      // Render Autocomplete Suggestions Popover for both sidebar & toolbar
+      // Render Autocomplete Suggestions Popover
       renderAutocomplete(features, query = '') {
-        const containers = [
-          document.getElementById('forest-search-suggestions'),
-          document.getElementById('toolbar-search-suggestions')
-        ];
+        const container = document.getElementById('forest-search-suggestions');
+        if (!container) return;
 
-        containers.forEach(container => {
-          if (!container) return;
+        if (!features || features.length === 0 || !query) {
+          container.classList.add('hidden');
+          container.innerHTML = '';
+          return;
+        }
 
-          if (!features || features.length === 0 || !query) {
-            container.classList.add('hidden');
-            container.innerHTML = '';
-            return;
-          }
-
-          let html = '';
-          features.slice(0, 6).forEach(f => {
-            const p = f.properties;
-            const targetCode = p.forest_code || p.id;
-            html += `
-              <div 
-                class="flex items-center justify-between p-2 hover:bg-[#e6f7f6] rounded-xl cursor-pointer transition-colors text-left group"
-                onclick="GeoOverview.selectSuggestedForest('${targetCode}')"
-              >
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="text-base shrink-0">🌲</span>
-                  <div class="truncate">
-                    <div class="font-extrabold text-gray-800 text-xs sm:text-[14px] group-hover:text-mezenc-brightCyan truncate">
-                      ${p.name_th}
-                    </div>
-                    <div class="text-[11px] text-gray-400 font-mono">
-                      ${p.name_en || p.category || ''}
-                    </div>
+        let html = '';
+        features.slice(0, 6).forEach(f => {
+          const p = f.properties;
+          const targetCode = p.forest_code || p.id;
+          html += `
+            <div 
+              class="flex items-center justify-between p-2 hover:bg-[#e6f7f6] rounded-xl cursor-pointer transition-colors text-left group"
+              onclick="GeoOverview.selectSuggestedForest('${targetCode}')"
+            >
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base shrink-0">🌲</span>
+                <div class="truncate">
+                  <div class="font-extrabold text-gray-800 text-xs sm:text-[14px] group-hover:text-mezenc-brightCyan truncate">
+                    ${p.name_th}
                   </div>
-                </div>
-                <div class="text-right shrink-0 pl-2">
-                  <span class="px-2 py-0.5 rounded-md bg-mezenc-lightCyan text-mezenc-teal font-mono font-bold text-[11px] sm:text-[12px]">
-                    ${p.forest_code}
-                  </span>
-                  <div class="text-[10px] sm:text-[11px] text-gray-500 mt-0.5">
-                    ${parseFloat(p.area_rai || 0).toLocaleString()} ไร่
+                  <div class="text-[11px] text-gray-400 font-mono">
+                    ${p.name_en || p.category || ''}
                   </div>
                 </div>
               </div>
-            `;
-          });
-
-          container.innerHTML = html;
-          container.classList.remove('hidden');
+              <div class="text-right shrink-0 pl-2">
+                <span class="px-2 py-0.5 rounded-md bg-mezenc-lightCyan text-mezenc-teal font-mono font-bold text-[11px] sm:text-[12px]">
+                  ${p.forest_code}
+                </span>
+                <div class="text-[10px] sm:text-[11px] text-gray-500 mt-0.5">
+                  ${parseFloat(p.area_rai || 0).toLocaleString()} ไร่
+                </div>
+              </div>
+            </div>
+          `;
         });
+
+        container.innerHTML = html;
+        container.classList.remove('hidden');
       },
 
       selectSuggestedForest(code) {
-        const topInput = document.getElementById('toolbar-quick-search');
         const sideInput = document.getElementById('forest-search-input');
         const select = document.getElementById('forest-select-dropdown');
         const feat = this.forestFeatures.find(f => (f.properties.forest_code == code || f.properties.id == code));
         
-        if (feat) {
-          if (topInput) topInput.value = feat.properties.name_th;
-          if (sideInput) sideInput.value = feat.properties.name_th;
+        if (feat && sideInput) {
+          sideInput.value = feat.properties.name_th;
         }
         if (select) select.value = code;
         this.renderAutocomplete([]);
@@ -1316,10 +1252,9 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
       },
 
       // Handle Enter Key Search
-      handleSearchEnter(customQuery = null) {
+      handleSearchEnter() {
         const sideInput = document.getElementById('forest-search-input');
-        const topInput = document.getElementById('toolbar-quick-search');
-        const q = (customQuery !== null ? customQuery : (topInput?.value || sideInput?.value || '')).trim().toLowerCase();
+        const q = (sideInput?.value || '').trim().toLowerCase();
         if (!q) return;
 
         const matched = this.forestFeatures.find(f => {
@@ -1353,17 +1288,13 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
       },
 
       clearSearch() {
-        const topInput = document.getElementById('toolbar-quick-search');
         const sideInput = document.getElementById('forest-search-input');
-        if (topInput) topInput.value = '';
         if (sideInput) sideInput.value = '';
 
         const select = document.getElementById('forest-select-dropdown');
         if (select) select.value = '';
         const clearBtn = document.getElementById('clear-search-btn');
-        const toolbarClearBtn = document.getElementById('toolbar-clear-btn');
         if (clearBtn) clearBtn.style.display = 'none';
-        if (toolbarClearBtn) toolbarClearBtn.style.display = 'none';
 
         this.renderAutocomplete([]);
         this.populateDropdown(this.forestFeatures);

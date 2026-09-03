@@ -95,26 +95,6 @@ const GeoMap = {
       } else {
         btn.classList.remove('active');
       }
-    }
-
-    // Sync toolbar switch if present
-    const toolbarBadge = document.getElementById('toolbar-forest-status-badge');
-    if (toolbarBadge) {
-      toolbarBadge.textContent = this.isForestVisible ? 'เปิด' : 'ปิด';
-      toolbarBadge.className = this.isForestVisible ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold';
-    }
-
-    const toolbarBtn = document.getElementById('toolbar-switch-forest');
-    if (toolbarBtn) {
-      if (this.isForestVisible) {
-        toolbarBtn.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-800');
-        toolbarBtn.classList.remove('bg-rose-50', 'border-rose-200', 'text-rose-700');
-      } else {
-        toolbarBtn.classList.remove('bg-emerald-50', 'border-emerald-300', 'text-emerald-800');
-        toolbarBtn.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-700');
-      }
-    }
-
     if (!this.map || !this.forestLayerGroup) return;
 
     if (this.isForestVisible) {
