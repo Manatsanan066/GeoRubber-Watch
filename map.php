@@ -105,6 +105,11 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       background: white !important;
     }
 
+    /* Hide Leaflet default draw & zoom controls to keep UI clean with custom buttons */
+    .leaflet-draw, .leaflet-control-zoom {
+      display: none !important;
+    }
+
     /* True Alpha Mask Fade (กลืนภาพลงสู่พื้นหลังอย่างเนียนกริบ 100% สไตล์ MNTN / Editorial) */
     .hero-mask-fade {
       -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 25%, rgba(0, 0, 0, 0.8) 55%, rgba(0, 0, 0, 0) 100%);
@@ -787,46 +792,117 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           </button>
         </div>
 
-        <!-- Floating Map Overlay: Circular Bottom-Right Action Buttons (GPS, Draw & Fullscreen) -->
-        <div class="absolute bottom-5 right-4 z-[400] flex flex-col gap-2.5">
-          <!-- GPS Locate Button -->
+        <!-- =====================================================================
+             FLOATING ACTIVE DRAWING HELPER BAR (ปรากฏขึ้นขณะกำลังวาดแปลง)
+             ===================================================================== -->
+        <div id="draw-helper-toolbar" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-[430] bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-[0_15px_35px_-5px_rgba(14,77,78,0.3)] border-2 border-mezenc-brightCyan flex flex-wrap items-center gap-2.5 transition-all">
+          <div class="flex items-center gap-2 font-bold text-xs sm:text-[13px] text-mezenc-teal pr-2 border-r border-gray-200">
+            <span class="animate-bounce">✏️</span>
+            <span>กำลังวาดแปลง (คลิกบนแผนที่เพื่อสร้างจุด)</span>
+          </div>
+          <!-- ลบจุดที่กดผิด -->
           <button 
             type="button" 
+            onclick="GeoMap.undoLastDrawPoint()" 
+            class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-xs"
+            title="ลบจุดพิกัดล่าสุดที่กดผิด"
+          >
+            <span>↩️ ลบจุดที่กดผิด</span>
+          </button>
+          <!-- ลบเส้นที่ทำการวาดมาทั้งหมด -->
+          <button 
+            type="button" 
+            onclick="GeoMap.cancelDrawPolygon()" 
+            class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-xs"
+            title="ลบเส้นที่ทำการวาดมาทั้งหมด"
+          >
+            <span>🗑️ ลบเส้นทั้งหมด</span>
+          </button>
+          <!-- ยืนยันว่าเสร็จแล้ว (Finish) -->
+          <button 
+            type="button" 
+            onclick="GeoMap.finishDrawPolygon()" 
+            class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-md"
+            title="กดยืนยันว่าเสร็จแล้ว"
+          >
+            <span>✅ เสร็จสิ้น (Finish)</span>
+          </button>
+        </div>
+
+        <!-- =====================================================================
+             5 MAP CONTROLS ON THE RIGHT SIDE (ตรงตามที่ผู้ใช้ต้องการ 100%)
+             ===================================================================== -->
+        <div class="absolute top-4 right-4 z-[400] flex flex-col gap-2.5 items-end select-none">
+          
+          <!-- 1. 📍 ดูพิกัดหมุด -->
+          <button 
+            type="button" 
+            id="btn-tool-pin-mode"
+            onclick="toggleMapPinMode()" 
+            title="ดูพิกัดหมุด (คลิกปุ่มนี้แล้วคลิกบนแผนที่เพื่อดูพิกัด)" 
+            class="h-11 px-3.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-95 group font-bold text-xs sm:text-[13px]"
+          >
+            <span class="text-base">📍</span>
+            <span>ดูพิกัดหมุด</span>
+          </button>
+
+          <!-- 2. ✏️ วาดแปลงปลูก -->
+          <button 
+            type="button" 
+            id="btn-tool-draw-plot"
+            onclick="GeoMap.startDrawPolygon()" 
+            title="วาดแปลงปลูก (คลิกเพื่อเริ่มวาดขอบเขตแปลง Polygon)" 
+            class="h-11 px-3.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-95 group font-bold text-xs sm:text-[13px]"
+          >
+            <span class="text-base">✏️</span>
+            <span>วาดแปลงปลูก</span>
+          </button>
+
+          <!-- 3. 🎯 ตำแหน่งปัจจุบัน -->
+          <button 
+            type="button" 
+            id="btn-tool-locate-me"
             onclick="locateUserDirect()" 
-            title="ระบุตำแหน่ง GPS ปัจจุบันของฉัน" 
-            class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
+            title="ตำแหน่งปัจจุบัน (ระบุและปักหมุดตำแหน่ง GPS ปัจจุบันของคุณ)" 
+            class="h-11 px-3.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-95 group font-bold text-xs sm:text-[13px]"
           >
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:scale-110">
-              <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/>
-              <circle cx="12" cy="3" r="3" fill="currentColor"/>
-              <line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="2" y1="12" x2="5" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="19" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
+            <span class="text-base">🎯</span>
+            <span>ตำแหน่งปัจจุบัน</span>
           </button>
 
-          <!-- Draw Polygon Button -->
-          <button 
-            type="button" 
-            onclick="activateMapDrawDirect()" 
-            title="คลิกเพื่อเริ่มวาดขอบเขตแปลงปลูก (Polygon)" 
-            class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
-          >
-            <span class="text-lg">✏️</span>
-          </button>
+          <!-- 4. ➕ / ➖ ขยาย/ย่อแผนที่ -->
+          <div class="flex flex-col rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] overflow-hidden" title="ขยาย/ย่อแผนที่">
+            <button 
+              type="button" 
+              onclick="if(GeoMap && GeoMap.map) GeoMap.map.zoomIn()" 
+              title="ขยายแผนที่ (Zoom In)" 
+              class="w-11 h-10 hover:bg-mezenc-lightCyan text-mezenc-teal hover:text-mezenc-brightCyan flex items-center justify-center font-extrabold text-lg transition-colors cursor-pointer border-b border-gray-100 active:bg-gray-100"
+            >
+              ＋
+            </button>
+            <button 
+              type="button" 
+              onclick="if(GeoMap && GeoMap.map) GeoMap.map.zoomOut()" 
+              title="ย่อแผนที่ (Zoom Out)" 
+              class="w-11 h-10 hover:bg-mezenc-lightCyan text-mezenc-teal hover:text-mezenc-brightCyan flex items-center justify-center font-extrabold text-lg transition-colors cursor-pointer active:bg-gray-100"
+            >
+              －
+            </button>
+          </div>
 
-          <!-- Fullscreen Toggle Button -->
+          <!-- 5. ⛶ แผนที่ ที่มีขนาดเต็มจอ -->
           <button 
             type="button" 
+            id="btn-tool-fullscreen"
             onclick="toggleFullscreen()" 
-            title="ขยายแผนที่เต็มจอ / ย่อขนาด" 
-            class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
+            title="แผนที่ ที่มีขนาดเต็มจอ (ขยายเต็มจอ / ย่อขนาด)" 
+            class="w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 group"
           >
             <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
             </svg>
           </button>
+
         </div>
 
       </div>
@@ -1689,6 +1765,101 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       } else {
         document.exitFullscreen();
       }
+    }
+
+    // Pin Inspection Mode (ดูพิกัดหมุด)
+    let isMapPinMode = false;
+    let mapInspectionPin = null;
+
+    function clearMapPin() {
+      if (mapInspectionPin && GeoMap.map) {
+        GeoMap.map.removeLayer(mapInspectionPin);
+        mapInspectionPin = null;
+      }
+    }
+
+    function toggleMapPinMode(forceState = null) {
+      isMapPinMode = forceState !== null ? forceState : !isMapPinMode;
+      const btn = document.getElementById('btn-tool-pin-mode');
+      if (btn) {
+        if (isMapPinMode) {
+          btn.classList.add('bg-mezenc-brightCyan', 'text-white', 'border-mezenc-brightCyan');
+          btn.classList.remove('bg-white/95', 'text-mezenc-teal');
+          if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
+            App.showToast('📍 โหมดดูพิกัดหมุด: คลิกบนแผนที่เพื่อดูพิกัดและตรวจสอบป่าสงวน', 'info');
+          }
+        } else {
+          btn.classList.remove('bg-mezenc-brightCyan', 'text-white', 'border-mezenc-brightCyan');
+          btn.classList.add('bg-white/95', 'text-mezenc-teal');
+        }
+      }
+    }
+
+    function handleMapPinClick(e) {
+      if (!isMapPinMode) return;
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+
+      clearMapPin();
+
+      // Drop inspection pin
+      const pinIcon = L.divIcon({
+        className: 'custom-inspection-pin',
+        html: `
+          <div style="font-size: 28px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35)); transform: translate(-14px, -28px);">
+            📍
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 28],
+        popupAnchor: [0, -28]
+      });
+
+      mapInspectionPin = L.marker([lat, lng], { icon: pinIcon }).addTo(GeoMap.map);
+
+      // Check distance to 26 forest reserves
+      let isOverlap = false;
+      let nearestForestName = 'ป่าสงวนแห่งชาติ';
+
+      if (GeoMap.forestData && GeoMap.forestData.length > 0 && typeof turf !== 'undefined') {
+        const point = turf.point([lng, lat]);
+        GeoMap.forestData.forEach(f => {
+          try {
+            if (turf.booleanPointInPolygon(point, f)) {
+              isOverlap = true;
+              nearestForestName = f.properties.name_th || nearestForestName;
+            }
+          } catch(err) {}
+        });
+      }
+
+      const statusColor = isOverlap ? '#dc2626' : '#16a34a';
+      const statusBg = isOverlap ? '#fee2e2' : '#dcfce7';
+      const statusText = isOverlap ? '⚠️ ทับซ้อนแนวเขตป่าสงวน (ไม่ผ่าน EUDR)' : '🟢 อยู่นอกเขตป่าสงวน (ผ่านเกณฑ์ EUDR)';
+
+      const popupContent = `
+        <div style="font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif; min-width: 250px; padding: 4px;">
+          <div style="font-size: 15px; font-weight: 800; color: #0e4d4e; margin-bottom: 2px;">📍 ข้อมูลพิกัดหมุดที่ระบุ</div>
+          <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">พิกัดภูมิสารสนเทศ (WGS84)</div>
+          <div style="background: #f8faf9; border: 1.5px solid #bee6e1; border-radius: 8px; padding: 6px 8px; font-size: 12px; margin-bottom: 8px;">
+            <div>🌐 <strong>ละติจูด:</strong> <span style="font-family: monospace; font-weight: bold; color: #0e4d4e;">${lat.toFixed(6)}</span></div>
+            <div>🌐 <strong>ลองจิจูด:</strong> <span style="font-family: monospace; font-weight: bold; color: #0e4d4e;">${lng.toFixed(6)}</span></div>
+          </div>
+          <div style="font-size: 12px; font-weight: bold; padding: 6px 8px; border-radius: 8px; background: ${statusBg}; color: ${statusColor}; margin-bottom: 8px; border: 1px solid ${statusColor}40;">
+            ${statusText}
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" onclick="GeoMap.startDrawPolygon(); toggleMapPinMode(false);" style="flex: 1; padding: 6px 8px; border-radius: 6px; background: #00a699; color: #fff; font-size: 11px; font-weight: bold; border: none; cursor: pointer;">
+              ✏️ วาดแปลงที่จุดนี้
+            </button>
+            <button type="button" onclick="clearMapPin()" style="padding: 6px 8px; border-radius: 6px; background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: bold; border: 1px solid #fca5a5; cursor: pointer;">
+              🗑️ ลบหมุด
+            </button>
+          </div>
+        </div>
+      `;
+
+      mapInspectionPin.bindPopup(popupContent).openPopup();
     }
 
     // Toggle Mobile Drawer

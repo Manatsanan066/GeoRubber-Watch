@@ -116,33 +116,9 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
       mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 25%, rgba(0, 0, 0, 0.8) 55%, rgba(0, 0, 0, 0) 100%);
     }
 
-    /* Hide Leaflet.draw Toolbar (ซ่อนปุ่มเครื่องมือวาด 3 ปุ่มบนแผนที่) */
-    .leaflet-draw {
+    /* Hide default Leaflet controls since we provide custom sleek buttons */
+    .leaflet-draw, .leaflet-control-zoom {
       display: none !important;
-    }
-
-    /* Leaflet Zoom Controls on the Right side below GPS, Pin & Fullscreen buttons (ขยับปุ่ม + และ - ไปไว้ด้านขวา) */
-    .leaflet-right .leaflet-control-zoom {
-      margin-top: 168px !important;
-      margin-right: 16px !important;
-      border-radius: 14px !important;
-      overflow: hidden;
-      box-shadow: 0 10px 25px rgba(14,77,78,0.18) !important;
-      border: 1.5px solid #bee6e1 !important;
-    }
-    .leaflet-control-zoom a {
-      width: 38px !important;
-      height: 38px !important;
-      line-height: 38px !important;
-      color: #0e4d4e !important;
-      font-weight: 800 !important;
-      font-size: 18px !important;
-      background: rgba(255, 255, 255, 0.95) !important;
-      transition: all 0.2s ease !important;
-    }
-    .leaflet-control-zoom a:hover {
-      background-color: #e6f7f6 !important;
-      color: #00a699 !important;
     }
 
     /* Fullscreen Mode Styling for GIS Map Workspace */
@@ -805,46 +781,61 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
           </button>
         </div>
 
-        <!-- Floating Map Overlay: Circular Bottom-Right Action Buttons (GPS, Pin & Full Map) -->
-        <div class="absolute bottom-5 right-4 z-[400] flex flex-col gap-2.5">
-          <!-- GPS Locate Button -->
-          <button 
-            type="button" 
-            id="btn-floating-locate-me"
-            onclick="GeoOverview.locateUser()" 
-            title="ระบุตำแหน่ง GPS ปัจจุบันของฉัน" 
-            class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
-          >
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:scale-110">
-              <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/>
-              <circle cx="12" cy="3" r="3" fill="currentColor"/>
-              <line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="2" y1="12" x2="5" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="19" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
-
-          <!-- Pin Location Tool Button (ปุ่มปักหมุดตรวจสอบพิกัด) -->
+        <!-- =====================================================================
+             MAP CONTROLS ON THE RIGHT SIDE (ดูพิกัดหมุด, ตำแหน่งปัจจุบัน, ซูม, เต็มจอ)
+             ===================================================================== -->
+        <div class="absolute top-4 right-4 z-[400] flex flex-col gap-2.5 items-end select-none">
+          <!-- 1. 📍 ดูพิกัดหมุด -->
           <button 
             type="button" 
             id="btn-floating-pin-mode"
             onclick="GeoOverview.togglePinMode()" 
-            title="ปักหมุดบนแผนที่เพื่อตรวจสอบการทับซ้อนเขตป่าสงวน (Pin Location Tool)" 
-            class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
+            title="ดูพิกัดหมุด (ปักหมุดบนแผนที่เพื่อดูพิกัดและตรวจสอบเขตป่าสงวน)" 
+            class="h-11 px-3.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-95 group font-bold text-xs sm:text-[13px]"
           >
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:scale-110">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
-            </svg>
+            <span class="text-base">📍</span>
+            <span>ดูพิกัดหมุด</span>
           </button>
 
-          <!-- Fullscreen / Full Map Toggle Button -->
+          <!-- 2. 🎯 ตำแหน่งปัจจุบัน -->
+          <button 
+            type="button" 
+            id="btn-floating-locate-me"
+            onclick="GeoOverview.locateUser()" 
+            title="ตำแหน่งปัจจุบัน (ระบุตำแหน่ง GPS ปัจจุบันของคุณ)" 
+            class="h-11 px-3.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center gap-2 transition-all duration-200 cursor-pointer active:scale-95 group font-bold text-xs sm:text-[13px]"
+          >
+            <span class="text-base">🎯</span>
+            <span>ตำแหน่งปัจจุบัน</span>
+          </button>
+
+          <!-- 3. ➕ / ➖ ขยาย/ย่อแผนที่ -->
+          <div class="flex flex-col rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] overflow-hidden" title="ขยาย/ย่อแผนที่">
+            <button 
+              type="button" 
+              onclick="if(GeoOverview && GeoOverview.map) GeoOverview.map.zoomIn()" 
+              title="ขยายแผนที่ (Zoom In)" 
+              class="w-11 h-10 hover:bg-mezenc-lightCyan text-mezenc-teal hover:text-mezenc-brightCyan flex items-center justify-center font-extrabold text-lg transition-colors cursor-pointer border-b border-gray-100 active:bg-gray-100"
+            >
+              ＋
+            </button>
+            <button 
+              type="button" 
+              onclick="if(GeoOverview && GeoOverview.map) GeoOverview.map.zoomOut()" 
+              title="ย่อแผนที่ (Zoom Out)" 
+              class="w-11 h-10 hover:bg-mezenc-lightCyan text-mezenc-teal hover:text-mezenc-brightCyan flex items-center justify-center font-extrabold text-lg transition-colors cursor-pointer active:bg-gray-100"
+            >
+              －
+            </button>
+          </div>
+
+          <!-- 4. ⛶ แผนที่ ที่มีขนาดเต็มจอ -->
           <button 
             type="button" 
             id="btn-floating-fullscreen"
             onclick="GeoOverview.toggleFullscreen()" 
-            title="ขยายแผนที่เต็มหน้าจอ (Full Map / Fullscreen)" 
-            class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
+            title="แผนที่ ที่มีขนาดเต็มจอ (ขยายเต็มจอ / ย่อขนาด)" 
+            class="w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 group"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 transition-transform group-hover:scale-110">
               <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>

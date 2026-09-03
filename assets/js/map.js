@@ -48,16 +48,18 @@ const GeoMap = {
       zoomControl: false
     });
 
-    const zoomPosition = options.zoomPosition || 'topright';
-
-    // Zoom control on the top right
-    L.control.zoom({ position: zoomPosition }).addTo(this.map);
-
     this.drawnItems = new L.FeatureGroup();
     this.map.addLayer(this.drawnItems);
 
     this.forestLayerGroup = new L.LayerGroup().addTo(this.map);
     this.plotsLayerGroup = new L.LayerGroup().addTo(this.map);
+
+    // Bind map click handler for pin inspection mode
+    this.map.on('click', (e) => {
+      if (typeof handleMapPinClick === 'function') {
+        handleMapPinClick(e);
+      }
+    });
 
     // Scale control (500m bar at bottom left)
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(this.map);
@@ -211,6 +213,9 @@ const GeoMap = {
 
     // Event on draw completed
     this.map.on(L.Draw.Event.CREATED, (event) => {
+      const helper = document.getElementById('draw-helper-toolbar');
+      if (helper) helper.classList.add('hidden');
+
       const layer = event.layer;
       this.drawnItems.clearLayers();
       this.drawnItems.addLayer(layer);
@@ -219,6 +224,59 @@ const GeoMap = {
       const geojson = layer.toGeoJSON();
       this.handleDrawnPolygon(geojson);
     });
+  },
+
+  startDrawPolygon() {
+    if (!this.map) return;
+    if (this.currentPolygonDrawer) {
+      this.currentPolygonDrawer.disable();
+    }
+    this.currentPolygonDrawer = new L.Draw.Polygon(this.map, {
+      allowIntersection: false,
+      showArea: true,
+      shapeOptions: {
+        color: '#10b981',
+        fillColor: '#10b981',
+        fillOpacity: 0.35,
+        weight: 3
+      }
+    });
+    this.currentPolygonDrawer.enable();
+    const helper = document.getElementById('draw-helper-toolbar');
+    if (helper) helper.classList.remove('hidden');
+    if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
+      App.showToast('เริ่มคลิกบนแผนที่เพื่อวาดแปลงปลูก (Polygon)', 'info');
+    }
+  },
+
+  undoLastDrawPoint() {
+    if (this.currentPolygonDrawer && typeof this.currentPolygonDrawer.deleteLastVertex === 'function') {
+      this.currentPolygonDrawer.deleteLastVertex();
+      if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
+        App.showToast('ลบจุดพิกัดล่าสุดแล้ว', 'info');
+      }
+    }
+  },
+
+  cancelDrawPolygon() {
+    if (this.currentPolygonDrawer) {
+      this.currentPolygonDrawer.disable();
+      this.currentPolygonDrawer = null;
+    }
+    const helper = document.getElementById('draw-helper-toolbar');
+    if (helper) helper.classList.add('hidden');
+    if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
+      App.showToast('ยกเลิกและลบเส้นวาดทั้งหมดแล้ว', 'info');
+    }
+  },
+
+  finishDrawPolygon() {
+    if (this.currentPolygonDrawer && typeof this.currentPolygonDrawer.completeShape === 'function') {
+      this.currentPolygonDrawer.completeShape();
+      this.currentPolygonDrawer = null;
+    }
+    const helper = document.getElementById('draw-helper-toolbar');
+    if (helper) helper.classList.add('hidden');
   },
 
   // Load Forest Reserve GeoJSON
