@@ -954,10 +954,6 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
 
       bindOutsideClickEvents() {
         document.addEventListener('click', (e) => {
-          if (!e.target.closest('#toolbar-quick-search') && !e.target.closest('#toolbar-search-suggestions')) {
-            const el = document.getElementById('toolbar-search-suggestions');
-            if (el) el.classList.add('hidden');
-          }
           if (!e.target.closest('#forest-search-input') && !e.target.closest('#forest-search-suggestions')) {
             const el = document.getElementById('forest-search-suggestions');
             if (el) el.classList.add('hidden');
