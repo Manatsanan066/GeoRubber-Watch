@@ -73,11 +73,6 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
             </a>
           </li>
           <li>
-            <a href="setup.php" class="nav-item <?= ($current_page === 'setup.php') ? 'active' : '' ?>">
-              🗄️ ฐานข้อมูล
-            </a>
-          </li>
-          <li>
             <a href="contact.php" class="nav-item <?= ($current_page === 'contact.php') ? 'active' : '' ?>">
               📞 ติดต่อเรา
             </a>

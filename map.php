@@ -430,19 +430,6 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             cursor-pointer
             drop-shadow-sm
           "
-          href="setup.php"
-        >
-          ฐานข้อมูล
-        </a>
-
-        <a
-          class="
-            text-white
-            hover:text-mezenc-mint
-            transition-colors
-            cursor-pointer
-            drop-shadow-sm
-          "
           href="contact.php"
         >
           ติดต่อเรา
@@ -564,9 +551,6 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           </a>
           <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
             <span>🧪</span> <span>ผลผลิต</span>
-          </a>
-          <a href="setup.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🗄️</span> <span>ฐานข้อมูล</span>
           </a>
           <a href="contact.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
             <span>📞</span> <span>ติดต่อเรา</span>
