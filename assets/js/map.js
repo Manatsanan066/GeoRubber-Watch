@@ -316,22 +316,38 @@ const GeoMap = {
       const geoJsonLayer = L.geoJSON(data, {
         style: (feature) => {
           const status = feature.properties.eudr_status;
-          let color = '#2e7d32'; // green (compliant)
-          if (status === 'non_compliant') color = '#c62828'; // red
-          if (status === 'under_review') color = '#d97706'; // amber
+          let strokeColor = '#059669'; // 🟢 ปลอดภัย (Green)
+          let fillColor = '#10b981';
+          let fillOpacity = 0.45;
+          let weight = 2.5;
+
+          if (status === 'non_compliant') {
+            strokeColor = '#dc2626'; // 🔴 ซ้อนทับเขตป่าสงวน (Red)
+            fillColor = '#ef4444';
+            fillOpacity = 0.55;
+            weight = 3.0;
+          } else if (status === 'under_review') {
+            strokeColor = '#ea580c'; // 🟠 มีความเสี่ยง (Orange)
+            fillColor = '#f97316';
+            fillOpacity = 0.50;
+            weight = 2.5;
+          }
 
           return {
-            color: color,
-            fillColor: color,
-            fillOpacity: 0.45,
-            weight: 2.5
+            color: strokeColor,
+            fillColor: fillColor,
+            fillOpacity: fillOpacity,
+            weight: weight
           };
         },
         onEachFeature: (feature, layer) => {
           const p = feature.properties;
-          let statusBadge = '<span class="badge badge-compliant">✅ สอดคล้อง EUDR</span>';
-          if (p.eudr_status === 'non_compliant') statusBadge = '<span class="badge badge-non_compliant">⛔ ไม่ผ่านเกณฑ์ EUDR</span>';
-          if (p.eudr_status === 'under_review') statusBadge = '<span class="badge badge-under_review">⚠️ โซนเฝ้าระวัง</span>';
+          let statusBadge = '<span class="badge" style="background:#d1fae5; color:#065f46; border:1.5px solid #34d399; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">🟢 ปลอดภัย (สอดคล้อง EUDR)</span>';
+          if (p.eudr_status === 'non_compliant') {
+            statusBadge = '<span class="badge" style="background:#fee2e2; color:#991b1b; border:1.5px solid #f87171; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">🔴 ซ้อนทับเขตป่าสงวน</span>';
+          } else if (p.eudr_status === 'under_review') {
+            statusBadge = '<span class="badge" style="background:#ffedd5; color:#9a3412; border:1.5px solid #fb923c; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">🟠 มีความเสี่ยง (โซนเฝ้าระวัง)</span>';
+          }
 
           const popupContent = `
             <div style="min-width: 270px; font-family: 'Open Sans', 'Google Sans', 'Sarabun', sans-serif; color: #1e293b; padding: 6px;">
@@ -404,9 +420,9 @@ const GeoMap = {
     let html = '';
     features.forEach(f => {
       const p = f.properties;
-      let badge = '<span class="badge badge-compliant">🟢 EUDR ผ่าน</span>';
-      if (p.eudr_status === 'non_compliant') badge = '<span class="badge badge-non_compliant">🔴 ทับซ้อนป่า</span>';
-      if (p.eudr_status === 'under_review') badge = '<span class="badge badge-under_review">🟠 โซนเฝ้าระวัง</span>';
+      let badge = '<span class="badge badge-compliant" style="background:#d1fae5; color:#065f46; border:1px solid #34d399; font-weight:700;">🟢 ปลอดภัย</span>';
+      if (p.eudr_status === 'non_compliant') badge = '<span class="badge badge-non_compliant" style="background:#fee2e2; color:#991b1b; border:1px solid #f87171; font-weight:700;">🔴 ซ้อนทับเขตป่า</span>';
+      if (p.eudr_status === 'under_review') badge = '<span class="badge badge-under_review" style="background:#ffedd5; color:#9a3412; border:1px solid #fb923c; font-weight:700;">🟠 มีความเสี่ยง</span>';
 
       html += `
         <div class="plot-card" id="plot-card-${p.id}" onclick="GeoMap.zoomToPlot(${p.centroid.lat}, ${p.centroid.lng}, ${p.id})">

@@ -46,9 +46,9 @@
   --danger-bg: #ffebee;
   --danger-text: #b71c1c;
 
-  --warning: #d97706;
-  --warning-bg: #fef3c7;
-  --warning-text: #92400e;
+  --warning: #ea580c;
+  --warning-bg: #ffedd5;
+  --warning-text: #c2410c;
 
   /* Shadows (Soft & Organic) */
   --shadow-sm: 0 2px 6px rgba(18, 34, 24, 0.04);

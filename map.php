@@ -204,9 +204,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       flex-shrink: 0;
     }
     .badge-under_review {
-      background-color: #fef3c7;
-      color: #b45309;
-      border: 1px solid #fde68a;
+      background-color: #ffedd5;
+      color: #c2410c;
+      border: 1px solid #fed7aa;
       padding: 0.25rem 0.65rem;
       border-radius: 9999px;
       font-size: 16px;
@@ -1900,29 +1900,34 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       let statusTitle = '';
       let statusBadge = '';
       let adviceText = '';
-      let circleColor = '#00A896';
+      let circleColor = '#059669'; // 🟢 ปลอดภัย (Green)
+      let circleFill = '#10b981';
 
       if (status === 'non_compliant') {
-        statusTitle = `🔴 อยู่ในเขต ${insideForest.name_th || 'ป่าสงวนแห่งชาติ'}`;
-        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-rose-600 text-white font-bold text-xs inline-block">⛔ ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์ EUDR)</span>';
+        statusTitle = `🔴 ซ้อนทับเขต ${insideForest.name_th || 'ป่าสงวนแห่งชาติ'}`;
+        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-red-600 text-white font-bold text-xs inline-block">🔴 ซ้อนทับเขตป่าสงวน (ไม่ผ่านเกณฑ์)</span>';
         adviceText = `จุดพิกัดนี้ตั้งอยู่ในแนวเขตป่าสงวนแห่งชาติ <strong>${insideForest.name_th || 'ป่าสงวน'}</strong> (รหัส: ${insideForest.forest_code || '-'}) ซึ่งเป็นเขตป่าเพื่อการอนุรักษ์ (Zone C)`;
-        circleColor = '#ef4444';
+        circleColor = '#dc2626'; // 🔴 ซ้อนทับ (Red)
+        circleFill = '#ef4444';
       } else if (status === 'buffer_zone') {
-        statusTitle = `🟡 โซนเฝ้าระวัง Buffer (${distMeters} ม.)`;
-        statusBadge = `<span class="px-2.5 py-0.5 rounded-lg bg-amber-500 text-white font-bold text-xs inline-block">⚠️ โซนเฝ้าระวัง Buffer (${distMeters} ม.)</span>`;
+        statusTitle = `🟠 มีความเสี่ยง (โซนเฝ้าระวัง Buffer ${distMeters} ม.)`;
+        statusBadge = `<span class="px-2.5 py-0.5 rounded-lg bg-orange-500 text-white font-bold text-xs inline-block">🟠 มีความเสี่ยง (โซนเฝ้าระวัง ${distMeters} ม.)</span>`;
         adviceText = `อยู่นอกแนวเขตป่า แต่อยู่ในระยะกันชนใกล้กับ <strong>${nearestForest ? nearestForest.name_th : 'ป่าสงวน'}</strong> เพียง ${distMeters} เมตร (อยู่ในระยะเฝ้าระวังไม่เกิน 500 ม.)`;
-        circleColor = '#f59e0b';
+        circleColor = '#ea580c'; // 🟠 มีความเสี่ยง (Orange)
+        circleFill = '#f97316';
       } else {
         statusTitle = `🟢 ปลอดภัย ผ่านเกณฑ์ EUDR`;
-        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-xs inline-block">✅ ปลอดภัย ผ่านเกณฑ์ EUDR</span>';
+        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-xs inline-block">🟢 ปลอดภัย (ผ่านเกณฑ์ EUDR)</span>';
         adviceText = `อยู่นอกแนวเขตป่าสงวนแห่งชาติ โดยห่างจาก <strong>${nearestForest ? nearestForest.name_th : 'แนวเขตป่า'}</strong> ประมาณ ${distMeters >= 1000 ? (distMeters/1000).toFixed(2) + ' กม.' : distMeters + ' ม.'}`;
-        circleColor = '#00A896';
+        circleColor = '#059669'; // 🟢 ปลอดภัย (Green)
+        circleFill = '#10b981';
       }
 
       if (userPinBufferCircle) {
         userPinBufferCircle.setStyle({
           color: circleColor,
-          fillColor: circleColor
+          fillColor: circleFill,
+          fillOpacity: 0.18
         });
       }
 
