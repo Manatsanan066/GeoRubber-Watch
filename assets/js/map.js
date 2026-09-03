@@ -809,18 +809,22 @@ const GeoMap = {
     }
     if (step2EudrBadge) {
       if (check.eudr_status === 'compliant') {
-        step2EudrBadge.className = 'bg-emerald-100 text-emerald-800 font-bold text-[14px] px-3 py-1 rounded-full border border-emerald-300';
+        step2EudrBadge.className = 'bg-emerald-100 text-emerald-800 font-bold text-[14px] px-3.5 py-1 rounded-full border border-emerald-300 shadow-xs';
         step2EudrBadge.innerText = '🟢 ปลอดการตัดไม้ (EUDR ผ่าน)';
+      } else if (check.eudr_status === 'under_review' || (check.nearest_forest_distance_m && check.nearest_forest_distance_m < 500 && !check.has_overlap)) {
+        step2EudrBadge.className = 'bg-orange-100 text-orange-900 font-bold text-[14px] px-3.5 py-1 rounded-full border border-orange-300 shadow-xs';
+        const distText = check.nearest_forest_distance_m ? ` (${Math.round(check.nearest_forest_distance_m)} ม.)` : '';
+        step2EudrBadge.innerText = `🟠 มีความเสี่ยง (โซนเฝ้าระวัง${distText})`;
       } else {
-        step2EudrBadge.className = 'bg-rose-100 text-rose-800 font-bold text-[14px] px-3 py-1 rounded-full border border-rose-300';
-        step2EudrBadge.innerText = '🔴 เสี่ยงทับซ้อนป่าสงวน';
+        step2EudrBadge.className = 'bg-rose-100 text-rose-800 font-bold text-[14px] px-3.5 py-1 rounded-full border border-rose-300 shadow-xs';
+        step2EudrBadge.innerText = '🔴 ซ้อนทับเขตป่าสงวน';
       }
     }
 
     // Smart default plot name with real area
     if (plotNameInput && (!plotNameInput.value || plotNameInput.value.includes('เขาท่าเพชร 1') || plotNameInput.value.includes('แปลงยางพารา'))) {
       const raiStr = check.area_thai ? `${check.area_thai.rai} ไร่ ${check.area_thai.ngan} งาน` : '';
-      plotNameInput.value = `แปลงยางพารา ม.อ. (${raiStr})`;
+      plotNameInput.value = `แปลงยางพารา (${raiStr})`;
     }
 
     // Direct jump to Step 2 (ข้อมูลแปลงปลูกและเกษตรกร) with real coordinates as requested
@@ -828,7 +832,13 @@ const GeoMap = {
       goToModalStep(2);
     }
     if (typeof setModalPresetMode === 'function') {
-      setModalPresetMode(check.eudr_status === 'compliant' ? 'compliant' : 'overlap');
+      if (check.eudr_status === 'compliant') {
+        setModalPresetMode('compliant');
+      } else if (check.eudr_status === 'under_review' || (check.nearest_forest_distance_m && check.nearest_forest_distance_m < 500 && !check.has_overlap)) {
+        setModalPresetMode('under_review');
+      } else {
+        setModalPresetMode('overlap');
+      }
     }
   }
 };

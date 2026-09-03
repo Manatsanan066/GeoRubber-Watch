@@ -1279,10 +1279,13 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <!-- Quick Test Toggle -->
               <div class="flex items-center gap-1.5 text-[16px]">
                 <span class="text-gray-400 font-medium text-[16px]">ทดสอบโหมด:</span>
-                <button type="button" onclick="setModalPresetMode('compliant')" id="modal-btn-compliant" class="px-3 py-1 rounded-full text-[16px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs cursor-pointer">
+                <button type="button" onclick="setModalPresetMode('compliant')" id="modal-btn-compliant" class="px-3 py-1 rounded-full text-[13px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs cursor-pointer">
                   🟢 ผ่านเกณฑ์ (Safe)
                 </button>
-                <button type="button" onclick="setModalPresetMode('overlap')" id="modal-btn-overlap" class="px-3 py-1 rounded-full text-[16px] font-bold bg-gray-100 text-gray-600 border border-gray-300 hover:bg-rose-100 hover:text-rose-700 transition-all cursor-pointer">
+                <button type="button" onclick="setModalPresetMode('under_review')" id="modal-btn-review" class="px-3 py-1 rounded-full text-[13px] font-bold bg-gray-100 text-gray-600 border border-gray-300 hover:bg-orange-100 hover:text-orange-700 transition-all cursor-pointer">
+                  🟠 มีความเสี่ยง (Buffer)
+                </button>
+                <button type="button" onclick="setModalPresetMode('overlap')" id="modal-btn-overlap" class="px-3 py-1 rounded-full text-[13px] font-bold bg-gray-100 text-gray-600 border border-gray-300 hover:bg-rose-100 hover:text-rose-700 transition-all cursor-pointer">
                   🔴 ทับซ้อนป่า (Overlap)
                 </button>
               </div>
@@ -1291,7 +1294,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             <!-- Card Body Container -->
             <div class="bg-white p-5 sm:p-6 rounded-2xl border border-[#bee6e1] shadow-xs space-y-4 text-[16px]">
               
-              <!-- DYNAMIC RESULT CONTAINER: COMPLIANT CASE -->
+              <!-- 1. DYNAMIC RESULT CONTAINER: COMPLIANT CASE (GREEN) -->
               <div id="modal-case-compliant" class="space-y-4">
                 <div class="p-4 sm:p-5 rounded-2xl bg-[#f4faf7] border-2 border-emerald-300 flex items-start gap-3.5">
                   <div class="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl shrink-0 shadow-xs">
@@ -1302,28 +1305,28 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                       <h3 class="text-[16px] sm:text-lg font-extrabold text-emerald-800">
                         ผ่านเกณฑ์ EUDR 100% (Zero Deforestation Compliant)
                       </h3>
-                      <span class="bg-emerald-100 text-emerald-800 font-bold text-[16px] px-2.5 py-0.5 rounded-full border border-emerald-300">
-                        ปลอดภัย
+                      <span class="bg-emerald-100 text-emerald-800 font-bold text-[14px] px-2.5 py-0.5 rounded-full border border-emerald-300">
+                        🟢 ปลอดภัย
                       </span>
                     </div>
                     <p class="text-[16px] text-emerald-700 font-medium mt-1 leading-relaxed">
-                      แปลงปลูกนี้ <strong class="underline">ไม่พบการทับซ้อน</strong> กับแนวเขตป่าสงวนแห่งชาติทั้ง 26 แห่งในจังหวัดสุราษฎร์ธานี และอยู่นอกระยะ Buffer Zone ปลอดภัย
+                      แปลงปลูกนี้ <strong class="underline">ไม่พบการทับซ้อน</strong> กับแนวเขตป่าสงวนแห่งชาติทั้ง 26 แห่งในจังหวัดสุราษฎร์ธานี และอยู่นอกระยะ Buffer Zone ปลอดภัย (> 500 ม.)
                     </p>
                   </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[16px]">
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
-                    <span class="text-gray-400 block text-[16px] uppercase font-bold">Zero Deforestation</span>
-                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[16px]">🌲 ไม่อยู่ในเขตป่าสงวน</strong>
+                    <span class="text-gray-400 block text-[13px] uppercase font-bold">Zero Deforestation</span>
+                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[15px]">🌲 ไม่อยู่ในเขตป่าสงวน</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
-                    <span class="text-gray-400 block text-[16px] uppercase font-bold">Buffer Distance</span>
-                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[16px]">📏 ห่างป่า > 1,450 ม.</strong>
+                    <span class="text-gray-400 block text-[13px] uppercase font-bold">Buffer Distance</span>
+                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[15px]">📏 ห่างป่า > 500 ม. (ปลอดภัย)</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
-                    <span class="text-gray-400 block text-[16px] uppercase font-bold">Cut-off Date</span>
-                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[16px]">📅 ปลูกปี 2018 (≤ 2020)</strong>
+                    <span class="text-gray-400 block text-[13px] uppercase font-bold">Cut-off Date</span>
+                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[15px]">📅 ปลูกก่อนปี 2020 (สอดคล้อง)</strong>
                   </div>
                 </div>
 
@@ -1339,48 +1342,96 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 </div>
               </div>
 
-              <!-- DYNAMIC RESULT CONTAINER: OVERLAP CASE -->
-              <div id="modal-case-overlap" class="hidden space-y-4">
-                <div class="p-4 sm:p-5 rounded-2xl bg-rose-50/70 border-2 border-rose-300 flex items-start gap-3.5">
-                  <div class="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-xl shrink-0 shadow-xs">
+              <!-- 2. DYNAMIC RESULT CONTAINER: UNDER REVIEW / BUFFER ZONE CASE (ORANGE) -->
+              <div id="modal-case-review" class="hidden space-y-4">
+                <div class="p-4 sm:p-5 rounded-2xl bg-orange-50/80 border-2 border-orange-300 flex items-start gap-3.5">
+                  <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shrink-0 shadow-xs">
                     ⚠️
                   </div>
                   <div class="flex-1">
                     <div class="flex flex-wrap items-center gap-2">
-                      <h3 class="text-[16px] sm:text-lg font-extrabold text-rose-800">
-                        ไม่ผ่านเกณฑ์ / เสี่ยงทับซ้อนแนวเขตป่าสงวน (Non-Compliant)
+                      <h3 class="text-[16px] sm:text-lg font-extrabold text-orange-950">
+                        มีความเสี่ยง / อยู่ในโซนเฝ้าระวังแนวเขตป่าสงวน (Buffer Zone)
                       </h3>
-                      <span class="bg-rose-100 text-rose-800 font-bold text-[16px] px-2.5 py-0.5 rounded-full border border-rose-300">
-                        เสี่ยงทับซ้อน
+                      <span class="bg-orange-100 text-orange-900 font-bold text-[14px] px-2.5 py-0.5 rounded-full border border-orange-300">
+                        🟠 มีความเสี่ยง (< 500 ม.)
                       </span>
                     </div>
-                    <p class="text-[16px] text-rose-700 font-medium mt-1 leading-relaxed">
-                      แปลงปลูกนี้ <strong class="underline">ตรวจพบระยะห่างติดแนวเขตป่าสงวนแห่งชาติเขาท่าเพชร</strong> อยู่ในเขต Buffer Alert (ระยะ 120 เมตร)
+                    <p class="text-[16px] text-orange-900 font-medium mt-1 leading-relaxed">
+                      แปลงปลูกนี้ <strong class="underline">อยู่นอกเขตป่าสงวน</strong> แต่มีระยะประชิดแนวเขตป่าสงวนแห่งชาติ < 500 เมตร ซึ่งอยู่ในระยะกันชนที่ต้องเฝ้าระวังเป็นพิเศษ
                     </p>
                   </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[16px]">
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
-                    <span class="text-gray-400 block text-[16px] uppercase font-bold">Forest Proximity</span>
-                    <strong class="text-rose-700 font-bold flex items-center gap-1 mt-1 text-[16px]">⚠️ ติดแนวเขตป่าสงวน</strong>
+                    <span class="text-gray-400 block text-[13px] uppercase font-bold">Forest Proximity</span>
+                    <strong class="text-orange-700 font-bold flex items-center gap-1 mt-1 text-[15px]">⚠️ ประชิดแนวเขตป่าสงวน</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
-                    <span class="text-gray-400 block text-[16px] uppercase font-bold">Buffer Distance</span>
-                    <strong class="text-rose-700 font-bold flex items-center gap-1 mt-1 text-[16px]">📏 ระยะห่าง 120 ม. (< 500 ม.)</strong>
+                    <span class="text-gray-400 block text-[13px] uppercase font-bold">Buffer Distance</span>
+                    <strong class="text-orange-700 font-bold flex items-center gap-1 mt-1 text-[15px]">📏 ระยะห่าง < 500 ม. (เฝ้าระวัง)</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
-                    <span class="text-gray-400 block text-[16px] uppercase font-bold">Planting Year</span>
-                    <strong class="text-rose-700 font-bold flex items-center gap-1 mt-1 text-[16px]">📅 ปลูกปี 2022 (> 2020)</strong>
+                    <span class="text-gray-400 block text-[13px] uppercase font-bold">EUDR Status</span>
+                    <strong class="text-orange-700 font-bold flex items-center gap-1 mt-1 text-[15px]">🟠 บันทึกสถานะเฝ้าระวัง</strong>
                   </div>
                 </div>
 
-                <div class="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 text-[16px] text-rose-900 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="p-3.5 bg-orange-50 rounded-2xl text-[16px] text-orange-950 border border-orange-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span class="leading-relaxed">📌 ระบบจะทำการบันทึกข้อมูลแปลงนี้เป็น <strong>"โซนเฝ้าระวัง (Under Review)"</strong> เพื่อติดตามตรวจสอบ</span>
+                  <button 
+                    type="button" 
+                    onclick="submitPlotFromModal('under_review')" 
+                    class="px-5 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-[16px] shadow transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>💾 บันทึกแปลงเฝ้าระวัง</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 3. DYNAMIC RESULT CONTAINER: OVERLAP CASE (RED) -->
+              <div id="modal-case-overlap" class="hidden space-y-4">
+                <div class="p-4 sm:p-5 rounded-2xl bg-red-50/80 border-2 border-red-300 flex items-start gap-3.5">
+                  <div class="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center text-xl shrink-0 shadow-xs">
+                    ⛔
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="text-[16px] sm:text-lg font-extrabold text-red-900">
+                        ซ้อนทับแนวเขตป่าสงวนแห่งชาติ (Non-Compliant)
+                      </h3>
+                      <span class="bg-red-100 text-red-900 font-bold text-[14px] px-2.5 py-0.5 rounded-full border border-red-300">
+                        🔴 ซ้อนทับเขตป่า
+                      </span>
+                    </div>
+                    <p class="text-[16px] text-red-800 font-medium mt-1 leading-relaxed">
+                      แปลงปลูกนี้ <strong class="underline">ตรวจพบการทับซ้อนกับแนวเขตป่าสงวนแห่งชาติ</strong> ซึ่งเป็นพื้นที่คุ้มครองและไม่ผ่านเกณฑ์ EUDR
+                    </p>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[16px]">
+                  <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
+                    <span class="text-gray-400 block text-[13px] uppercase font-bold">Forest Proximity</span>
+                    <strong class="text-red-700 font-bold flex items-center gap-1 mt-1 text-[15px]">⛔ อยู่ในเขตป่าสงวน</strong>
+                  </div>
+                  <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
+                    <span class="text-gray-400 block text-[13px] uppercase font-bold">Compliance Status</span>
+                    <strong class="text-red-700 font-bold flex items-center gap-1 mt-1 text-[15px]">🔴 ไม่ผ่านเกณฑ์ EUDR</strong>
+                  </div>
+                  <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
+                    <span class="text-gray-400 block text-[13px] uppercase font-bold">Action</span>
+                    <strong class="text-red-700 font-bold flex items-center gap-1 mt-1 text-[15px]">⚠️ ระงับการออก Passport</strong>
+                  </div>
+                </div>
+
+                <div class="p-3.5 bg-red-50 rounded-2xl border border-red-200 text-[16px] text-red-900 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <span class="leading-relaxed">📌 ระบบจะทำการบันทึกข้อมูลแปลงนี้เป็น <strong>"ไม่ผ่านเกณฑ์ (Non-Compliant)"</strong> เพื่อเก็บประวัติในระบบ</span>
                   <button 
                     type="button" 
                     onclick="submitPlotFromModal('non_compliant')" 
-                    class="px-5 py-2.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-[16px] shadow transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+                    class="px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-[16px] shadow transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>💾 บันทึกข้อมูล</span>
                   </button>
@@ -2008,24 +2059,41 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
     function setModalPresetMode(mode) {
       modalPresetMode = mode;
       const btnCompliant = document.getElementById("modal-btn-compliant");
+      const btnReview = document.getElementById("modal-btn-review");
       const btnOverlap = document.getElementById("modal-btn-overlap");
       const caseCompliant = document.getElementById("modal-case-compliant");
+      const caseReview = document.getElementById("modal-case-review");
       const caseOverlap = document.getElementById("modal-case-overlap");
 
+      if (btnCompliant) btnCompliant.className = "px-3 py-1 rounded-full text-[13px] font-bold bg-gray-100 text-gray-600 border border-gray-300 hover:bg-emerald-100 hover:text-emerald-700 transition-all cursor-pointer";
+      if (btnReview) btnReview.className = "px-3 py-1 rounded-full text-[13px] font-bold bg-gray-100 text-gray-600 border border-gray-300 hover:bg-orange-100 hover:text-orange-700 transition-all cursor-pointer";
+      if (btnOverlap) btnOverlap.className = "px-3 py-1 rounded-full text-[13px] font-bold bg-gray-100 text-gray-600 border border-gray-300 hover:bg-rose-100 hover:text-rose-700 transition-all cursor-pointer";
+
+      if (caseCompliant) caseCompliant.classList.add("hidden");
+      if (caseReview) caseReview.classList.add("hidden");
+      if (caseOverlap) caseOverlap.classList.add("hidden");
+
       if (mode === "compliant") {
-        btnCompliant.className = "px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs cursor-pointer";
-        btnOverlap.className = "px-3 py-1 rounded-full text-[11px] font-bold bg-gray-100 text-gray-600 border border-gray-300 hover:bg-rose-100 hover:text-rose-700 transition-all cursor-pointer";
-        caseCompliant.classList.remove("hidden");
-        caseOverlap.classList.add("hidden");
-        document.getElementById("form-plot-name").value = "แปลงยางพาราเขาท่าเพชร 1";
-        document.getElementById("form-planting-year").value = "2018";
+        if (btnCompliant) btnCompliant.className = "px-3 py-1 rounded-full text-[13px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs cursor-pointer";
+        if (caseCompliant) caseCompliant.classList.remove("hidden");
+        const nameInput = document.getElementById("form-plot-name");
+        if (nameInput && (!nameInput.value || nameInput.value.includes('แนวเขตป่าสงวน'))) {
+          nameInput.value = "แปลงยางพารา (ปลอดภัย)";
+        }
+      } else if (mode === "under_review") {
+        if (btnReview) btnReview.className = "px-3 py-1 rounded-full text-[13px] font-bold bg-orange-100 text-orange-900 border border-orange-300 shadow-xs cursor-pointer";
+        if (caseReview) caseReview.classList.remove("hidden");
+        const nameInput = document.getElementById("form-plot-name");
+        if (nameInput && (!nameInput.value || nameInput.value.includes('ปลอดภัย') || nameInput.value.includes('ทับซ้อน'))) {
+          nameInput.value = "แปลงยางพาราโซนเฝ้าระวัง (Buffer Zone)";
+        }
       } else {
-        btnOverlap.className = "px-3 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-xs cursor-pointer";
-        btnCompliant.className = "px-3 py-1 rounded-full text-[11px] font-bold bg-gray-100 text-gray-600 border border-gray-300 hover:bg-emerald-100 hover:text-emerald-700 transition-all cursor-pointer";
-        caseCompliant.classList.add("hidden");
-        caseOverlap.classList.remove("hidden");
-        document.getElementById("form-plot-name").value = "แปลงยางพาราแนวเขตป่าสงวน (Buffer 120m)";
-        document.getElementById("form-planting-year").value = "2022";
+        if (btnOverlap) btnOverlap.className = "px-3 py-1 rounded-full text-[13px] font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-xs cursor-pointer";
+        if (caseOverlap) caseOverlap.classList.remove("hidden");
+        const nameInput = document.getElementById("form-plot-name");
+        if (nameInput && (!nameInput.value || nameInput.value.includes('ปลอดภัย'))) {
+          nameInput.value = "แปลงยางพาราแนวเขตป่าสงวน (ทับซ้อน)";
+        }
       }
     }
 
