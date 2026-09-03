@@ -55,7 +55,13 @@ function getDatabaseConnection() {
     }
 
     $cfg = $db_config['pgsql'];
-    $ssl = !empty($cfg['sslmode']) ? ";sslmode={$cfg['sslmode']}" : "";
+    
+    // Prevent libpq from attempting to read root client certificates when running under Apache daemon
+    putenv("PGSSLCERT=");
+    putenv("PGSSLKEY=");
+    putenv("PGSSLROOTCERT=");
+
+    $ssl = !empty($cfg['sslmode']) ? ";sslmode={$cfg['sslmode']};sslcert=;sslkey=" : "";
 
     // 1. Attempt PostgreSQL Connection (Supabase Cloud or Local)
     try {
