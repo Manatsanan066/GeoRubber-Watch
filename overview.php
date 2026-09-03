@@ -546,7 +546,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
             href="map.php" 
             class="px-4 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[14px] sm:text-[15px] shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <span>ตรวจสอบ</span>
+            <span>ตรวจสอบแปลงปลูก</span>
           </a>
         </div>
 
@@ -559,11 +559,11 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         <div id="map-view" class="w-full h-full z-10"></div>
 
         <!-- =====================================================================
-             2. SLIDE-OUT / FLOATING GIS LAYER CONTROL PANEL (แผงควบคุมแผนที่ - เปิดไว้เริ่มต้น)
+             2. SLIDE-OUT / FLOATING GIS LAYER CONTROL PANEL (แผงควบคุมแผนที่ - เริ่มต้นซ่อนไว้)
              ===================================================================== -->
         <div 
           id="floatingLayerPanel" 
-          class="absolute top-3 bottom-3 left-3 w-[360px] sm:w-[390px] max-w-[calc(100%-24px)] bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-[0_20px_50px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] p-4 sm:p-5 flex flex-col overflow-y-auto space-y-4 z-[450] transition-all duration-300 ease-in-out transform translate-x-0 opacity-100 pointer-events-auto"
+          class="absolute top-3 bottom-3 left-3 w-[360px] sm:w-[390px] max-w-[calc(100%-24px)] bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-[0_20px_50px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] p-4 sm:p-5 flex flex-col overflow-y-auto space-y-4 z-[450] transition-all duration-300 ease-in-out transform -translate-x-[120%] opacity-0 pointer-events-none"
         >
           
           <!-- Panel Header with Close Button ✕ -->
@@ -599,16 +599,15 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
               </span>
             </div>
 
-            <!-- Text Search Input with Clear button & Autocomplete Dropdown -->
+            <!-- Text Search Input with Clear button -->
             <div class="relative">
               <input 
                 type="text" 
                 id="forest-search-input" 
-                placeholder="พิมพ์ชื่อป่า เช่น ป่าเขาพุทธทอง หรือรหัส R1.001..." 
+                placeholder="พิมพ์ชื่อป่า, อำเภอ, รหัส..." 
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl pl-9 pr-8 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all shadow-xs"
                 oninput="GeoOverview.filterForestList(this.value)"
                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); GeoOverview.handleSearchEnter(); }"
-                autocomplete="off"
               >
               <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -620,9 +619,6 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
                 class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 hidden text-[15px] font-bold w-4 h-4 rounded-full flex items-center justify-center cursor-pointer"
                 title="ล้างคำค้นหา"
               >✕</button>
-
-              <!-- Dynamic Autocomplete Suggestions List -->
-              <div id="forest-search-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white rounded-2xl shadow-xl border border-mezenc-brightCyan/30 max-h-60 overflow-y-auto z-50 p-1.5 space-y-1 divide-y divide-gray-100"></div>
             </div>
 
             <!-- Dropdown Select 26 Forest Reserves -->
@@ -632,7 +628,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl px-3 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all cursor-pointer shadow-xs leading-relaxed"
                 onchange="GeoOverview.zoomToForest(this.value)"
               >
-                <option value="">เลือกพื้นที่เขตป่าสงวนแห่งชาติ (26 แห่ง)</option>
+                <option value="">เลือกพื้นที่เขตป่าสงวนแห่งชาติ</option>
               </select>
             </div>
           </div>
@@ -944,21 +940,6 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         await this.loadForestList();
         this.bindFullscreenEvents();
         this.bindMapEvents();
-        this.bindOutsideClickEvents();
-
-        // Fit map bounds to show all 26 forest reserves
-        setTimeout(() => {
-          this.fitAllForests();
-        }, 400);
-      },
-
-      bindOutsideClickEvents() {
-        document.addEventListener('click', (e) => {
-          if (!e.target.closest('#forest-search-input') && !e.target.closest('#forest-search-suggestions')) {
-            const el = document.getElementById('forest-search-suggestions');
-            if (el) el.classList.add('hidden');
-          }
-        });
       },
 
       bindMapEvents() {
@@ -1124,11 +1105,6 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
       // 1. Fetch and populate 26 forest reserves
       async loadForestList() {
         try {
-          if (GeoMap && GeoMap.forestData && GeoMap.forestData.length > 0) {
-            this.forestFeatures = GeoMap.forestData;
-            this.populateDropdown(this.forestFeatures);
-            return;
-          }
           const res = await fetch('api/forests.php');
           const data = await res.json();
           this.forestFeatures = data.features || [];
@@ -1142,7 +1118,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         const select = document.getElementById('forest-select-dropdown');
         if (!select) return;
 
-        select.innerHTML = '<option value="">เลือกพื้นที่เขตป่าสงวนแห่งชาติ (26 แห่ง)</option>';
+        select.innerHTML = '<option value="">เลือกพื้นที่เขตป่าสงวนแห่งชาติ</option>';
 
         // Sort by forest code (R1.001 to R1.026)
         const sorted = [...features].sort((a, b) => (a.properties.forest_code || '').localeCompare(b.properties.forest_code || ''));
@@ -1162,15 +1138,16 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         }
       },
 
-      // 2. Filter forest list on search input and show dynamic suggestions
+      // 2. Filter forest list on search input
       filterForestList(query) {
         const q = (query || '').trim().toLowerCase();
         const clearBtn = document.getElementById('clear-search-btn');
-        if (clearBtn) clearBtn.style.display = q ? 'flex' : 'none';
+        if (clearBtn) {
+          clearBtn.style.display = q ? 'flex' : 'none';
+        }
 
         if (!q) {
           this.populateDropdown(this.forestFeatures);
-          this.renderAutocomplete([]);
           return;
         }
 
@@ -1184,73 +1161,19 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         });
 
         this.populateDropdown(filtered);
-        this.renderAutocomplete(filtered, q);
-      },
 
-      // Render Autocomplete Suggestions Popover
-      renderAutocomplete(features, query = '') {
-        const container = document.getElementById('forest-search-suggestions');
-        if (!container) return;
-
-        if (!features || features.length === 0 || !query) {
-          container.classList.add('hidden');
-          container.innerHTML = '';
-          return;
+        // Auto zoom if exactly 1 match found
+        if (filtered.length === 1) {
+          const targetCode = filtered[0].properties.forest_code || filtered[0].properties.id;
+          const select = document.getElementById('forest-select-dropdown');
+          if (select) select.value = targetCode;
+          this.zoomToForest(targetCode);
         }
-
-        let html = '';
-        features.slice(0, 6).forEach(f => {
-          const p = f.properties;
-          const targetCode = p.forest_code || p.id;
-          html += `
-            <div 
-              class="flex items-center justify-between p-2 hover:bg-[#e6f7f6] rounded-xl cursor-pointer transition-colors text-left group"
-              onclick="GeoOverview.selectSuggestedForest('${targetCode}')"
-            >
-              <div class="flex items-center gap-2 min-w-0">
-                <span class="text-base shrink-0">🌲</span>
-                <div class="truncate">
-                  <div class="font-extrabold text-gray-800 text-xs sm:text-[14px] group-hover:text-mezenc-brightCyan truncate">
-                    ${p.name_th}
-                  </div>
-                  <div class="text-[11px] text-gray-400 font-mono">
-                    ${p.name_en || p.category || ''}
-                  </div>
-                </div>
-              </div>
-              <div class="text-right shrink-0 pl-2">
-                <span class="px-2 py-0.5 rounded-md bg-mezenc-lightCyan text-mezenc-teal font-mono font-bold text-[11px] sm:text-[12px]">
-                  ${p.forest_code}
-                </span>
-                <div class="text-[10px] sm:text-[11px] text-gray-500 mt-0.5">
-                  ${parseFloat(p.area_rai || 0).toLocaleString()} ไร่
-                </div>
-              </div>
-            </div>
-          `;
-        });
-
-        container.innerHTML = html;
-        container.classList.remove('hidden');
       },
 
-      selectSuggestedForest(code) {
-        const sideInput = document.getElementById('forest-search-input');
-        const select = document.getElementById('forest-select-dropdown');
-        const feat = this.forestFeatures.find(f => (f.properties.forest_code == code || f.properties.id == code));
-        
-        if (feat && sideInput) {
-          sideInput.value = feat.properties.name_th;
-        }
-        if (select) select.value = code;
-        this.renderAutocomplete([]);
-        this.zoomToForest(code);
-      },
-
-      // Handle Enter Key Search
       handleSearchEnter() {
-        const sideInput = document.getElementById('forest-search-input');
-        const q = (sideInput?.value || '').trim().toLowerCase();
+        const input = document.getElementById('forest-search-input');
+        const q = (input?.value || '').trim().toLowerCase();
         if (!q) return;
 
         const matched = this.forestFeatures.find(f => {
@@ -1263,36 +1186,20 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
 
         if (matched) {
           const targetCode = matched.properties.forest_code || matched.properties.id;
-          this.selectSuggestedForest(targetCode);
-        }
-      },
-
-      // Fit map bounds to show all 26 forest reserves
-      fitAllForests() {
-        if (GeoMap && GeoMap.map && GeoMap.forestLayerGroup) {
-          try {
-            const layers = GeoMap.forestLayerGroup.getLayers();
-            if (layers.length > 0 && typeof layers[0].getBounds === 'function') {
-              GeoMap.map.fitBounds(layers[0].getBounds(), { padding: [30, 30] });
-            } else {
-              GeoMap.map.flyTo([9.138, 99.321], 9, { duration: 1.2 });
-            }
-          } catch(e) {
-            GeoMap.map.flyTo([9.138, 99.321], 9, { duration: 1.2 });
-          }
+          const select = document.getElementById('forest-select-dropdown');
+          if (select) select.value = targetCode;
+          this.zoomToForest(targetCode);
         }
       },
 
       clearSearch() {
-        const sideInput = document.getElementById('forest-search-input');
-        if (sideInput) sideInput.value = '';
-
+        const input = document.getElementById('forest-search-input');
+        if (input) input.value = '';
         const select = document.getElementById('forest-select-dropdown');
         if (select) select.value = '';
         const clearBtn = document.getElementById('clear-search-btn');
         if (clearBtn) clearBtn.style.display = 'none';
 
-        this.renderAutocomplete([]);
         this.populateDropdown(this.forestFeatures);
         this.hideForestInfoCard();
 
@@ -1301,7 +1208,9 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
           this.selectedHighlightLayer = null;
         }
 
-        this.fitAllForests();
+        if (GeoMap.map) {
+          GeoMap.map.flyTo([9.0805, 99.3515], 10, { duration: 1.2 });
+        }
       },
 
       // 3. Zoom directly to selected Forest Reserve
