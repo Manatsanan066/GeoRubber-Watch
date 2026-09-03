@@ -97,6 +97,24 @@ const GeoMap = {
       }
     }
 
+    // Sync toolbar switch if present
+    const toolbarBadge = document.getElementById('toolbar-forest-status-badge');
+    if (toolbarBadge) {
+      toolbarBadge.textContent = this.isForestVisible ? 'เปิด' : 'ปิด';
+      toolbarBadge.className = this.isForestVisible ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold';
+    }
+
+    const toolbarBtn = document.getElementById('toolbar-switch-forest');
+    if (toolbarBtn) {
+      if (this.isForestVisible) {
+        toolbarBtn.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-800');
+        toolbarBtn.classList.remove('bg-rose-50', 'border-rose-200', 'text-rose-700');
+      } else {
+        toolbarBtn.classList.remove('bg-emerald-50', 'border-emerald-300', 'text-emerald-800');
+        toolbarBtn.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-700');
+      }
+    }
+
     if (!this.map || !this.forestLayerGroup) return;
 
     if (this.isForestVisible) {
@@ -233,32 +251,50 @@ const GeoMap = {
 
       this.forestLayerGroup.clearLayers();
 
-      L.geoJSON(data, {
+      const forestGeoLayer = L.geoJSON(data, {
         style: (feature) => ({
-          color: feature.properties.color_code || '#ef4444',
-          fillColor: feature.properties.color_code || '#ef4444',
-          fillOpacity: 0.25,
-          weight: 2.5,
-          dashArray: '5, 5'
+          color: feature.properties.color_code || '#dc2626',
+          fillColor: feature.properties.color_code || '#dc2626',
+          fillOpacity: 0.32,
+          weight: 2.2,
+          dashArray: '3, 3'
         }),
         onEachFeature: (feature, layer) => {
           const props = feature.properties;
           layer.bindPopup(`
-            <div style="font-family: 'Open Sans', 'Google Sans', 'Sarabun', sans-serif; color: #1e293b; padding: 6px; min-width: 250px;">
-              <div style="font-weight: 700; color: #dc2626; font-size: 18px; margin-bottom: 3px;">🌲 ${props.name_th}</div>
-              <div style="font-size: 16px; color: #64748b; margin-bottom: 8px;">${props.name_en || ''}</div>
-              <div style="background: #f8faf9; border: 1.5px solid #bee6e1; padding: 10px 12px; border-radius: 10px; font-size: 16px; line-height: 1.6; margin-bottom: 10px;">
-                <div><strong>ประเภท:</strong> ${props.category}</div>
-                <div><strong>รหัสพื้นที่:</strong> <span style="font-family:monospace; color:#0e4d4e; font-weight:700;">${props.forest_code}</span></div>
-                <div><strong>เนื้อที่ประมาณ:</strong> ${parseFloat(props.area_rai).toLocaleString()} ไร่</div>
+            <div style="font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif; color: #1e293b; padding: 4px; min-width: 260px;">
+              <div style="font-weight: 800; color: #0e4d4e; font-size: 17px; margin-bottom: 2px;">🌲 ${props.name_th}</div>
+              <div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">${props.name_en || ''}</div>
+              <div style="background: #f8faf9; border: 1.5px solid #bee6e1; padding: 8px 10px; border-radius: 10px; font-size: 14px; line-height: 1.6; margin-bottom: 8px;">
+                <div><strong>รหัสพื้นที่:</strong> <span style="font-family:monospace; color:#0e4d4e; font-weight:700; font-size:14px;">${props.forest_code}</span></div>
+                <div><strong>เนื้อที่ประมาณ:</strong> <span style="font-weight:700; color:#0e4d4e;">${parseFloat(props.area_rai).toLocaleString()} ไร่</span></div>
+                <div><strong>ประเภท:</strong> ${props.category || 'Zone-C ป่าสงวนแห่งชาติ'}</div>
               </div>
-              <div style="font-size: 16px; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 8px 10px; border-radius: 8px; font-weight: 700; line-height: 1.4;">
+              <div style="font-size: 13px; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 6px 10px; border-radius: 8px; font-weight: 700; line-height: 1.3;">
                 ⚠️ พื้นที่คุ้มครองตามเกณฑ์ EUDR ห้ามบุกรุก/ตัดไม้ทำลายป่า
               </div>
             </div>
           `);
+
+          layer.on('click', () => {
+            if (typeof GeoOverview !== 'undefined' && GeoOverview.showForestInfoCard) {
+              GeoOverview.showForestInfoCard(props);
+            }
+          });
         }
       }).addTo(this.forestLayerGroup);
+
+      const isOverviewPage = window.location.pathname.includes('overview.php') || 
+                             window.location.href.includes('overview');
+
+      if (isOverviewPage && this.forestData.length > 0 && this.map) {
+        try {
+          const bounds = forestGeoLayer.getBounds();
+          if (bounds.isValid()) {
+            this.map.fitBounds(bounds, { padding: [25, 25] });
+          }
+        } catch(e) {}
+      }
 
     } catch (e) {
       console.error('Error loading forest reserves:', e);
