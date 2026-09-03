@@ -598,6 +598,11 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
         <!-- Real Leaflet Map Container -->
         <div id="map-view" class="w-full h-full z-10"></div>
 
+        <!-- Real-time Forest Loading Indicator Banner -->
+        <div id="forest-loading-status" class="absolute top-4 left-16 z-[400] bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border-2 border-[#bee6e1] shadow-[0_10px_25px_-5px_rgba(14,77,78,0.2)] flex items-center gap-2 text-xs font-bold text-mezenc-teal transition-all duration-300 pointer-events-none">
+          <span class="animate-spin text-sm">⏳</span> <span>กำลังประมวลผล 26 แนวเขตป่าสงวน...</span>
+        </div>
+
         <!-- =====================================================================
              2. SLIDE-OUT / FLOATING GIS LAYER CONTROL PANEL (แผงควบคุมแผนที่ - เปิดไว้เริ่มต้น)
              ===================================================================== -->
@@ -1168,6 +1173,11 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
       // 1. Fetch and populate 26 forest reserves
       async loadForestList() {
         try {
+          if (GeoMap && GeoMap.forestData && GeoMap.forestData.length > 0) {
+            this.forestFeatures = GeoMap.forestData;
+            this.populateDropdown(this.forestFeatures);
+            return;
+          }
           const res = await fetch('api/forests.php');
           const data = await res.json();
           this.forestFeatures = data.features || [];

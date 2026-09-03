@@ -4,39 +4,47 @@
  */
 header('Content-Type: application/json; charset=utf-8');
 
-require_once __DIR__ . '/../config/database.php';
-initDatabaseIfNeeded();
-
-$pdo = getDatabaseConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Handle GET: Fetch all Forest Reserves as GeoJSON FeatureCollection
+// Handle GET: Fetch all Forest Reserves as GeoJSON FeatureCollection or lightweight list
 if ($method === 'GET') {
+    $listCache = __DIR__ . '/../data/cache_forest_list.json';
+    $cacheFile = __DIR__ . '/../data/cache_forest_reserves.json';
+    $cacheGz = __DIR__ . '/../data/cache_forest_reserves.json.gz';
+
+    // 1. Lightweight List Mode (for instant dropdown & search autocomplete < 1ms)
+    if (isset($_GET['mode']) && $_GET['mode'] === 'list') {
+        if (file_exists($listCache)) {
+            header('Cache-Control: public, max-age=86400, stale-while-revalidate=604800');
+            readfile($listCache);
+            exit;
+        }
+    }
+
+    // 2. Full GeoJSON Cache Delivery (< 5ms)
+    if (!isset($_GET['mode']) && file_exists($cacheFile)) {
+        header('Cache-Control: public, max-age=86400, stale-while-revalidate=604800');
+        header('ETag: "' . md5_file($cacheFile) . '"');
+
+        $acceptEncoding = $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
+        if (file_exists($cacheGz) && strpos($acceptEncoding, 'gzip') !== false) {
+            header('Content-Encoding: gzip');
+            readfile($cacheGz);
+            exit;
+        }
+
+        readfile($cacheFile);
+        exit;
+    }
+
+    // Lazy load DB if cache is missing
+    require_once __DIR__ . '/../config/database.php';
+    initDatabaseIfNeeded();
+    $pdo = getDatabaseConnection();
+
     try {
         $stmt = $pdo->query("SELECT * FROM forest_reserves ORDER BY id ASC");
         $reserves = $stmt->fetchAll();
-
-        // If table is empty, auto-seed from Zone-c.geojson
-        if (empty($reserves)) {
-            $zoneCPath = __DIR__ . '/../Zone-c.geojson';
-            if (file_exists($zoneCPath)) {
-                $rawGeo = json_decode(file_get_contents($zoneCPath), true);
-                if ($rawGeo && isset($rawGeo['features'])) {
-                    $ins = $pdo->prepare("INSERT INTO forest_reserves (forest_code, name_th, name_en, category, area_rai, geojson_geometry, color_code) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    foreach ($rawGeo['features'] as $idx => $f) {
-                        $p = $f['properties'] ?? [];
-                        $code = $p['forest_code'] ?? $p['FOREST_COD'] ?? ('FOR-ST-' . str_pad($idx + 1, 3, '0', STR_PAD_LEFT));
-                        $nameTh = $p['name_th'] ?? $p['NAME_TH'] ?? $p['name'] ?? ('ป่าสงวนแห่งชาติผืนที่ ' . ($idx + 1));
-                        $nameEn = $p['name_en'] ?? $p['NAME_EN'] ?? 'National Forest Reserve';
-                        $cat = $p['category'] ?? 'ป่าสงวนแห่งชาติ (Zone C)';
-                        $rai = (float)($p['area_rai'] ?? $p['AREA_RAI'] ?? 0);
-                        $ins->execute([$code, $nameTh, $nameEn, $cat, $rai, json_encode($f['geometry']), '#0e4d4e']);
-                    }
-                    $stmt = $pdo->query("SELECT * FROM forest_reserves ORDER BY id ASC");
-                    $reserves = $stmt->fetchAll();
-                }
-            }
-        }
 
         $features = [];
         foreach ($reserves as $row) {
@@ -50,16 +58,27 @@ if ($method === 'GET') {
                     'name_en' => $row['name_en'],
                     'category' => $row['category'],
                     'area_rai' => (float)$row['area_rai'],
-                    'color_code' => $row['color_code'] ?? '#0e4d4e'
+                    'color_code' => $row['color_code'] ?? '#dc2626'
                 ],
                 'geometry' => $geometry
             ];
         }
 
-        echo json_encode([
+        $fc = [
             'type' => 'FeatureCollection',
             'features' => $features
-        ], JSON_UNESCAPED_UNICODE);
+        ];
+
+        $jsonStr = json_encode($fc, JSON_UNESCAPED_UNICODE);
+
+        if (!is_dir(dirname($cacheFile))) {
+            @mkdir(dirname($cacheFile), 0777, true);
+        }
+        @file_put_contents($cacheFile, $jsonStr);
+        @file_put_contents($cacheGz, gzencode($jsonStr, 9));
+
+        header('Cache-Control: public, max-age=86400, stale-while-revalidate=604800');
+        echo $jsonStr;
 
     } catch (Exception $e) {
         http_response_code(500);

@@ -296,8 +296,21 @@ const GeoMap = {
         } catch(e) {}
       }
 
+      // Hide or update loading indicator
+      const loadingEl = document.getElementById('forest-loading-status');
+      if (loadingEl) {
+        loadingEl.innerHTML = '<span class="text-emerald-600">✅</span> <span class="text-emerald-800">แสดงครบ 26 แนวเขตป่าสงวน</span>';
+        loadingEl.className = 'absolute top-4 left-16 z-[400] bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border-2 border-emerald-300 shadow-md flex items-center gap-2 text-xs font-bold transition-all duration-500 pointer-events-none opacity-100';
+        setTimeout(() => {
+          loadingEl.style.opacity = '0';
+          setTimeout(() => loadingEl.remove(), 500);
+        }, 2000);
+      }
+
     } catch (e) {
       console.error('Error loading forest reserves:', e);
+      const loadingEl = document.getElementById('forest-loading-status');
+      if (loadingEl) loadingEl.remove();
     }
   },
 
