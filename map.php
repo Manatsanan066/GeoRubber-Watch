@@ -787,7 +787,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           </button>
         </div>
 
-        <!-- Floating Map Overlay: Circular Bottom-Right Action Buttons (GPS, Draw & Fullscreen) -->
+        <!-- Floating Map Overlay: Circular Bottom-Right Action Buttons (GPS, Pin Location & Fullscreen) -->
         <div class="absolute bottom-5 right-4 z-[400] flex flex-col gap-2.5">
           <!-- GPS Locate Button -->
           <button 
@@ -806,14 +806,17 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             </svg>
           </button>
 
-          <!-- Draw Polygon Button -->
+          <!-- Pin Location Tool Button (ปุ่มปักหมุดตรวจสอบพิกัด & ความเสี่ยง Buffer Zone) -->
           <button 
             type="button" 
-            onclick="activateMapDrawDirect()" 
-            title="คลิกเพื่อเริ่มวาดขอบเขตแปลงปลูก (Polygon)" 
+            id="btn-floating-pin-mode"
+            onclick="toggleMapPinMode()" 
+            title="ปักหมุดบนแผนที่เพื่อตรวจสอบความเสี่ยงและระยะห่างเขตป่าสงวน (Buffer Zone Check)" 
             class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
           >
-            <span class="text-lg">✏️</span>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:scale-110">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+            </svg>
           </button>
 
           <!-- Fullscreen Toggle Button -->
@@ -1688,6 +1691,267 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         });
       } else {
         document.exitFullscreen();
+      }
+    }
+
+    // Pin Marker Tool & Real-Time Spatial Risk Check (ปักหมุดตรวจสอบพิกัด & Buffer Zone)
+    let isMapPinMode = false;
+    let userPinMarker = null;
+    let userPinBufferCircle = null;
+
+    function clearMapPin() {
+      if (userPinMarker && GeoMap && GeoMap.map) {
+        GeoMap.map.removeLayer(userPinMarker);
+        userPinMarker = null;
+      }
+      if (userPinBufferCircle && GeoMap && GeoMap.map) {
+        GeoMap.map.removeLayer(userPinBufferCircle);
+        userPinBufferCircle = null;
+      }
+      toggleMapPinMode(false);
+    }
+
+    function toggleMapPinMode(forceState = null) {
+      isMapPinMode = forceState !== null ? forceState : !isMapPinMode;
+      const btn = document.getElementById('btn-floating-pin-mode');
+
+      if (isMapPinMode) {
+        if (btn) {
+          btn.classList.add('bg-mezenc-brightCyan', 'text-white', 'border-mezenc-brightCyan');
+          btn.classList.remove('bg-white/95', 'text-mezenc-teal');
+        }
+        if (!userPinMarker && GeoMap && GeoMap.map) {
+          const center = GeoMap.map.getCenter();
+          placeMapPin(center.lat, center.lng);
+        }
+        if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
+          App.showToast('📍 โหมดปักหมุดเปิดใช้งาน: คลิกหรือลากหมุดบนแผนที่เพื่อดูพิกัดและความเสี่ยง', 'info');
+        }
+      } else {
+        if (btn) {
+          btn.classList.remove('bg-mezenc-brightCyan', 'text-white', 'border-mezenc-brightCyan');
+          btn.classList.add('bg-white/95', 'text-mezenc-teal');
+        }
+      }
+    }
+
+    function handleMapPinClick(e) {
+      if (!isMapPinMode) return;
+      placeMapPin(e.latlng.lat, e.latlng.lng);
+    }
+
+    function placeMapPin(lat, lng) {
+      if (!GeoMap || !GeoMap.map) return;
+
+      const pinIcon = L.divIcon({
+        className: 'custom-pin-marker',
+        html: `
+          <div class="pin-drop-animation relative cursor-pointer" style="filter: drop-shadow(0 6px 14px rgba(14,77,78,0.45)); transform: translate(-17px, -42px);">
+            <svg width="34" height="42" viewBox="0 0 384 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0z" fill="#00A896"/>
+              <circle cx="192" cy="192" r="80" fill="#FFFFFF"/>
+              <circle cx="192" cy="192" r="44" fill="#024959"/>
+            </svg>
+          </div>
+        `,
+        iconSize: [34, 42],
+        iconAnchor: [0, 0]
+      });
+
+      if (userPinMarker) {
+        userPinMarker.setLatLng([lat, lng]);
+      } else {
+        userPinMarker = L.marker([lat, lng], {
+          icon: pinIcon,
+          draggable: true,
+          zIndexOffset: 1200
+        }).addTo(GeoMap.map);
+
+        userPinMarker.on('dragend', (evt) => {
+          const pos = evt.target.getLatLng();
+          analyzePinLocation(pos.lat, pos.lng);
+        });
+      }
+
+      // Draw 500m buffer circle around pin
+      if (userPinBufferCircle) {
+        userPinBufferCircle.setLatLng([lat, lng]);
+      } else {
+        userPinBufferCircle = L.circle([lat, lng], {
+          radius: 500,
+          color: '#f59e0b',
+          fillColor: '#f59e0b',
+          fillOpacity: 0.14,
+          weight: 2,
+          dashArray: '5, 5'
+        }).addTo(GeoMap.map);
+      }
+
+      toggleMapPinMode(true);
+      analyzePinLocation(lat, lng);
+    }
+
+    // Exact Spatial Proximity & Overlap Calculation Engine (Turf.js)
+    function calculateForestSpatialProximity(lat, lng) {
+      let insideForest = null;
+      let nearestForest = null;
+      let minDistanceKm = Infinity;
+
+      const features = (GeoMap && GeoMap.forestData && GeoMap.forestData.features)
+        ? GeoMap.forestData.features
+        : (GeoMap && GeoMap.forestData ? GeoMap.forestData : []);
+
+      if (typeof turf !== 'undefined' && features.length > 0) {
+        const pt = turf.point([lng, lat]);
+
+        const getDistanceToFeature = (feature) => {
+          if (!feature || !feature.geometry) return Infinity;
+          const geom = feature.geometry;
+          let minD = Infinity;
+
+          const checkRing = (coords) => {
+            if (!coords || coords.length < 2) return;
+            try {
+              const line = turf.lineString(coords);
+              const d = turf.pointToLineDistance(pt, line, { units: 'kilometers' });
+              if (!isNaN(d) && isFinite(d) && d < minD) {
+                minD = d;
+              }
+            } catch (e) {
+              for (let i = 0; i < coords.length; i++) {
+                const p = turf.point(coords[i]);
+                const d = turf.distance(pt, p, { units: 'kilometers' });
+                if (!isNaN(d) && isFinite(d) && d < minD) {
+                  minD = d;
+                }
+              }
+            }
+          };
+
+          if (geom.type === 'Polygon') {
+            for (let r = 0; r < geom.coordinates.length; r++) {
+              checkRing(geom.coordinates[r]);
+            }
+          } else if (geom.type === 'MultiPolygon') {
+            for (let p = 0; p < geom.coordinates.length; p++) {
+              const poly = geom.coordinates[p];
+              for (let r = 0; r < poly.length; r++) {
+                checkRing(poly[r]);
+              }
+            }
+          }
+          return minD;
+        };
+
+        for (let i = 0; i < features.length; i++) {
+          const f = features[i];
+          try {
+            if (f.geometry) {
+              let isInside = false;
+              try {
+                isInside = turf.booleanPointInPolygon(pt, f);
+              } catch (ePoly) {
+                try {
+                  isInside = turf.booleanPointInPolygon(pt, f.geometry);
+                } catch (eGeom) {}
+              }
+
+              if (isInside) {
+                insideForest = f.properties;
+                minDistanceKm = 0;
+                nearestForest = f.properties;
+                break;
+              }
+
+              const distToBoundary = getDistanceToFeature(f);
+              if (distToBoundary < minDistanceKm) {
+                minDistanceKm = distToBoundary;
+                nearestForest = f.properties;
+              }
+            }
+          } catch (err) {
+            console.error('Spatial check error for forest:', f, err);
+          }
+        }
+      }
+
+      const distMeters = insideForest ? 0 : (isFinite(minDistanceKm) ? Math.round(minDistanceKm * 1000) : 9999);
+      
+      let status = 'compliant';
+      if (insideForest) {
+        status = 'non_compliant';
+      } else if (distMeters <= 500) {
+        status = 'buffer_zone';
+      }
+
+      return {
+        insideForest,
+        nearestForest,
+        minDistanceKm,
+        distMeters,
+        status
+      };
+    }
+
+    function analyzePinLocation(lat, lng) {
+      const result = calculateForestSpatialProximity(lat, lng);
+      const { insideForest, nearestForest, distMeters, status } = result;
+
+      let statusTitle = '';
+      let statusBadge = '';
+      let adviceText = '';
+      let circleColor = '#00A896';
+
+      if (status === 'non_compliant') {
+        statusTitle = `🔴 อยู่ในเขต ${insideForest.name_th || 'ป่าสงวนแห่งชาติ'}`;
+        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-rose-600 text-white font-bold text-xs inline-block">⛔ ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์ EUDR)</span>';
+        adviceText = `จุดพิกัดนี้ตั้งอยู่ในแนวเขตป่าสงวนแห่งชาติ <strong>${insideForest.name_th || 'ป่าสงวน'}</strong> (รหัส: ${insideForest.forest_code || '-'}) ซึ่งเป็นเขตป่าเพื่อการอนุรักษ์ (Zone C)`;
+        circleColor = '#ef4444';
+      } else if (status === 'buffer_zone') {
+        statusTitle = `🟡 โซนเฝ้าระวัง Buffer (${distMeters} ม.)`;
+        statusBadge = `<span class="px-2.5 py-0.5 rounded-lg bg-amber-500 text-white font-bold text-xs inline-block">⚠️ โซนเฝ้าระวัง Buffer (${distMeters} ม.)</span>`;
+        adviceText = `อยู่นอกแนวเขตป่า แต่อยู่ในระยะกันชนใกล้กับ <strong>${nearestForest ? nearestForest.name_th : 'ป่าสงวน'}</strong> เพียง ${distMeters} เมตร (อยู่ในระยะเฝ้าระวังไม่เกิน 500 ม.)`;
+        circleColor = '#f59e0b';
+      } else {
+        statusTitle = `🟢 ปลอดภัย ผ่านเกณฑ์ EUDR`;
+        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-xs inline-block">✅ ปลอดภัย ผ่านเกณฑ์ EUDR</span>';
+        adviceText = `อยู่นอกแนวเขตป่าสงวนแห่งชาติ โดยห่างจาก <strong>${nearestForest ? nearestForest.name_th : 'แนวเขตป่า'}</strong> ประมาณ ${distMeters >= 1000 ? (distMeters/1000).toFixed(2) + ' กม.' : distMeters + ' ม.'}`;
+        circleColor = '#00A896';
+      }
+
+      if (userPinBufferCircle) {
+        userPinBufferCircle.setStyle({
+          color: circleColor,
+          fillColor: circleColor
+        });
+      }
+
+      const pinSvgIcon = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; display: inline-block; vertical-align: -3px; flex-shrink: 0;"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#00A896"/></svg>`;
+
+      if (userPinMarker) {
+        userPinMarker.bindPopup(`
+          <div style="min-width: 270px; font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif; padding: 4px;">
+            <div style="font-weight: 800; font-size: 15px; margin-bottom: 4px; color: #0e4d4e; display: flex; align-items: center; gap: 6px;">
+              ${pinSvgIcon}
+              <span>${statusTitle}</span>
+            </div>
+            <div style="margin-bottom: 6px;">${statusBadge}</div>
+            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 8px 10px; border-radius: 10px; font-size: 12px; line-height: 1.5; margin-bottom: 8px;">
+              ${adviceText}
+            </div>
+            <div style="font-size: 12px; color: #64748b; font-family: monospace; margin-bottom: 8px;">
+              🌐 พิกัด: <strong>${lat.toFixed(5)}, ${lng.toFixed(5)}</strong>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" onclick="if(GeoMap.drawControl && GeoMap.drawControl._toolbars && GeoMap.drawControl._toolbars.draw) { GeoMap.drawControl._toolbars.draw._modes.polygon.handler.enable(); } else if (GeoMap.startDrawPolygon) { GeoMap.startDrawPolygon(); }" style="flex: 1; padding: 6px 8px; border-radius: 8px; background: #00a699; color: #fff; font-size: 11px; font-weight: bold; border: none; cursor: pointer;">
+                ✏️ เริ่มวาดแปลงที่นี่
+              </button>
+              <button type="button" onclick="clearMapPin()" style="padding: 6px 8px; border-radius: 8px; background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: bold; border: 1px solid #fca5a5; cursor: pointer;">
+                🗑️ ลบหมุด
+              </button>
+            </div>
+          </div>
+        `).openPopup();
       }
     }
 
