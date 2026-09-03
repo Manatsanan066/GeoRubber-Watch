@@ -1585,32 +1585,93 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       }
     }
 
-    // Direct GPS Locate trigger
+    // GPS Live Pin Marker & Accuracy Circle Tracker
+    let userGpsMarker = null;
+    let userAccuracyCircle = null;
+
+    function clearUserGpsPin() {
+      if (userGpsMarker && GeoMap.map) {
+        GeoMap.map.removeLayer(userGpsMarker);
+        userGpsMarker = null;
+      }
+      if (userAccuracyCircle && GeoMap.map) {
+        GeoMap.map.removeLayer(userAccuracyCircle);
+        userAccuracyCircle = null;
+      }
+    }
+
+    // Direct GPS Locate & Pin trigger
     function locateUserDirect() {
       if (!navigator.geolocation) {
-        alert('เบราว์เซอร์ของคุณไม่รองรับการระบุพิกัด GPS');
+        App.showToast('เบราว์เซอร์ของคุณไม่รองรับการระบุพิกัด GPS', 'error');
         return;
       }
-      App.showToast('กำลังค้นหาพิกัด GPS ของคุณ...', 'info');
+      App.showToast('📡 กำลังค้นหาและปักหมุดพิกัด GPS ของคุณ...', 'info');
+      
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
-          if (GeoMap && GeoMap.map) {
-            GeoMap.map.flyTo([lat, lng], 16, { duration: 1.5 });
-            L.popup()
-              .setLatLng([lat, lng])
-              .setContent(`
-                <div style="padding: 4px; font-size: 14px; font-weight: bold; color: #0e4d4e;">
-                  📍 พิกัดปัจจุบันของคุณ<br>
-                  <span style="font-family: monospace; font-size: 12px; color: #00a699;">${lat.toFixed(5)}, ${lng.toFixed(5)}</span>
-                </div>
-              `)
-              .openOn(GeoMap.map);
-          }
+          const accuracy = Math.round(pos.coords.accuracy || 10);
+
+          if (!GeoMap || !GeoMap.map) return;
+
+          clearUserGpsPin();
+
+          // Pulse animation custom pin icon
+          const pulseIcon = L.divIcon({
+            className: 'gps-pulse-pin-container',
+            html: `
+              <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                <div style="position: absolute; width: 36px; height: 36px; background: rgba(0, 166, 153, 0.35); border-radius: 50%; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+                <div style="position: absolute; width: 28px; height: 28px; background: rgba(0, 166, 153, 0.5); border-radius: 50%;"></div>
+                <div style="width: 22px; height: 22px; background: #00a699; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 10;"></div>
+              </div>
+            `,
+            iconSize: [36, 36],
+            iconAnchor: [18, 18],
+            popupAnchor: [0, -18]
+          });
+
+          // Draw Accuracy Circle
+          userAccuracyCircle = L.circle([lat, lng], {
+            radius: Math.max(accuracy, 25),
+            color: '#00a699',
+            fillColor: '#00a699',
+            fillOpacity: 0.15,
+            weight: 1.5,
+            dashArray: '3, 3'
+          }).addTo(GeoMap.map);
+
+          // Add Pulse Marker
+          userGpsMarker = L.marker([lat, lng], { icon: pulseIcon }).addTo(GeoMap.map);
+
+          GeoMap.map.flyTo([lat, lng], 17, { duration: 1.4 });
+
+          const popupContent = `
+            <div style="font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif; min-width: 240px; padding: 4px;">
+              <div style="font-size: 15px; font-weight: 800; color: #0e4d4e; margin-bottom: 2px;">📍 ตำแหน่งพิกัดปัจจุบันของคุณ</div>
+              <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">Live GPS Geolocation (ความแม่นยำ ±${accuracy} ม.)</div>
+              <div style="background: #f8faf9; border: 1.5px solid #bee6e1; border-radius: 8px; padding: 6px 8px; font-size: 12px; margin-bottom: 8px;">
+                <div>🌐 <strong>ละติจูด:</strong> <span style="font-family: monospace; font-weight: bold; color: #0e4d4e;">${lat.toFixed(6)}</span></div>
+                <div>🌐 <strong>ลองจิจูด:</strong> <span style="font-family: monospace; font-weight: bold; color: #0e4d4e;">${lng.toFixed(6)}</span></div>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" onclick="activateMapDrawDirect()" style="flex: 1; padding: 6px 8px; border-radius: 6px; background: #00a699; color: #fff; font-size: 11px; font-weight: bold; border: none; cursor: pointer;">
+                  ✏️ เริ่มวาดแปลงที่นี่
+                </button>
+                <button type="button" onclick="clearUserGpsPin()" style="padding: 6px 8px; border-radius: 6px; background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: bold; border: 1px solid #fca5a5; cursor: pointer;">
+                  🗑️ ลบหมุด
+                </button>
+              </div>
+            </div>
+          `;
+
+          userGpsMarker.bindPopup(popupContent).openPopup();
+          App.showToast(`📍 ระบุตำแหน่ง GPS สำเร็จ: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
         },
         (err) => {
-          alert('ไม่สามารถดึงพิกัด GPS ได้: ' + err.message);
+          App.showToast('ไม่สามารถดึงพิกัด GPS ได้: ' + err.message, 'error');
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );

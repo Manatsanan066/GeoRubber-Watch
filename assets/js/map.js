@@ -48,12 +48,9 @@ const GeoMap = {
       zoomControl: false
     });
 
-    const isOverviewPage = window.location.pathname.includes('overview.php') || 
-                           window.location.href.includes('overview') || 
-                           options.isOverview === true;
-    const zoomPosition = options.zoomPosition || (isOverviewPage ? 'topright' : 'topleft');
+    const zoomPosition = options.zoomPosition || 'topright';
 
-    // Zoom control on the right for overview or specified position
+    // Zoom control on the top right
     L.control.zoom({ position: zoomPosition }).addTo(this.map);
 
     this.drawnItems = new L.FeatureGroup();
@@ -182,7 +179,7 @@ const GeoMap = {
 
   initDrawTools() {
     this.drawControl = new L.Control.Draw({
-      position: 'topleft',
+      position: 'topright',
       draw: {
         polygon: {
           allowIntersection: false,
