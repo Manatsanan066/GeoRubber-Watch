@@ -805,8 +805,8 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
           </button>
         </div>
 
-        <!-- Floating Map Overlay: Circular Top-Right Action Buttons (GPS, Pin & Full Map) -->
-        <div class="absolute top-4 right-4 z-[400] flex flex-col gap-2.5">
+        <!-- Floating Map Overlay: Circular Bottom-Right Action Buttons (GPS, Pin & Full Map) -->
+        <div class="absolute bottom-5 right-4 z-[400] flex flex-col gap-2.5">
           <!-- GPS Locate Button -->
           <button 
             type="button" 
