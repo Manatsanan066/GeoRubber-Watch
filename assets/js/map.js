@@ -234,12 +234,12 @@ const GeoMap = {
       this.forestLayerGroup.clearLayers();
 
       const forestGeoLayer = L.geoJSON(data, {
-        style: (feature) => ({
-          color: feature.properties.color_code || '#dc2626',
-          fillColor: feature.properties.color_code || '#dc2626',
-          fillOpacity: 0.32,
-          weight: 2.2,
-          dashArray: '3, 3'
+        style: () => ({
+          color: '#dc2626',
+          fillColor: '#ef4444',
+          fillOpacity: 0.35,
+          weight: 2.5,
+          dashArray: '4, 4'
         }),
         onEachFeature: (feature, layer) => {
           const props = feature.properties;

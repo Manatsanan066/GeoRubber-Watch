@@ -782,6 +782,10 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
               <span class="w-3 h-3 rounded-full bg-amber-500 shrink-0"></span>
               <span class="font-medium text-gray-800 text-[14px] leading-tight">โซนเฝ้าระวัง (Buffer &lt; 500 ม.)</span>
             </div>
+            <div class="flex items-center gap-2 pt-1.5 border-t border-gray-200/60">
+              <span class="w-3.5 h-3 rounded-xs border-2 border-red-600 bg-red-500/40 shrink-0"></span>
+              <span class="font-bold text-red-700 text-[13px] leading-tight">แนวเขตป่าสงวน (Zone C เขตหวงห้าม)</span>
+            </div>
           </div>
 
         </div>
