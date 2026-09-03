@@ -76,143 +76,166 @@ if ($method === 'GET') {
 
 // POST: Add New Yield Log
 if ($method === 'POST') {
-    $data = json_decode(file_get_contents('php://input'), true);
+    try {
+        $data = json_decode(file_get_contents('php://input'), true);
 
-    $plot_id = (int)($data['plot_id'] ?? 0);
-    $harvest_date = $data['harvest_date'] ?? date('Y-m-d');
-    $tapping_round = (int)($data['tapping_round'] ?? 1);
-    $fresh_latex_kg = (float)($data['fresh_latex_kg'] ?? 0);
-    $drc_percent = (float)($data['drc_percent'] ?? 33.5);
-    $price_per_kg = (float)($data['price_per_kg'] ?? 65.0);
-    $buyer_name = trim($data['buyer_name'] ?? 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด');
-    $notes = trim($data['notes'] ?? '');
+        $plot_id = (int)($data['plot_id'] ?? 0);
+        $harvest_date = $data['harvest_date'] ?? date('Y-m-d');
+        $tapping_round = (int)($data['tapping_round'] ?? 1);
+        $fresh_latex_kg = (float)($data['fresh_latex_kg'] ?? 0);
+        $drc_percent = (float)($data['drc_percent'] ?? 33.5);
+        $price_per_kg = (float)($data['price_per_kg'] ?? 65.0);
+        $buyer_name = trim($data['buyer_name'] ?? 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด');
+        $notes = trim($data['notes'] ?? '');
 
-    if ($plot_id <= 0 || $fresh_latex_kg <= 0) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'กรุณาเลือกแปลงปลูกและระบุน้ำหนักน้ำยางสด']);
+        if ($plot_id <= 0 || $fresh_latex_kg <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'กรุณาเลือกแปลงปลูกและระบุน้ำหนักน้ำยางสด']);
+            exit;
+        }
+
+        // Get farmer_id from plot
+        $plotStmt = $pdo->prepare("SELECT farmer_id FROM rubber_plots WHERE id = ?");
+        $plotStmt->execute([$plot_id]);
+        $plot = $plotStmt->fetch();
+
+        if (!$plot) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลแปลงปลูก']);
+            exit;
+        }
+
+        $farmer_id = (int)$plot['farmer_id'];
+        
+        // Calculate Total Revenue directly (Fresh Latex kg * Price per kg)
+        $total_revenue = round($fresh_latex_kg * $price_per_kg, 2);
+        $dry_rubber_kg = round($fresh_latex_kg, 2);
+
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $insertSql = "
+            INSERT INTO yield_logs (
+                plot_id, farmer_id, harvest_date, tapping_round,
+                fresh_latex_kg, drc_percent, dry_rubber_kg,
+                price_per_kg, total_revenue, buyer_name, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ";
+
+        if ($driver === 'pgsql') {
+            $insertSql .= " RETURNING id";
+            $stmt = $pdo->prepare($insertSql);
+            $stmt->execute([
+                $plot_id, $farmer_id, $harvest_date, $tapping_round,
+                $fresh_latex_kg, $drc_percent, $dry_rubber_kg,
+                $price_per_kg, $total_revenue, $buyer_name, $notes
+            ]);
+            $newId = (int)$stmt->fetchColumn();
+        } else {
+            $stmt = $pdo->prepare($insertSql);
+            $stmt->execute([
+                $plot_id, $farmer_id, $harvest_date, $tapping_round,
+                $fresh_latex_kg, $drc_percent, $dry_rubber_kg,
+                $price_per_kg, $total_revenue, $buyer_name, $notes
+            ]);
+            $newId = (int)$pdo->lastInsertId();
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'บันทึกข้อมูลผลผลิตน้ำยางสดเรียบร้อยแล้ว',
+            'id' => $newId,
+            'fresh_latex_kg' => $fresh_latex_kg,
+            'total_revenue' => $total_revenue
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    } catch (Throwable $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'เกิดข้อผิดพลาดในการบันทึก: ' . $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
-
-    // Get farmer_id from plot
-    $plotStmt = $pdo->prepare("SELECT farmer_id FROM rubber_plots WHERE id = ?");
-    $plotStmt->execute([$plot_id]);
-    $plot = $plotStmt->fetch();
-
-    if (!$plot) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลแปลงปลูก']);
-        exit;
-    }
-
-    $farmer_id = $plot['farmer_id'];
-    
-    // Calculate Total Revenue directly (Fresh Latex kg * Price per kg)
-    $total_revenue = round($fresh_latex_kg * $price_per_kg, 2);
-    $dry_rubber_kg = round($fresh_latex_kg, 2);
-    $drc_percent = (float)($data['drc_percent'] ?? 100.0);
-
-    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-    $insertSql = "
-        INSERT INTO yield_logs (
-            plot_id, farmer_id, harvest_date, tapping_round,
-            fresh_latex_kg, drc_percent, dry_rubber_kg,
-            price_per_kg, total_revenue, buyer_name, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ";
-
-    if ($driver === 'pgsql') {
-        $insertSql .= " RETURNING id";
-        $stmt = $pdo->prepare($insertSql);
-        $stmt->execute([
-            $plot_id, $farmer_id, $harvest_date, $tapping_round,
-            $fresh_latex_kg, $drc_percent, $dry_rubber_kg,
-            $price_per_kg, $total_revenue, $buyer_name, $notes
-        ]);
-        $newId = (int)$stmt->fetchColumn();
-    } else {
-        $stmt = $pdo->prepare($insertSql);
-        $stmt->execute([
-            $plot_id, $farmer_id, $harvest_date, $tapping_round,
-            $fresh_latex_kg, $drc_percent, $dry_rubber_kg,
-            $price_per_kg, $total_revenue, $buyer_name, $notes
-        ]);
-        $newId = (int)$pdo->lastInsertId();
-    }
-
-    echo json_encode([
-        'success' => true,
-        'message' => 'บันทึกข้อมูลผลผลิตน้ำยางสดเรียบร้อยแล้ว',
-        'id' => $newId,
-        'fresh_latex_kg' => $fresh_latex_kg,
-        'total_revenue' => $total_revenue
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
 }
 
 // PUT: Update Existing Yield Log
 if ($method === 'PUT') {
-    $data = json_decode(file_get_contents('php://input'), true);
-    $id = (int)($data['id'] ?? ($_GET['id'] ?? 0));
+    try {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = (int)($data['id'] ?? ($_GET['id'] ?? 0));
 
-    if ($id <= 0) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Missing ID']);
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing ID']);
+            exit;
+        }
+
+        $plot_id = (int)($data['plot_id'] ?? 0);
+        $harvest_date = $data['harvest_date'] ?? date('Y-m-d');
+        $tapping_round = (int)($data['tapping_round'] ?? 1);
+        $fresh_latex_kg = (float)($data['fresh_latex_kg'] ?? 0);
+        $price_per_kg = (float)($data['price_per_kg'] ?? 65.0);
+        $buyer_name = trim($data['buyer_name'] ?? '');
+        $notes = trim($data['notes'] ?? '');
+
+        $total_revenue = round($fresh_latex_kg * $price_per_kg, 2);
+        $dry_rubber_kg = round($fresh_latex_kg, 2);
+
+        $stmt = $pdo->prepare("
+            UPDATE yield_logs SET
+                plot_id = ?,
+                harvest_date = ?,
+                tapping_round = ?,
+                fresh_latex_kg = ?,
+                dry_rubber_kg = ?,
+                price_per_kg = ?,
+                total_revenue = ?,
+                buyer_name = ?,
+                notes = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([
+            $plot_id, $harvest_date, $tapping_round,
+            $fresh_latex_kg, $dry_rubber_kg, $price_per_kg,
+            $total_revenue, $buyer_name, $notes, $id
+        ]);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'แก้ไขข้อมูลผลผลิตเรียบร้อยแล้ว',
+            'id' => $id,
+            'total_revenue' => $total_revenue
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    } catch (Throwable $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'เกิดข้อผิดพลาดในการแก้ไข: ' . $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
-
-    $plot_id = (int)($data['plot_id'] ?? 0);
-    $harvest_date = $data['harvest_date'] ?? date('Y-m-d');
-    $tapping_round = (int)($data['tapping_round'] ?? 1);
-    $fresh_latex_kg = (float)($data['fresh_latex_kg'] ?? 0);
-    $price_per_kg = (float)($data['price_per_kg'] ?? 65.0);
-    $buyer_name = trim($data['buyer_name'] ?? '');
-    $notes = trim($data['notes'] ?? '');
-
-    $total_revenue = round($fresh_latex_kg * $price_per_kg, 2);
-    $dry_rubber_kg = round($fresh_latex_kg, 2);
-
-    $stmt = $pdo->prepare("
-        UPDATE yield_logs SET
-            plot_id = ?,
-            harvest_date = ?,
-            tapping_round = ?,
-            fresh_latex_kg = ?,
-            dry_rubber_kg = ?,
-            price_per_kg = ?,
-            total_revenue = ?,
-            buyer_name = ?,
-            notes = ?
-        WHERE id = ?
-    ");
-    $stmt->execute([
-        $plot_id, $harvest_date, $tapping_round,
-        $fresh_latex_kg, $dry_rubber_kg, $price_per_kg,
-        $total_revenue, $buyer_name, $notes, $id
-    ]);
-
-    echo json_encode([
-        'success' => true,
-        'message' => 'แก้ไขข้อมูลผลผลิตเรียบร้อยแล้ว',
-        'id' => $id,
-        'total_revenue' => $total_revenue
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
 }
 
 // DELETE: Delete Yield Log
 if ($method === 'DELETE') {
-    $id = $_GET['id'] ?? null;
-    if (!$id) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing ID']);
+    try {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing ID']);
+            exit;
+        }
+
+        $stmt = $pdo->prepare("DELETE FROM yield_logs WHERE id = ?");
+        $stmt->execute([$id]);
+
+        echo json_encode(['success' => true, 'message' => 'ลบข้อมูลผลผลิตเรียบร้อยแล้ว']);
+        exit;
+    } catch (Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'เกิดข้อผิดพลาดในการลบ: ' . $e->getMessage()]);
         exit;
     }
-
-    $stmt = $pdo->prepare("DELETE FROM yield_logs WHERE id = ?");
-    $stmt->execute([$id]);
-
-    echo json_encode(['success' => true, 'message' => 'ลบข้อมูลผลผลิตเรียบร้อยแล้ว']);
-    exit;
 }
 
 http_response_code(405);
