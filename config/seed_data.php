@@ -247,33 +247,62 @@ function seedDatabase($pdo) {
         // Farmers already exist
     }
 
-    // 4. Insert Simulated Forest Reserves in Surat Thani (Zone around PSU / Khao Tha Phet)
+    // 4. Insert 26 National Forest Reserves in Surat Thani (Zone C)
     try {
-        $forest1_geo = json_encode([
-            "type" => "Polygon",
-            "coordinates" => [[
-                [99.3590, 9.0980],
-                [99.3750, 9.1020],
-                [99.3820, 9.0850],
-                [99.3690, 9.0790],
-                [99.3590, 9.0980]
-            ]]
-        ]);
+        $zoneCPath = dirname(__DIR__) . '/Zone-c.geojson';
+        if (file_exists($zoneCPath)) {
+            $rawGeo = json_decode(file_get_contents($zoneCPath), true);
+            if ($rawGeo && isset($rawGeo['features'])) {
+                $enNames = [
+                    'R1.001' => 'Khao Phuttha Thong Forest Reserve',
+                    'R1.002' => 'Thung Rang, Khuan Siat, Bok Kai Fa & Khlong Kong Chang Forest Reserve',
+                    'R1.003' => 'Khlong Sin Pun Forest Reserve',
+                    'R1.004' => 'Khlong Yan Forest Reserve',
+                    'R1.005' => 'Wat Pradu Forest Reserve',
+                    'R1.006' => 'Hin Lat Waterfall Forest Reserve',
+                    'R1.007' => 'Don Sak Mangrove Forest Reserve',
+                    'R1.008' => 'Khlong Nam Thao Forest Reserve',
+                    'R1.009' => 'Khao Phlu Forest Reserve',
+                    'R1.010' => 'Tha Chang Mangrove Forest Reserve',
+                    'R1.011' => 'Khao Tha Phet Forest Reserve',
+                    'R1.012' => 'Koh Pha-ngan Forest Reserve',
+                    'R1.013' => 'Ban Na, Tha Ruea & Khian Sa Forest Reserve',
+                    'R1.014' => 'Tha Chana Forest Reserve',
+                    'R1.015' => 'Chaiya Khram & Wat Pradu Forest Reserve',
+                    'R1.016' => 'Bang Bao & Khlong Siat Forest Reserve',
+                    'R1.017' => 'Khlong Tha Nian & Phum Riang Mangrove Forest Reserve',
+                    'R1.018' => 'Thung Sai Chai Forest Reserve',
+                    'R1.019' => 'Tha Khoei, Khlong Sai, Maluan & Bang Ngon Forest Reserve',
+                    'R1.020' => 'Ban Mak & Pak Phang Forest Reserve',
+                    'R1.021' => 'Khlong Sok & Khlong Phanom Forest Reserve',
+                    'R1.022' => 'Yan Yao, Khao Wong & Krasum Forest Reserve',
+                    'R1.023' => 'Sai Thon & Khlong Song Forest Reserve',
+                    'R1.024' => 'Chaiya Khram & Wat Pradu (Plot 2) Forest Reserve',
+                    'R1.025' => 'Khao Phanom & Phlu Thuean Forest Reserve',
+                    'R1.026' => 'Khao Daeng Ram & Khao Na Rahu Forest Reserve'
+                ];
 
-        $forest2_geo = json_encode([
-            "type" => "Polygon",
-            "coordinates" => [[
-                [99.3300, 9.0650],
-                [99.3450, 9.0680],
-                [99.3480, 9.0520],
-                [99.3280, 9.0510],
-                [99.3300, 9.0650]
-            ]]
-        ]);
+                $colors = [
+                    '#dc2626', '#ea580c', '#d97706', '#ca8a04', '#65a30d',
+                    '#16a34a', '#059669', '#0d9488', '#0891b2', '#0284c7',
+                    '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#c026d3',
+                    '#db2777', '#e11d48', '#b91c1c', '#c2410c', '#b45309',
+                    '#4d7c0f', '#15803d', '#047857', '#0f766e', '#0369a1', '#1d4ed8'
+                ];
 
-        $stmt = $pdo->prepare("INSERT INTO forest_reserves (forest_code, name_th, name_en, category, geojson_geometry, area_rai, color_code) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute(['FOR-ST-001', 'เขตป่าสงวนแห่งชาติเขาท่าเพชร (จำลอง)', 'Khao Tha Phet National Forest Reserve (Simulated)', 'ป่าสงวนแห่งชาติ', $forest1_geo, 2450.75, '#ef4444']);
-        $stmt->execute(['FOR-ST-002', 'เขตป่าคุ้มครองต้นน้ำขุนทะเล (จำลอง)', 'Khun Thale Watershed Protected Forest (Simulated)', 'ป่าคุ้มครองแหล่งน้ำ', $forest2_geo, 1820.30, '#dc2626']);
+                $stmt = $pdo->prepare("INSERT INTO forest_reserves (forest_code, name_th, name_en, category, geojson_geometry, area_rai, color_code) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                foreach ($rawGeo['features'] as $idx => $f) {
+                    $p = $f['properties'] ?? [];
+                    $code = $p['NRF_CODE'] ?? sprintf('R1.%03d', $idx + 1);
+                    $nameTh = $p['FR_NAME'] ?? ('ป่าสงวนแห่งชาติ ' . $code);
+                    $nameEn = $enNames[$code] ?? ($nameTh . ' Forest Reserve');
+                    $category = 'Zone-C ป่าสงวนแห่งชาติ';
+                    $areaRai = (float)($p['AREA_RAI'] ?? ($p['rai_GIS'] ?? 0));
+                    $colorCode = $colors[$idx % count($colors)];
+                    $stmt->execute([$code, $nameTh, $nameEn, $category, json_encode($f['geometry']), $areaRai, $colorCode]);
+                }
+            }
+        }
     } catch (Exception $e) {
         // Forests exist
     }
