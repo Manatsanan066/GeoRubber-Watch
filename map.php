@@ -1403,14 +1403,16 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 </div>
 
                 <div class="p-3.5 bg-orange-50 rounded-2xl text-[16px] text-orange-950 border border-orange-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span class="leading-relaxed">📌 ระบบจะทำการบันทึกข้อมูลแปลงนี้เป็น <strong>"โซนเฝ้าระวัง (Under Review)"</strong> เพื่อติดตามตรวจสอบ</span>
-                  <button 
-                    type="button" 
-                    onclick="submitPlotFromModal('under_review')" 
-                    class="px-5 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-[16px] shadow transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <span>💾 บันทึกแปลงเฝ้าระวัง</span>
-                  </button>
+                  <span class="leading-relaxed">📌 แปลงนี้อยู่ในโซนเฝ้าระวัง สามารถ <strong>ออกเอกสารรับรองเฝ้าระวัง (QR Code)</strong> หรือบันทึกข้อมูลได้</span>
+                  <div class="flex items-center gap-2">
+                    <button 
+                      type="button" 
+                      onclick="goToModalStep(4)" 
+                      class="px-5 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-[16px] shadow transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>ออก QR Code เฝ้าระวัง ➔</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1568,17 +1570,25 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             type="button" 
             id="modal-btn-prev" 
             onclick="prevModalStep()" 
-            class="hidden px-4 py-2 rounded-full bg-white hover:bg-gray-100 text-gray-600 font-bold text-[16px] border border-gray-300 transition-all cursor-pointer"
+            class="hidden px-4 py-2 rounded-full bg-white hover:bg-gray-100 text-gray-600 font-bold text-[16px] border border-gray-300 transition-all cursor-pointer shadow-xs"
           >
             ‹ ย้อนกลับ
           </button>
           <button 
             type="button" 
+            id="modal-btn-save" 
+            onclick="submitPlotFromModal()" 
+            class="px-5 py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-[16px] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <span id="modal-btn-save-label">💾 บันทึกข้อมูล</span>
+          </button>
+          <button 
+            type="button" 
             id="modal-btn-next" 
             onclick="nextModalStep()" 
-            class="px-5 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-sm hover:shadow transition-all flex items-center gap-1 cursor-pointer uppercase"
+            class="px-5 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-sm hover:shadow transition-all flex items-center gap-1 cursor-pointer"
           >
-            <span id="modal-btn-next-label">ขั้นตอนถัดไป</span>
+            <span id="modal-btn-next-label">หน้าถัดไป</span>
             <span class="text-[16px] font-bold">›</span>
           </button>
         </div>
@@ -2123,8 +2133,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         if (cutoffElem) {
           cutoffElem.innerText = `📅 ปลูกปี ${plantYear} (สอดคล้อง)`;
         }
+        // ปลอดภัย: แสดงปุ่มหน้าถัดไปเพื่อไปขั้นตอนที่ 4
         if (btnNext) btnNext.classList.remove("hidden");
-        if (btnNextLabel) btnNextLabel.innerText = "ขั้นตอนถัดไป: ออก QR Code";
+        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ออก QR Code";
       } else if (currentStatus === 'under_review') {
         if (caseReview) caseReview.classList.remove("hidden");
         const dist = check && check.nearest_forest_distance_m ? Math.round(check.nearest_forest_distance_m) : null;
@@ -2144,8 +2155,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         if (reviewDesc && check && check.nearest_forest_name) {
           reviewDesc.innerHTML = `แปลงปลูกนี้ <strong class="underline">อยู่นอกเขตป่าสงวน</strong> แต่มีระยะประชิดแนวเขต <strong>${check.nearest_forest_name}</strong> เพียง ${dist ? `${dist} เมตร` : '< 500 เมตร'} ซึ่งอยู่ในระยะกันชนที่ต้องเฝ้าระวัง`;
         }
+        // มีความเสี่ยง: แสดงปุ่มหน้าถัดไปเพื่อไปขั้นตอนที่ 4 ได้
         if (btnNext) btnNext.classList.remove("hidden");
-        if (btnNextLabel) btnNextLabel.innerText = "บันทึกแปลงเฝ้าระวัง";
+        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ออก QR Code (เฝ้าระวัง)";
       } else {
         if (caseOverlap) caseOverlap.classList.remove("hidden");
         if (statusPill) {
@@ -2161,8 +2173,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         if (overlapDesc) {
           overlapDesc.innerHTML = `แปลงปลูกนี้ <strong class="underline">ตรวจพบการทับซ้อนกับแนวเขต ${forestName}</strong> ซึ่งเป็นพื้นที่คุ้มครองและไม่ผ่านเกณฑ์ EUDR`;
         }
-        if (btnNext) btnNext.classList.remove("hidden");
-        if (btnNextLabel) btnNextLabel.innerText = "บันทึกข้อมูล";
+        // ทับซ้อนป่าสงวน: ซ่อนปุ่มหน้าถัดไป (ไม่สามารถไปยังขั้นตอนที่ 4 ได้)
+        if (btnNext) btnNext.classList.add("hidden");
       }
     }
 
@@ -2206,6 +2218,14 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
     }
 
     function goToModalStep(step) {
+      // ตรวจสอบเงื่อนไข: หากแปลงทับซ้อนป่าสงวน จะไม่สามารถไปขั้นตอนที่ 4 ได้
+      if (step === 4 && modalPresetMode === 'non_compliant') {
+        if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
+          App.showToast('⚠️ แปลงนี้ทับซ้อนเขตป่าสงวน ไม่สามารถออกหนังสือรับรอง QR Code ได้ กรุณาบันทึกข้อมูลในขั้นตอนที่ 3', 'warning');
+        }
+        step = 3;
+      }
+
       modalCurrentStep = step;
 
       // Toggle modal step views
@@ -2251,34 +2271,60 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
       // Update Bottom Action Buttons
       const btnPrev = document.getElementById("modal-btn-prev");
+      const btnSave = document.getElementById("modal-btn-save");
+      const btnSaveLabel = document.getElementById("modal-btn-save-label");
       const btnNext = document.getElementById("modal-btn-next");
       const btnNextLabel = document.getElementById("modal-btn-next-label");
 
       if (step === 1) {
-        btnPrev.classList.add("hidden");
-        btnNext.classList.remove("hidden");
-        btnNextLabel.innerText = "ขั้นตอนถัดไป";
+        // ขั้นตอนที่ 1: ปุ่มบันทึกข้อมูล และ ปุ่มหน้าถัดไป (ปุ่มย้อนกลับซ่อน)
+        if (btnPrev) btnPrev.classList.add("hidden");
+        if (btnSave) {
+          btnSave.classList.remove("hidden");
+          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกข้อมูล";
+          btnSave.onclick = function() { submitPlotFromModal(); };
+        }
+        if (btnNext) btnNext.classList.remove("hidden");
+        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป";
       } else if (step === 2) {
-        btnPrev.classList.remove("hidden");
-        btnNext.classList.remove("hidden");
-        btnNextLabel.innerText = "ขั้นตอนถัดไป: ตรวจสอบ EUDR";
+        // ขั้นตอนที่ 2: ปุ่มย้อนกลับ, ปุ่มบันทึกข้อมูล, และ ปุ่มหน้าถัดไป
+        if (btnPrev) btnPrev.classList.remove("hidden");
+        if (btnSave) {
+          btnSave.classList.remove("hidden");
+          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกข้อมูล";
+          btnSave.onclick = function() { submitPlotFromModal(); };
+        }
+        if (btnNext) btnNext.classList.remove("hidden");
+        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ตรวจสอบ EUDR";
       } else if (step === 3) {
-        btnPrev.classList.remove("hidden");
-        btnNext.classList.remove("hidden");
+        // ขั้นตอนที่ 3: ปุ่มย้อนกลับ, ปุ่มบันทึกข้อมูล, และ ปุ่มหน้าถัดไป (แสดงเฉพาะกรณีปลอดภัย/เฝ้าระวัง)
+        if (btnPrev) btnPrev.classList.remove("hidden");
+        if (btnSave) {
+          btnSave.classList.remove("hidden");
+          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกข้อมูล";
+          btnSave.onclick = function() { submitPlotFromModal(modalPresetMode); };
+        }
         renderStep3SpatialResult();
       } else if (step === 4) {
-        btnPrev.classList.remove("hidden");
-        btnNext.classList.add("hidden");
+        // ขั้นตอนที่ 4: ปุ่มย้อนกลับ และ ปุ่มบันทึก (ไม่มีปุ่มหน้าถัดไป)
+        if (btnPrev) btnPrev.classList.remove("hidden");
+        if (btnSave) {
+          btnSave.classList.remove("hidden");
+          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกแปลงปลูก";
+          btnSave.onclick = function() { submitPlotFromModal(modalPresetMode || 'compliant'); };
+        }
+        if (btnNext) btnNext.classList.add("hidden");
         updateModalSummaryCard();
       }
     }
 
     function nextModalStep() {
       if (modalCurrentStep === 3) {
-        if (modalPresetMode === 'compliant') {
+        if (modalPresetMode === 'compliant' || modalPresetMode === 'under_review') {
           goToModalStep(4);
         } else {
-          submitPlotFromModal(modalPresetMode);
+          // ถ้าทับซ้อนป่าสงวน ให้บันทึกข้อมูลในขั้นตอนที่ 3
+          submitPlotFromModal('non_compliant');
         }
         return;
       }
@@ -2309,12 +2355,13 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       const eudrBadgeElem = document.getElementById("modal-sum-eudr-badge");
       if (eudrBadgeElem) {
         const check = window.currentDrawnSpatialCheck;
-        if (check && (check.has_overlap || check.eudr_status === 'non_compliant')) {
+        if (check && (check.has_overlap || check.eudr_status === 'non_compliant' || modalPresetMode === 'non_compliant')) {
           eudrBadgeElem.className = "font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200 text-[16px]";
           eudrBadgeElem.innerHTML = "🔴 ไม่ผ่านเกณฑ์ (ทับซ้อนป่าสงวน)";
-        } else if (check && (check.eudr_status === 'under_review' || check.nearest_forest_distance_m < 500)) {
+        } else if (check && (check.eudr_status === 'under_review' || check.nearest_forest_distance_m < 500 || modalPresetMode === 'under_review')) {
+          const dist = check && check.nearest_forest_distance_m ? Math.round(check.nearest_forest_distance_m) : null;
           eudrBadgeElem.className = "font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 text-[16px]";
-          eudrBadgeElem.innerHTML = `🟡 โซนเฝ้าระวัง Buffer (${Math.round(check.nearest_forest_distance_m)} ม.)`;
+          eudrBadgeElem.innerHTML = `🟠 โซนเฝ้าระวัง Buffer ${dist ? `(${dist} ม.)` : '(< 500 ม.)'}`;
         } else {
           eudrBadgeElem.className = "font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[16px]";
           eudrBadgeElem.innerHTML = "🟢 ผ่านเกณฑ์ 100% (Compliant)";
