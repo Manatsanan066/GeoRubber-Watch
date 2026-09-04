@@ -748,25 +748,31 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           </div>
 
           <!-- Status Legend Guide -->
-          <div class="mt-auto pt-3 border-t border-gray-100 text-[14px] text-gray-700 space-y-2 bg-[#f8faf9] p-3 rounded-2xl border border-gray-100">
-            <div class="font-bold text-mezenc-teal flex items-center gap-1.5 text-[14px]">
-              <span>🛡️</span> <span>สถานะความสอดคล้อง EUDR:</span>
+          <div class="mt-auto pt-3 border-t border-gray-100 text-[15px] text-gray-700 space-y-2 bg-[#f8faf9] p-3 rounded-2xl border border-gray-100">
+            <div class="font-bold text-mezenc-teal flex items-center gap-1.5 text-[15px]">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-mezenc-teal shrink-0">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M8 16L4.35009 13.3929C2.24773 11.8912 1 9.46667 1 6.88306V3L8 0L15 3V6.88306C15 9.46667 13.7523 11.8912 11.6499 13.3929L8 16ZM12.2071 5.70711L10.7929 4.29289L7 8.08579L5.20711 6.29289L3.79289 7.70711L7 10.9142L12.2071 5.70711Z" fill="#00a896"/>
+              </svg>
+              <span>สถานะความสอดคล้อง EUDR</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span>
-              <span class="font-medium text-gray-800 text-[14px] leading-tight">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>
+              <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 shrink-0"></span>
+              <span class="font-medium text-gray-800 text-[15px] leading-tight">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full bg-rose-600 shrink-0"></span>
-              <span class="font-medium text-gray-800 text-[14px] leading-tight">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>
+              <span class="w-3.5 h-3.5 rounded-full bg-rose-600 shrink-0"></span>
+              <span class="font-medium text-gray-800 text-[15px] leading-tight">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full bg-amber-500 shrink-0"></span>
-              <span class="font-medium text-gray-800 text-[14px] leading-tight">โซนเฝ้าระวัง (Buffer &lt; 500 ม.)</span>
+              <span class="w-3.5 h-3.5 rounded-full bg-amber-500 shrink-0"></span>
+              <span class="font-medium text-gray-800 text-[15px] leading-tight">โซนเฝ้าระวัง (Buffer &lt; 500 ม.)</span>
             </div>
-            <div class="flex items-center gap-2 pt-1.5 border-t border-gray-200/60">
-              <span class="w-3.5 h-3 rounded-xs border-2 border-red-600 bg-red-500/40 shrink-0"></span>
-              <span class="font-bold text-red-700 text-[13px] leading-tight">แนวเขตป่าสงวน (Zone C เขตหวงห้าม)</span>
+            <div class="flex items-center gap-2 pt-2 border-t border-gray-200/60">
+              <svg viewBox="0 0 1024 1024" class="w-5 h-5 shrink-0" xmlns="http://www.w3.org/2000/svg">
+                <path d="M921.6 742.4c0 14.08-11.52 25.6-25.6 25.6l-256 64-256-76.8-230.4 64c-14.08 0-25.6-11.52-25.6-25.6V332.8c0-14.08 11.52-25.6 25.6-25.6l230.4-64 256 76.8 256-64c14.08 0 25.6 11.52 25.6 25.6v460.8z" fill="#66A8A5"/>
+                <path d="M640 832l-256-76.8V243.2l256 76.8z" fill="#438478"/>
+              </svg>
+              <span class="font-bold text-red-700 text-[15px] leading-tight">แนวเขตป่าสงวน (Zone C เขตหวงห้าม)</span>
             </div>
           </div>
 
