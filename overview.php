@@ -604,7 +604,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
               <input 
                 type="text" 
                 id="forest-search-input" 
-                placeholder="พิมพ์ชื่อป่า (เช่น เขาพุทธทอง) หรือรหัส (เช่น R1.001)..." 
+                placeholder="พิมพ์รหัส เช่น R1.001 หรือชื่อเขตป่าสงวน" 
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl pl-9 pr-8 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all shadow-xs"
                 oninput="GeoOverview.filterForestList(this.value)"
                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); GeoOverview.handleSearchEnter(); }"
@@ -652,9 +652,10 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
               <button 
                 type="button" 
                 onclick="GeoOverview.recenterSelectedForest()" 
-                class="flex-1 py-1.5 px-2.5 rounded-xl bg-mezenc-teal hover:bg-mezenc-brightCyan text-white font-bold text-[14px] transition-colors text-center cursor-pointer shadow-xs"
+                class="flex-1 py-1.5 px-2.5 rounded-xl bg-mezenc-teal hover:bg-mezenc-brightCyan text-white font-bold text-[14px] transition-colors text-center cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
               >
-                🔍 ซูมดูภาพรวมผืนป่า
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 inline-block"><path d="M15.7955 15.8111L21 21M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <span>ซูมดูภาพรวมผืนป่า</span>
               </button>
             </div>
           </div>
@@ -712,7 +713,7 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
           <!-- 1.4 BASEMAP SELECT -->
           <div>
             <label for="basemap-select" class="block text-[15px] font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 inline-block"><path d="M12 6H12.01M9 20L3 17V4L5 5M9 20L15 17M9 20V14M15 17L21 20V7L19 6M15 17V14M15 6.2C15 7.96731 13.5 9.4 12 11C10.5 9.4 9 7.96731 9 6.2C9 4.43269 10.3431 3 12 3C13.6569 3 15 4.43269 15 6.2Z" stroke="#00A896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <svg fill="#00a896" viewBox="0 0 32 32" class="w-4 h-4 shrink-0 inline-block" xmlns="http://www.w3.org/2000/svg" stroke="#00a896"><title>satellite</title><path d="M22.81 23.318l-0.126-0.188 1.107-0.704-2.953-4.646-1.214 0.772-0.521-0.779c0.817-0.727 1.372-1.742 1.504-2.887l4.052 5.901 6.244-1.885-11.090-16.151-6.244 1.885 3.628 5.283c-0.363-0.093-0.743-0.142-1.134-0.142-1.915 0-3.555 1.177-4.237 2.847l-4.095-5.963-6.244 1.885 11.090 16.151 6.244-1.885-2.667-3.884c0.888-0.017 1.714-0.288 2.409-0.742l0.488 0.73-1.026 0.652 2.953 4.646 1.133-0.72 0.12 0.18c-1.012 0.736-1.72 1.902-1.94 3.227l6.030-3.773c-1.3-0.448-2.513-0.32-3.511 0.19zM25.79 26.619c0 0.638-0.517 1.155-1.155 1.155s-1.155-0.517-1.155-1.155c0-0.638 0.517-1.155 1.155-1.155s1.155 0.517 1.155 1.155z"></path></svg>
               <span>แผนที่ฐาน (Basemap)</span>
             </label>
             <div class="relative">
@@ -1364,13 +1365,22 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
             .setLatLng(center)
             .setContent(`
               <div style="min-width: 260px; padding: 4px; font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif;">
-                <div style="font-weight: 800; color: #0e4d4e; font-size: 18px; margin-bottom: 3px;">🌲 ${p.name_th}</div>
+                <div style="font-weight: 800; color: #0e4d4e; font-size: 18px; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
+                  <svg style="width: 20px; height: 20px; flex-shrink: 0;" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="#e32400" d="M346.483,226.653c-58.176-75.765-90.498-181.813-90.498-181.813s-32.318,106.048-90.505,181.813 c0,0,26.66,16.09,41.21,7.569c0,0-14.55,65.341-79.995,151.514c58.176,18.923,101.81-12.328,101.81-12.328v93.75h21.025h12.916 h21.021v-93.75c0,0,43.642,31.25,101.817,12.328c-65.457-86.174-79.995-151.514-79.995-151.514 C319.826,242.743,346.483,226.653,346.483,226.653z"></path><path fill="#e32400" d="M160.886,307.087c-19.185-35.761-24.363-59.015-24.363-59.015c8.768,5.141,23.33-1.454,29.058-4.376 c1.522-0.84,2.417-1.379,2.417-1.379c-5.313-6.985-10.353-14.276-15.186-21.718c-34.855-54.482-53.972-117.26-53.972-117.26 s-24.711,81.041-69.23,138.977c0,0,20.361,12.283,31.542,5.756c0,0-11.181,49.956-61.151,115.88 c44.451,14.426,77.788-9.443,77.788-9.443v71.674h42.034v-71.674c0,0,3.035,2.151,8.415,4.759 C141.633,340.391,152.332,322.817,160.886,307.087z"></path><path fill="#e32400" d="M450.849,248.071c11.121,6.527,31.474-5.756,31.474-5.756c-44.454-57.936-69.155-138.977-69.155-138.977 s-19.125,62.778-54.05,117.26c-4.766,7.441-9.803,14.733-15.123,21.718c0,0,0.906,0.54,2.428,1.379 c5.725,2.922,20.29,9.517,29.058,4.376c0,0-5.178,23.328-24.442,59.09c8.566,15.655,19.331,33.303,32.723,52.106 c5.381-2.608,8.423-4.759,8.423-4.759v71.674h41.967v-71.674c0,0,33.394,23.869,77.848,9.443 C461.97,298.027,450.849,248.071,450.849,248.071z"></path></svg>
+                  <span>${p.name_th}</span>
+                </div>
                 <div style="font-size: 16px; color: #64748b; margin-bottom: 8px;">
                   รหัส: <span style="font-family: monospace; font-weight:700; color:#00b4d8; font-size:16px;">${p.forest_code}</span> | ${p.category || 'ป่าสงวนแห่งชาติ'}
                 </div>
-                <div style="background: #f4faf7; border: 1.5px solid #bee6e1; padding: 8px 10px; border-radius: 10px; font-size: 16px; line-height: 1.6; margin-bottom: 8px;">
-                  <div>📐 <strong>เนื้อที่คุ้มครอง:</strong> <span style="font-weight:700; color:#0e4d4e; font-size:16px;">${parseFloat(p.area_rai || 0).toLocaleString()} ไร่</span></div>
-                  <div>📍 <strong>พิกัดศูนย์กลาง:</strong> ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}</div>
+                <div style="background: #f4faf7; border: 1.5px solid #bee6e1; padding: 8px 10px; border-radius: 10px; font-size: 16px; line-height: 1.6; margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <svg style="width: 16px; height: 16px; flex-shrink: 0;" viewBox="0 0 32 32" fill="none"><polygon points="3,3 3,27 29,27" stroke="#00a896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polygon><polygon points="8,15 8,22 16,22" stroke="#00a896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polygon><polygon points="29,13.7 29,16.5 26.2,16.5 15.6,5.9 18.4,3.1" stroke="#00a896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polygon></svg>
+                    <span><strong>เนื้อที่คุ้มครอง:</strong> <span style="font-weight:700; color:#0e4d4e; font-size:16px;">${parseFloat(p.area_rai || 0).toLocaleString()} ไร่</span></span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <svg style="width: 16px; height: 16px; flex-shrink: 0;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 16.0156C19.2447 16.5445 20 17.2392 20 18C20 19.6568 16.4183 21 12 21C7.58172 21 4 19.6568 4 18C4 17.2392 4.75527 16.5445 6 16.0156" stroke="#00a896" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M17 8.44444C17 11.5372 12 17 12 17C12 17 7 11.5372 7 8.44444C7 5.35165 9.23858 3 12 3C14.7614 3 17 5.35165 17 8.44444Z" stroke="#00a896" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><circle cx="12" cy="8" r="1" stroke="#00a896" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></circle></svg>
+                    <span><strong>พิกัดศูนย์กลาง:</strong> ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}</span>
+                  </div>
                 </div>
                 <div style="font-size: 16px; background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; padding: 6px 10px; border-radius: 8px; font-weight: 700; line-height: 1.4;">
                   ⚠️ เขตป่าเพื่อการอนุรักษ์ (Zone C) - ห้ามบุกรุกตามเกณฑ์ EUDR
