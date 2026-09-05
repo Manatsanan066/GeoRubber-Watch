@@ -541,7 +541,7 @@
         </div>
         <div class="w-full pt-1 flex items-center justify-center gap-2">
           <button onclick="openCardModal(1)" class="px-5 xl:px-6 py-1.5 xl:py-2 rounded-full border border-gray-200 hover:border-mezenc-teal hover:bg-mezenc-teal hover:text-white text-gray-500 text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer">
-            READ MORE
+            <span data-i18n="card_readmore">อ่านเพิ่มเติม</span>
           </button>
         </div>
       </div>
@@ -562,7 +562,7 @@
         </div>
         <div class="w-full pt-1 flex items-center justify-center gap-2">
           <button onclick="openCardModal(2)" class="px-5 xl:px-6 py-1.5 xl:py-2 rounded-full border border-gray-200 hover:border-mezenc-teal hover:bg-mezenc-teal hover:text-white text-gray-500 text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer">
-            READ MORE
+            <span data-i18n="card_readmore">อ่านเพิ่มเติม</span>
           </button>
         </div>
       </div>
@@ -583,7 +583,7 @@
         </div>
         <div class="w-full pt-1 flex items-center justify-center gap-2">
           <button onclick="openCardModal(3)" class="px-5 xl:px-6 py-1.5 xl:py-2 rounded-full border border-gray-200 hover:border-mezenc-teal hover:bg-mezenc-teal hover:text-white text-gray-500 text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer">
-            READ MORE
+            <span data-i18n="card_readmore">อ่านเพิ่มเติม</span>
           </button>
         </div>
       </div>
@@ -604,7 +604,7 @@
         </div>
         <div class="w-full pt-1 flex items-center justify-center gap-2">
           <button onclick="openCardModal(4)" class="px-5 xl:px-6 py-1.5 xl:py-2 rounded-full border border-gray-200 hover:border-mezenc-teal hover:bg-mezenc-teal hover:text-white text-gray-500 text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer">
-            READ MORE
+            <span data-i18n="card_readmore">อ่านเพิ่มเติม</span>
           </button>
         </div>
       </div>
@@ -625,7 +625,7 @@
         </div>
         <div class="w-full pt-1 flex items-center justify-center gap-2">
           <button onclick="openCardModal(5)" class="px-5 xl:px-6 py-1.5 xl:py-2 rounded-full border border-gray-200 hover:border-mezenc-teal hover:bg-mezenc-teal hover:text-white text-gray-500 text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer">
-            READ MORE
+            <span data-i18n="card_readmore">อ่านเพิ่มเติม</span>
           </button>
         </div>
       </div>
@@ -960,7 +960,7 @@
 
           <!-- Bottom Action Pill Button -->
           <div class="px-1 sm:px-2 pt-2">
-            <button type="button" onclick="openReadMoreModal('🔴', 'สำรวจ 26 แนวเขตป่าสงวนแห่งชาติ', 'กรุณาเข้าสู่ระบบเพื่อสำรวจและวิเคราะห์แนวเขตป่าสงวนแห่งชาติ 26 แห่งในจังหวัดสุราษฎร์ธานี (Zone C) ตรวจสอบพิกัดความทับซ้อน และข้อมูลเชิงพื้นที่ระบบ GIS อย่างละเอียด', 'login.php?redirect=overview.php')" class="inline-flex items-center justify-center gap-2.5 bg-mezenc-brightCyan hover:bg-mezenc-teal text-white px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
+            <button type="button" onclick="openRiskModal(1)" class="inline-flex items-center justify-center gap-2.5 bg-mezenc-brightCyan hover:bg-mezenc-teal text-white px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
               <span data-i18n="risk_c1_btn">สำรวจ 26 แนวเขตป่าสงวน ➔</span>
             </button>
           </div>
@@ -987,7 +987,7 @@
 
           <!-- Bottom Action Pill Button -->
           <div class="px-1 sm:px-2 pt-2">
-            <button type="button" onclick="openReadMoreModal('🟠', 'ตรวจสอบแนวเขตและแปลงพิกัด (Map GIS)', 'กรุณาเข้าสู่ระบบเพื่อเข้าสู่ระบบแผนที่ GIS สำหรับวาดแปลงพิกัดและตรวจสอบแนวเขตป่าสงวนแห่งชาติ 26 แห่ง พร้อมระบบวิเคราะห์ความเสี่ยงเชิงพื้นที่', 'login.php?redirect=map.php')" class="inline-flex items-center justify-center gap-2.5 bg-mezenc-brightCyan hover:bg-mezenc-teal text-white px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
+            <button type="button" onclick="openRiskModal(2)" class="inline-flex items-center justify-center gap-2.5 bg-mezenc-brightCyan hover:bg-mezenc-teal text-white px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
               <span data-i18n="risk_c2_btn">ตรวจสอบระยะห่าง Buffer ➔</span>
             </button>
           </div>
@@ -1014,7 +1014,7 @@
 
           <!-- Bottom Action Pill Button -->
           <div class="px-1 sm:px-2 pt-2">
-            <button type="button" onclick="openReadMoreModal('🟢', 'ออกเอกสาร EUDR Passport ดิจิทัล', 'กรุณาเข้าสู่ระบบเพื่อสร้างเอกสารรับรองความสอดคล้องตามมาตรฐาน EUDR พร้อม QR Code สำหรับการตรวจสอบย้อนกลับ (Traceability) 100% สำหรับการส่งออกยางพารา', 'login.php?redirect=trace.php')" class="inline-flex items-center justify-center gap-2.5 bg-mezenc-brightCyan hover:bg-mezenc-teal text-white px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
+            <button type="button" onclick="openRiskModal(3)" class="inline-flex items-center justify-center gap-2.5 bg-mezenc-brightCyan hover:bg-mezenc-teal text-white px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
               <span data-i18n="risk_c3_btn">ออกเอกสาร EUDR Passport ➔</span>
             </button>
           </div>
@@ -1044,7 +1044,7 @@
             </div>
             <div class="space-y-0.5">
               <div class="font-extrabold text-[15px] sm:text-[16px] leading-snug text-white" data-i18n="foot_title">แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา</div>
-              <div class="font-semibold text-[13px] sm:text-[14px] leading-snug text-white/95">GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations</div>
+              <div class="font-semibold text-[13px] sm:text-[14px] leading-snug text-white/95" data-i18n="foot_title_en">GeoRubber Watch: ระบบภูมิสารสนเทศติดตามพื้นที่ปลูกยางพารายั่งยืน</div>
             </div>
           </div>
           <p class="text-[14px] text-white/85 leading-relaxed font-light" data-i18n="foot_dept">
@@ -1061,14 +1061,14 @@
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
             <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
             <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div>✉️ <strong>อีเมล / Email:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
+            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
           </div>
         </div>
 
         <!-- คอลัมน์ที่ 3: กล่องสถิติพื้นที่ (Surat Thani Territory Card) -->
         <div class="md:col-span-3 flex justify-start md:justify-end">
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
-            <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1">SURAT THANI FOREST COVERAGE</div>
+            <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
             <div class="text-[14px] font-bold text-white leading-tight" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
             <div class="text-[12px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
@@ -1080,7 +1080,7 @@
       <!-- แถบล่างสุด (Copyright Bar) -->
       <div class="pt-6 flex flex-col sm:flex-row justify-between items-center text-[14px] text-white/75 gap-4">
         <div data-i18n="foot_copy">&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
-        <div class="text-mezenc-mint text-center sm:text-right">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
+        <div class="text-mezenc-mint text-center sm:text-right" data-i18n="foot_eudr_cert">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
       </div>
 
     </div>
@@ -1120,27 +1120,27 @@
         <!-- Details Grid -->
         <div class="bg-mezenc-sand p-3.5 sm:p-4 rounded-2xl border border-gray-200 space-y-2">
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500">👨‍🌾 เจ้าของแปลง / เกษตรกร:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_farmer">👨‍🌾 เจ้าของแปลง / เกษตรกร:</span>
             <span class="font-bold text-gray-800" id="modal-farmer-name">-</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500">📄 ประเภทเอกสารสิทธิ์:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_doc">📄 ประเภทเอกสารสิทธิ์:</span>
             <span class="font-bold text-gray-800" id="modal-doc-type">โฉนดที่ดิน (น.ส.4 จ)</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500">🗺️ ที่ตั้งแปลง:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_loc">🗺️ ที่ตั้งแปลง:</span>
             <span class="font-bold text-gray-800" id="modal-location">-</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500">📐 เนื้อที่คำนวณ:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_area">📐 เนื้อที่คำนวณ:</span>
             <span class="font-bold text-gray-800" id="modal-area">-</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500">🌳 พันธุ์ยางพารา / สถานะ:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_clone">🌳 พันธุ์ยางพารา / สถานะ:</span>
             <span class="font-bold text-gray-800" id="modal-rubber-clone">-</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">🌲 ระยะห่างป่าสงวนที่ใกล้ที่สุด:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_dist">🌲 ระยะห่างป่าสงวนที่ใกล้ที่สุด:</span>
             <span class="font-bold" id="modal-forest-dist">-</span>
           </div>
         </div>
@@ -1149,13 +1149,13 @@
         <div class="space-y-1.5">
           <div class="font-bold text-gray-700" data-i18n="deed_lbl_checklist">การประเมินความสอดคล้องตามมาตรฐาน EUDR:</div>
           <div class="flex items-center gap-2 text-gray-600" id="modal-check-1">
-            <span>✅</span> <span>พิกัด Polygon WGS84 บันทึกบน Supabase Cloud ครบถ้วน</span>
+            <span>✅</span> <span data-i18n="deed_chk1">พิกัด Polygon WGS84 บันทึกบน Supabase Cloud ครบถ้วน</span>
           </div>
           <div class="flex items-center gap-2 text-gray-600" id="modal-check-2">
-            <span>✅</span> <span>ปลอดการตัดไม้ทำลายป่าหลัง 31 ธ.ค. 2020</span>
+            <span>✅</span> <span data-i18n="deed_chk2">ปลอดการตัดไม้ทำลายป่าหลัง 31 ธ.ค. 2020</span>
           </div>
           <div class="flex items-center gap-2 text-gray-600" id="modal-check-3">
-            <span>✅</span> <span>เอกสารสิทธิ์ถูกต้อง สามารถออก EUDR Passport ได้ทันที</span>
+            <span>✅</span> <span data-i18n="deed_chk3">เอกสารสิทธิ์ถูกต้อง สามารถออก EUDR Passport ได้ทันที</span>
           </div>
         </div>
 
@@ -1167,19 +1167,19 @@
           ⚠️
         </div>
         <div class="space-y-1.5">
-          <h4 class="font-extrabold text-gray-900 text-base" id="modal-notfound-title">
+          <h4 class="font-extrabold text-gray-900 text-base" id="modal-notfound-title" data-i18n="deed_notfound_title">
             ไม่พบข้อมูลในฐานข้อมูล
           </h4>
-          <p class="text-xs sm:text-sm text-gray-500 max-w-sm mx-auto leading-relaxed" id="modal-notfound-desc">
+          <p class="text-xs sm:text-sm text-gray-500 max-w-sm mx-auto leading-relaxed" id="modal-notfound-desc" data-i18n="deed_notfound_desc">
             ระบบตรวจสอบกับฐานข้อมูล Supabase Cloud แล้ว ไม่พบรหัสแปลงปลูกหรือเลขที่เอกสารสิทธิ์นี้
           </p>
         </div>
         <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 text-left space-y-1 font-medium">
-          <div>💡 <strong>คำแนะนำในการค้นหา:</strong></div>
+          <div data-i18n="deed_hint_hdr">💡 <strong>คำแนะนำในการค้นหา:</strong></div>
           <ul class="list-disc list-inside space-y-0.5 text-amber-800">
-            <li>ตรวจสอบตัวสะกดหรือขีดคั่น เช่น <code class="bg-amber-100 px-1 rounded">RB-ST-2026-006</code> หรือ <code class="bg-amber-100 px-1 rounded">1234-5678</code></li>
-            <li>ลองค้นหาด้วย <strong>ชื่อแปลง</strong> หรือ <strong>ชื่อเกษตรกร</strong></li>
-            <li>หากยังไม่ได้ลงทะเบียน สามารถเข้าสู่ระบบเพื่อวาดแปลงปลูกใหม่ได้ทันที</li>
+            <li data-i18n="deed_hint_1">ตรวจสอบตัวสะกดหรือขีดคั่น เช่น <code class="bg-amber-100 px-1 rounded">RB-ST-2026-006</code> หรือ <code class="bg-amber-100 px-1 rounded">1234-5678</code></li>
+            <li data-i18n="deed_hint_2">ลองค้นหาด้วย <strong>ชื่อแปลง</strong> หรือ <strong>ชื่อเกษตรกร</strong></li>
+            <li data-i18n="deed_hint_3">หากยังไม่ได้ลงทะเบียน สามารถเข้าสู่ระบบเพื่อวาดแปลงปลูกใหม่ได้ทันที</li>
           </ul>
         </div>
       </div>
@@ -1189,7 +1189,7 @@
         <button onclick="closeDeedModal()" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-all cursor-pointer" data-i18n="deed_btn_close">
           ปิดหน้าต่าง
         </button>
-        <a id="modal-action-btn" href="map.php" class="flex-1 py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center transition-all shadow cursor-pointer">
+        <a id="modal-action-btn" href="map.php" class="flex-1 py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center transition-all shadow cursor-pointer" data-i18n="deed_btn_map">
           เปิดดูบนแผนที่ GIS ➔
         </a>
       </div>
@@ -1231,12 +1231,16 @@
       if (e) e.preventDefault();
       const inputEl = document.getElementById('hero-deed-search');
       const query = inputEl ? inputEl.value.trim() : '';
+      const isEn = currentIndexLang === 'en';
 
       if (!query) {
+        const warnMsg = isEn 
+          ? (i18n_index.en.search_empty_warn || 'Please enter a title deed no., Nor.Sor.3Kor, or plot code')
+          : (i18n_index.th.search_empty_warn || 'กรุณากรอกเลขที่โฉนด น.ส.3ก หรือรหัสแปลงปลูก');
         if (window.App && typeof window.App.showToast === 'function') {
-          App.showToast('กรุณากรอกเลขที่โฉนด น.ส.3ก หรือรหัสแปลงปลูก', 'warning');
+          App.showToast(warnMsg, 'warning');
         } else {
-          alert('กรุณากรอกเลขที่โฉนด น.ส.3ก หรือรหัสแปลงปลูก');
+          alert(warnMsg);
         }
         inputEl?.focus();
         return;
@@ -1247,7 +1251,8 @@
       const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<span>⏳</span> <span class="hidden sm:inline">กำลังตรวจสอบ...</span>`;
+        const loadingText = isEn ? 'Verifying...' : 'กำลังตรวจสอบ...';
+        submitBtn.innerHTML = `<span>⏳</span> <span class="hidden sm:inline">${loadingText}</span>`;
       }
 
       try {
@@ -1274,12 +1279,12 @@
     function showRealDeedModal(plot) {
       const modal = document.getElementById('deed-modal');
       const box = document.getElementById('deed-modal-box');
-      const isEn = typeof currentIndexLang !== 'undefined' && currentIndexLang === 'en';
+      const isEn = currentIndexLang === 'en';
 
       document.getElementById('modal-body-found').classList.remove('hidden');
       document.getElementById('modal-body-notfound').classList.add('hidden');
 
-      const titleText = `${plot.title_deed_type} เลขที่ ${plot.title_deed_no}`;
+      const titleText = isEn ? `${plot.title_deed_type} No. ${plot.title_deed_no}` : `${plot.title_deed_type} เลขที่ ${plot.title_deed_no}`;
       document.getElementById('modal-title').textContent = titleText;
       document.getElementById('modal-subtitle').textContent = isEn 
         ? `Spatial Land Title Audit • Plot Code: ${plot.plot_code}` 
@@ -1289,14 +1294,22 @@
       document.getElementById('modal-doc-type').textContent = `${plot.title_deed_type} (${plot.plot_name})`;
       document.getElementById('modal-location').textContent = plot.location;
       document.getElementById('modal-area').textContent = `${plot.area_formatted} (${plot.area_hectare})`;
-      document.getElementById('modal-rubber-clone').textContent = `${plot.rubber_clone} (ปลูกปี ${plot.planting_year}) • ${plot.tapping_status}`;
+
+      let tappingStr = plot.tapping_status;
+      if (isEn) {
+        if (plot.tapping_status === 'เปิดกรีดแล้ว') tappingStr = 'Active Tapping';
+        else if (plot.tapping_status === 'ยังไม่เปิดกรีด') tappingStr = 'Immature / Pre-Tapping';
+      }
+      const plantedPrefix = isEn ? 'Planted' : 'ปลูกปี';
+      document.getElementById('modal-rubber-clone').textContent = `${plot.rubber_clone} (${plantedPrefix} ${plot.planting_year}) • ${tappingStr}`;
       
       const forestDistEl = document.getElementById('modal-forest-dist');
+      const distUnit = isEn ? 'meters' : 'เมตร';
       if (plot.forest_distance_meters > 0) {
-        forestDistEl.textContent = `${plot.forest_distance_meters.toLocaleString()} เมตร (${plot.nearest_forest_name})`;
+        forestDistEl.textContent = `${plot.forest_distance_meters.toLocaleString()} ${distUnit} (${plot.nearest_forest_name})`;
         forestDistEl.className = 'font-bold text-emerald-700';
       } else {
-        forestDistEl.textContent = `0 เมตร (${plot.nearest_forest_name})`;
+        forestDistEl.textContent = `0 ${distUnit} (${plot.nearest_forest_name})`;
         forestDistEl.className = 'font-bold text-rose-600';
       }
 
@@ -1350,7 +1363,7 @@
     function showNotFoundDeedModal(query) {
       const modal = document.getElementById('deed-modal');
       const box = document.getElementById('deed-modal-box');
-      const isEn = typeof currentIndexLang !== 'undefined' && currentIndexLang === 'en';
+      const isEn = currentIndexLang === 'en';
 
       document.getElementById('modal-body-found').classList.add('hidden');
       document.getElementById('modal-body-notfound').classList.remove('hidden');
@@ -1401,15 +1414,16 @@
     function toggleForestLayer() {
       if (!miniForestMap || !geoForestLayer) return;
       const btn = document.getElementById('toggle-forest-layer-btn');
+      const isEn = currentIndexLang === 'en';
       
       if (isForestLayerVisible) {
         miniForestMap.removeLayer(geoForestLayer);
         isForestLayerVisible = false;
-        if (btn) btn.innerHTML = `<span>🌲 แสดงเลเยอร์ป่าสงวน 26 แห่ง</span>`;
+        if (btn) btn.innerHTML = isEn ? `<span>🌲 Show 26 Forest Reserves Layer</span>` : `<span>🌲 แสดงเลเยอร์ป่าสงวน 26 แห่ง</span>`;
       } else {
         miniForestMap.addLayer(geoForestLayer);
         isForestLayerVisible = true;
-        if (btn) btn.innerHTML = `<span>🌲 ซ่อนเลเยอร์ป่าสงวน 26 แห่ง</span>`;
+        if (btn) btn.innerHTML = isEn ? `<span>🌲 Hide 26 Forest Reserves Layer</span>` : `<span>🌲 ซ่อนเลเยอร์ป่าสงวน 26 แห่ง</span>`;
       }
     }
 
@@ -1545,8 +1559,44 @@
       }
     };
 
+    const riskModalData = {
+      1: {
+        icon: '🔴',
+        title_th: 'สำรวจ 26 แนวเขตป่าสงวนแห่งชาติ',
+        title_en: 'Explore 26 National Forest Reserves',
+        text_th: 'กรุณาเข้าสู่ระบบเพื่อสำรวจและวิเคราะห์แนวเขตป่าสงวนแห่งชาติ 26 แห่งในจังหวัดสุราษฎร์ธานี (Zone C) ตรวจสอบพิกัดความทับซ้อน และข้อมูลเชิงพื้นที่ระบบ GIS อย่างละเอียด',
+        text_en: 'Please log in to explore and analyze 26 National Forest Reserves in Surat Thani (Zone C), verify spatial boundary overlaps, and inspect comprehensive GIS layers.',
+        link: 'login.php?redirect=overview.php'
+      },
+      2: {
+        icon: '🟠',
+        title_th: 'ตรวจสอบแนวเขตและแปลงพิกัด (Map GIS)',
+        title_en: 'Verify Boundary & Plot Coordinates (GIS Map)',
+        text_th: 'กรุณาเข้าสู่ระบบเพื่อเข้าสู่ระบบแผนที่ GIS สำหรับวาดแปลงพิกัดและตรวจสอบแนวเขตป่าสงวนแห่งชาติ 26 แห่ง พร้อมระบบวิเคราะห์ความเสี่ยงเชิงพื้นที่',
+        text_en: 'Please log in to access the GIS Map system for drawing polygon plots, calculating 500m buffer distances, and auditing spatial forest overlaps.',
+        link: 'login.php?redirect=map.php'
+      },
+      3: {
+        icon: '🟢',
+        title_th: 'ออกเอกสาร EUDR Passport ดิจิทัล',
+        title_en: 'Issue Digital EUDR Passport',
+        text_th: 'กรุณาเข้าสู่ระบบเพื่อสร้างเอกสารรับรองความสอดคล้องตามมาตรฐาน EUDR พร้อม QR Code สำหรับการตรวจสอบย้อนกลับ (Traceability) 100% สำหรับการส่งออกยางพารา',
+        text_en: 'Please log in to generate official EUDR Due Diligence compliance certificates with QR codes for 100% farm-to-export supply chain traceability.',
+        link: 'login.php?redirect=trace.php'
+      }
+    };
+
     function openCardModal(cardId) {
       const item = cardData[cardId];
+      if (item) {
+        const title = currentIndexLang === 'en' ? item.title_en : item.title_th;
+        const text = currentIndexLang === 'en' ? item.text_en : item.text_th;
+        openReadMoreModal(item.icon, title, text, item.link);
+      }
+    }
+
+    function openRiskModal(riskId) {
+      const item = riskModalData[riskId];
       if (item) {
         const title = currentIndexLang === 'en' ? item.title_en : item.title_th;
         const text = currentIndexLang === 'en' ? item.text_en : item.text_th;
@@ -1595,6 +1645,8 @@
     // =========================================================================
     const i18n_index = {
       th: {
+        page_title: "GeoRubber Watch - ระบบภูมิสารสนเทศอัจฉริยะติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี",
+        
         // Navigation
         nav_home: "หน้าแรก",
         nav_gis: "แผนที่ GIS",
@@ -1602,11 +1654,16 @@
         nav_plots: "แปลงปลูก",
         nav_yields: "ผลผลิต",
         nav_contact: "ติดต่อเรา",
-        
+        nav_login_title: "เข้าสู่ระบบ",
+        nav_menu_label: "เปิดเมนูนำทาง",
+        lang_toggle_title: "คลิกเพื่อสลับภาษา TH / EN",
+
         // Hero Section
         hero_sub: "ยกระดับการจัดการสวนยางพาราด้วยเทคโนโลยี GIS และดาวเทียม เพื่อความยั่งยืนและการปฏิบัติตามมาตรฐาน EUDR อย่างครบวงจร",
         search_placeholder: "ระบุเลขที่โฉนด, น.ส.3ก หรือรหัสแปลงปลูก...",
         search_btn: "ตรวจสอบ",
+        search_empty_warn: "กรุณากรอกเลขที่โฉนด น.ส.3ก หรือรหัสแปลงปลูก",
+        search_loading: "กำลังตรวจสอบ...",
 
         // Section 2: 5 Capability Cards
         card1_title: "จัดการข้อมูลเกษตรกรและแปลงปลูก",
@@ -1619,6 +1676,11 @@
         card4_desc: "ระบบบันทึกผลผลิตน้ำยางสดพร้อมแดชบอร์ดวิเคราะห์ข้อมูลเพื่อการบริหารจัดการสวนยาง",
         card5_title: "ตรวจสอบย้อนกลับตามมาตรฐาน EUDR",
         card5_desc: "สร้างกลไกสนับสนุนการตรวจสอบย้อนกลับ (Traceability) ของผลผลิตประจำแปลงผ่านเทคโนโลยี QR Code เพื่อการส่งออก",
+        card_readmore: "อ่านเพิ่มเติม",
+
+        // Capability / Risk Modal
+        modal_badge_tag: "รายละเอียดระบบงาน",
+        modal_close_btn: "ปิด",
 
         // Section 3: Territory & Real Map
         sec3_tag: "การจำแนกแนวเขตป่าสงวนและประเมินพื้นที่เสี่ยงเชิงภูมิสารสนเทศ",
@@ -1667,40 +1729,61 @@
         risk_c3_desc: "แปลงยางพาราที่มีเอกสารสิทธิ์ถูกต้อง (โฉนด, น.ส.3ก, ส.ป.ก.4-01 ฯลฯ) อยู่นอกแนวป่าสงวน 100% และปลูกก่อนปี 2020 สามารถออกหนังสือรับรอง EUDR ได้ทันที",
         risk_c3_btn: "ออกเอกสาร EUDR Passport ➔",
 
-        // Modals & Deeds
-        modal_badge_tag: "รายละเอียดระบบงาน",
-        modal_close_btn: "ปิด",
-        deed_lbl_doc: "ประเภทเอกสาร:",
-        deed_lbl_loc: "ที่ตั้งแปลง:",
-        deed_lbl_area: "เนื้อที่คำนวณ:",
-        deed_lbl_dist: "ระยะห่างป่าสงวนที่ใกล้ที่สุด:",
+        // Deed Modal Labels & Hints
+        deed_lbl_farmer: "👨‍🌾 เจ้าของแปลง / เกษตรกร:",
+        deed_lbl_doc: "📄 ประเภทเอกสารสิทธิ์:",
+        deed_lbl_loc: "🗺️ ที่ตั้งแปลง:",
+        deed_lbl_area: "📐 เนื้อที่คำนวณ:",
+        deed_lbl_clone: "🌳 พันธุ์ยางพารา / สถานะ:",
+        deed_lbl_dist: "🌲 ระยะห่างป่าสงวนที่ใกล้ที่สุด:",
         deed_lbl_checklist: "การประเมินความสอดคล้องตามมาตรฐาน EUDR:",
+        deed_chk1: "พิกัด Polygon WGS84 บันทึกบน Supabase Cloud ครบถ้วน",
+        deed_chk2: "ปลอดการตัดไม้ทำลายป่าหลัง 31 ธ.ค. 2020",
+        deed_chk3: "เอกสารสิทธิ์ถูกต้อง สามารถออก EUDR Passport ได้ทันที",
+        deed_notfound_title: "ไม่พบข้อมูลในฐานข้อมูล",
+        deed_notfound_desc: "ระบบตรวจสอบกับฐานข้อมูล Supabase Cloud แล้ว ไม่พบรหัสแปลงปลูกหรือเลขที่เอกสารสิทธิ์นี้",
+        deed_hint_hdr: "💡 <strong>คำแนะนำในการค้นหา:</strong>",
+        deed_hint_1: "ตรวจสอบตัวสะกดหรือขีดคั่น เช่น <code class=\"bg-amber-100 px-1 rounded\">RB-ST-2026-006</code> หรือ <code class=\"bg-amber-100 px-1 rounded\">1234-5678</code>",
+        deed_hint_2: "ลองค้นหาด้วย <strong>ชื่อแปลง</strong> หรือ <strong>ชื่อเกษตรกร</strong>",
+        deed_hint_3: "หากยังไม่ได้ลงทะเบียน สามารถเข้าสู่ระบบเพื่อวาดแปลงปลูกใหม่ได้ทันที",
         deed_btn_close: "ปิดหน้าต่าง",
+        deed_btn_map: "เปิดดูบนแผนที่ GIS ➔",
 
         // Footer
         foot_title: "แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา",
+        foot_title_en: "GeoRubber Watch: ระบบภูมิสารสนเทศติดตามพื้นที่ปลูกยางพารายั่งยืน",
         foot_dept: "สาขาเทคโนโลยีสารสนเทศ คณะวิทยาศาสตร์และเทคโนโลยีอุตสาหกรรม<br>มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี<br><span class=\"text-white/75 text-[14px]\">31 หมู่ 6 ต.มะขามเตี้ย อ.เมือง จ.สุราษฎร์ธานี 84000</span>",
         foot_dev_header: "ข้อมูลผู้พัฒนาและช่องทางติดต่อ",
         foot_dev_sub: "ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง",
         foot_authors: "👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์",
         foot_advisor: "🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์",
+        foot_email: "✉️ <strong>อีเมล / Email:</strong>",
+        foot_card_hdr: "พื้นที่ป่าไม้ จ.สุราษฎร์ธานี",
         foot_card_stat: "26 ผืนป่าสงวน (Zone C) • 784,618 ไร่",
         foot_card_source: "ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้",
-        foot_copy: "© 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี"
+        foot_copy: "© 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี",
+        foot_eudr_cert: "มาตรฐานความสอดคล้องตามกฎระเบียบ EUDR (EU) 2023/1115 ปลอดการตัดไม้ทำลายป่า 100%"
       },
       en: {
+        page_title: "GeoRubber Watch - Intelligent Geospatial Monitoring Platform for Rubber Plantations, Surat Thani",
+        
         // Navigation
         nav_home: "Home",
         nav_gis: "GIS Map",
         nav_dashboard: "Dashboard",
-        nav_plots: "Plantation Plots",
-        nav_yields: "Latex Yields",
+        nav_plots: "Plots",
+        nav_yields: "Yields",
         nav_contact: "Contact Us",
+        nav_login_title: "Login",
+        nav_menu_label: "Open Navigation Menu",
+        lang_toggle_title: "Click to toggle language TH / EN",
 
         // Hero Section
         hero_sub: "Elevating rubber plantation management with Web-GIS and satellite technology for sustainability and full EUDR compliance.",
         search_placeholder: "Enter title deed no., Nor.Sor.3Kor, or plot code...",
         search_btn: "Verify",
+        search_empty_warn: "Please enter a title deed no., Nor.Sor.3Kor, or plot code",
+        search_loading: "Verifying...",
 
         // Section 2: 5 Capability Cards
         card1_title: "Farmer & Plot Registry",
@@ -1713,6 +1796,11 @@
         card4_desc: "Digital latex harvest logging and decision support analytics dashboards for optimal farm productivity and revenue tracking.",
         card5_title: "EUDR Traceability & QR Passport",
         card5_desc: "Issues unique QR-code digital passports verifying farm geolocation origin back to individual rubber tree coordinates.",
+        card_readmore: "READ MORE",
+
+        // Capability / Risk Modal
+        modal_badge_tag: "SYSTEM SPECIFICATIONS",
+        modal_close_btn: "Close",
 
         // Section 3: Territory & Real Map
         sec3_tag: "NATIONAL FOREST RESERVE DELIMITATION & SPATIAL RISK ASSESSMENT",
@@ -1723,7 +1811,7 @@
         sec3_stat1_lbl: "Total Protected Area",
         sec3_stat1_val: "784,618 Rai",
         sec3_stat2_lbl: "Forest Reserves",
-        sec3_stat2_val: "26 Forests",
+        sec3_stat2_val: "26 Reserves",
         sec3_stat3_lbl: "Buffer Zone Radius",
         sec3_stat3_val: "500 Meters",
         sec3_btn: "Open Full Web-GIS Map ➔",
@@ -1761,26 +1849,40 @@
         risk_c3_desc: "Fully titled rubber farms situated outside forest reserves planted prior to Dec 31, 2020, eligible for immediate EUDR digital certification.",
         risk_c3_btn: "Issue EUDR Passport ➔",
 
-        // Modals & Deeds
-        modal_badge_tag: "SYSTEM SPECIFICATIONS",
-        modal_close_btn: "Close",
-        deed_lbl_doc: "Document Type:",
-        deed_lbl_loc: "Plot Location:",
-        deed_lbl_area: "Calculated Area:",
-        deed_lbl_dist: "Nearest Reserve Distance:",
+        // Deed Modal Labels & Hints
+        deed_lbl_farmer: "👨‍🌾 Farm Owner / Farmer:",
+        deed_lbl_doc: "📄 Title Deed Type:",
+        deed_lbl_loc: "🗺️ Plot Location:",
+        deed_lbl_area: "📐 Calculated Area:",
+        deed_lbl_clone: "🌳 Rubber Clone / Status:",
+        deed_lbl_dist: "🌲 Nearest Reserve Distance:",
         deed_lbl_checklist: "EUDR Due Diligence Compliance Checklist:",
+        deed_chk1: "Full WGS84 polygon coordinates stored on Supabase Cloud",
+        deed_chk2: "Zero deforestation verified after Dec 31, 2020",
+        deed_chk3: "Valid land title deed; eligible for instant EUDR Passport",
+        deed_notfound_title: "No Record Found in Database",
+        deed_notfound_desc: "No matching plot code or title deed number was found in Supabase Cloud database.",
+        deed_hint_hdr: "💡 <strong>Search Tips:</strong>",
+        deed_hint_1: "Check spelling or hyphens, e.g., <code class=\"bg-amber-100 px-1 rounded\">RB-ST-2026-006</code> or <code class=\"bg-amber-100 px-1 rounded\">1234-5678</code>",
+        deed_hint_2: "Try searching by <strong>Plot Name</strong> or <strong>Farmer Name</strong>",
+        deed_hint_3: "If not yet registered, you can log in to map and register a new plot immediately.",
         deed_btn_close: "Close Window",
+        deed_btn_map: "View on GIS Map ➔",
 
         // Footer
         foot_title: "Intelligent Geospatial Platform for Rubber Monitoring & Deforestation Due Diligence",
+        foot_title_en: "GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations",
         foot_dept: "Department of Information Technology, Faculty of Science and Industrial Technology<br>Prince of Songkla University, Surat Thani Campus<br><span class=\"text-white/75 text-[14px]\">31 Moo 6 Makham Tia, Mueang Surat Thani, 84000 Thailand</span>",
         foot_dev_header: "Developer Info & Contact",
         foot_dev_sub: "24/7 Online Geospatial Information Service",
         foot_authors: "👩‍💻 <strong>Authors:</strong> Miss Matinee Roynarin & Miss Manatsanan Anantanarong",
         foot_advisor: "🎓 <strong>Advisor:</strong> Assoc. Prof. Dr. Supattra Puttinaovarat",
+        foot_email: "✉️ <strong>Email:</strong>",
+        foot_card_hdr: "SURAT THANI FOREST COVERAGE",
         foot_card_stat: "26 Forest Reserves (Zone C) • 784,618 Rai",
         foot_card_source: "Royal Forest Department Conservation Database",
-        foot_copy: "© 2026 GeoRubber Watch • Prince of Songkla University, Surat Thani Campus"
+        foot_copy: "© 2026 GeoRubber Watch • Prince of Songkla University, Surat Thani Campus",
+        foot_eudr_cert: "EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)"
       }
     };
 
@@ -1789,12 +1891,18 @@
     function setIndexLanguage(lang) {
       currentIndexLang = lang;
       localStorage.setItem('georubber_lang', lang);
+      document.documentElement.lang = lang;
+
+      // Update Document Title
+      if (i18n_index[lang] && i18n_index[lang].page_title) {
+        document.title = i18n_index[lang].page_title;
+      }
 
       // Update all elements with data-i18n attribute (handles HTML text and innerHTML if tags present)
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (i18n_index[lang] && i18n_index[lang][key] !== undefined) {
-          if (i18n_index[lang][key].includes('<br>') || i18n_index[lang][key].includes('<strong>') || i18n_index[lang][key].includes('<span>')) {
+          if (i18n_index[lang][key].includes('<br>') || i18n_index[lang][key].includes('<strong>') || i18n_index[lang][key].includes('<span>') || i18n_index[lang][key].includes('<code>')) {
             el.innerHTML = i18n_index[lang][key];
           } else {
             el.textContent = i18n_index[lang][key];
@@ -1802,10 +1910,16 @@
         }
       });
 
-      // Update Search Placeholder & Button
+      // Update Search Placeholder & Loading State Text
       const searchInput = document.getElementById('hero-deed-search');
       if (searchInput && i18n_index[lang]) {
         searchInput.placeholder = i18n_index[lang].search_placeholder;
+      }
+
+      // Update Title & Aria-labels
+      const toggleBtn = document.getElementById('lang-toggle-btn');
+      if (toggleBtn && i18n_index[lang]) {
+        toggleBtn.title = i18n_index[lang].lang_toggle_title;
       }
 
       // Update Slider Visuals (Left position & text colors)
@@ -1822,6 +1936,16 @@
           navTh.className = "relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none";
           navEn.className = "relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none";
         }
+      }
+
+      // Update Dynamic Info Box under Leaflet Map (if not currently hovering over a polygon)
+      const districtTitle = document.getElementById('district-title');
+      const districtDesc = document.getElementById('district-desc');
+      const districtForest = document.getElementById('district-forest');
+      if (districtTitle && districtDesc && districtForest && i18n_index[lang]) {
+        districtTitle.textContent = i18n_index[lang].sec3_info_title;
+        districtDesc.textContent = i18n_index[lang].sec3_info_desc;
+        districtForest.textContent = i18n_index[lang].sec3_info_sub;
       }
     }
 
