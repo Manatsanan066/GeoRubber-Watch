@@ -54,14 +54,18 @@ if ($method === 'POST' && $action === 'login') {
         exit;
     }
 
+    $cleanPhone = str_replace(['-', ' '], '', $username);
     $stmt = $pdo->prepare("
         SELECT u.*, f.id as farmer_id, f.farmer_code
         FROM users u
         LEFT JOIN farmers f ON f.user_id = u.id
-        WHERE LOWER(u.username) = LOWER(?) OR LOWER(u.email) = LOWER(?) OR u.phone = ? OR REPLACE(REPLACE(u.phone, '-', ''), ' ', '') = ?
+        WHERE LOWER(TRIM(u.username)) = LOWER(?) 
+           OR LOWER(TRIM(u.email)) = LOWER(?) 
+           OR LOWER(TRIM(u.full_name)) = LOWER(?)
+           OR u.phone = ? 
+           OR REPLACE(REPLACE(u.phone, '-', ''), ' ', '') = ?
     ");
-    $cleanPhone = str_replace(['-', ' '], '', $username);
-    $stmt->execute([$username, $username, $username, $cleanPhone]);
+    $stmt->execute([$username, $username, $username, $username, $cleanPhone]);
     $user = $stmt->fetch();
 
     if ($user && (password_verify($password, $user['password_hash']) || $password === 'admin123' || $password === 'adminrabber@123' || $password === 'farmer123')) {
@@ -126,15 +130,55 @@ if ($method === 'POST' && $action === 'register') {
         exit;
     }
 
-    // Check if phone or username already registered
-    $checkStmt = $pdo->prepare("
+    // 1. Check Duplicate Name (ห้ามชื่อซ้ำในระบบ)
+    $checkNameStmt = $pdo->prepare("
+        SELECT id, full_name FROM users 
+        WHERE LOWER(TRIM(full_name)) = LOWER(TRIM(?))
+    ");
+    $checkNameStmt->execute([$full_name]);
+    if ($existingName = $checkNameStmt->fetch()) {
+        http_response_code(409);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'ชื่อ-นามสกุล "' . $full_name . '" มีอยู่ในระบบแล้ว ไม่สามารถสมัครบัญชีซ้ำได้'
+        ]);
+        exit;
+    }
+
+    // 2. Check Duplicate Phone (ห้ามเบอร์โทรซ้ำ)
+    $checkPhoneStmt = $pdo->prepare("
         SELECT id FROM users 
         WHERE phone = ? OR username = ? OR REPLACE(REPLACE(phone, '-', ''), ' ', '') = ?
     ");
-    $checkStmt->execute([$phone, $cleanPhone, $cleanPhone]);
-    if ($checkStmt->fetch()) {
+    $checkPhoneStmt->execute([$phone, $cleanPhone, $cleanPhone]);
+    if ($checkPhoneStmt->fetch()) {
         http_response_code(409);
-        echo json_encode(['success' => false, 'message' => 'เบอร์โทรศัพท์นี้ลงทะเบียนในระบบแล้ว กรุณาใช้เข้าสู่ระบบ']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'เบอร์โทรศัพท์ "' . $phone . '" ถูกลงทะเบียนในระบบแล้ว ไม่สามารถสมัครซ้ำได้'
+        ]);
+        exit;
+    }
+
+    // 3. Check Duplicate Password (ห้ามรหัสผ่านซ้ำกับบัญชีที่มีอยู่เดิมในระบบ)
+    $allUsersStmt = $pdo->query("SELECT id, username, full_name, password_hash FROM users");
+    $existingUsers = $allUsersStmt->fetchAll();
+    foreach ($existingUsers as $eu) {
+        if (!empty($eu['password_hash']) && password_verify($password, $eu['password_hash'])) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'รหัสผ่านนี้ถูกใช้งานแล้วในระบบ เพื่อความปลอดภัยกรุณากำหนดรหัสผ่านใหม่ที่ไม่ซ้ำกับบัญชีอื่น'
+            ]);
+            exit;
+        }
+    }
+    if ($password === 'admin123' || $password === 'adminrabber@123' || $password === 'farmer123') {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'รหัสผ่านนี้เป็นรหัสผ่านตั้งต้นของระบบที่ถูกใช้งานแล้ว กรุณากำหนดรหัสผ่านใหม่ที่ไม่ซ้ำ'
+        ]);
         exit;
     }
 

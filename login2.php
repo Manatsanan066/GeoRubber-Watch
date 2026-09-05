@@ -463,11 +463,19 @@ $destination_title = $page_titles[$safe_redirect] ?? 'ระบบสารส�
               </p>
             </div>
 
-            <!-- Notice for Admins / Agencies -->
-            <div class="mb-3.5 p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-start gap-2 leading-relaxed">
-              <span class="text-amber-600 font-bold shrink-0 mt-0.5">ℹ️</span>
-              <div>
-                <span class="font-bold">เงื่อนไขการลงทะเบียน:</span> หน้านี้เปิดรับลงทะเบียนเฉพาะ <span class="underline font-bold">เกษตรกรชาวสวนยาง</span> เท่านั้น สำหรับเจ้าหน้าที่หน่วยงานภาครัฐและสหกรณ์ โปรดใช้บัญชีองค์กรเข้าสู่ระบบในแท็บ "เข้าสู่ระบบ"
+            <!-- Notice for Admins / Agencies & Duplicate Policy -->
+            <div class="mb-3.5 space-y-2">
+              <div class="p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-start gap-2 leading-relaxed">
+                <span class="text-amber-600 font-bold shrink-0 mt-0.5">ℹ️</span>
+                <div>
+                  <span class="font-bold">เงื่อนไขการลงทะเบียน:</span> หน้านี้เปิดรับลงทะเบียนเฉพาะ <span class="underline font-bold">เกษตรกรชาวสวนยาง</span> เท่านั้น สำหรับเจ้าหน้าที่หน่วยงานภาครัฐและสหกรณ์ โปรดใช้บัญชีองค์กรเข้าสู่ระบบในแท็บ "เข้าสู่ระบบ"
+                </div>
+              </div>
+              <div class="p-2.5 bg-emerald-50/90 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-start gap-2 leading-relaxed">
+                <span class="text-emerald-600 font-bold shrink-0 mt-0.5">🔒</span>
+                <div>
+                  <span class="font-bold">เงื่อนไขความปลอดภัย:</span> ระบบไม่อนุญาตให้สมัครซ้ำ <span class="font-bold">ทั้งชื่อ-นามสกุล, เบอร์โทรศัพท์ และรหัสผ่าน</span> เพื่อป้องกันข้อมูลทับซ้อนและความปลอดภัยของข้อมูลแปลงปลูก
+                </div>
               </div>
             </div>
 
@@ -939,10 +947,12 @@ $destination_title = $page_titles[$safe_redirect] ?? 'ระบบสารส�
         spinner.classList.add('hidden');
 
         if (data.success) {
-          showAlert(`🎉 ${data.message}! รหัสเกษตรกรของคุณคือ <strong>${data.user.farmer_code}</strong> กำลังนำท่านเข้าสู่ระบบ...`, true);
+          showAlert(`🎉 ${data.message}! รหัสเกษตรกรของคุณคือ <strong>${data.user.farmer_code}</strong> ข้อมูลได้รับการบันทึกลงฐานข้อมูลแล้ว กำลังนำท่านเข้าสู่ระบบ...`, true);
+          document.getElementById('login-username').value = phone;
+          document.getElementById('login-password').value = password;
           setTimeout(() => {
             window.location.href = redirectUrl;
-          }, 1200);
+          }, 1500);
         } else {
           showAlert(`❌ ${data.message || 'เกิดข้อผิดพลาดในการลงทะเบียน'}`);
         }
