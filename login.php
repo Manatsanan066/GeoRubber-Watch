@@ -213,6 +213,11 @@ if (!empty($redirect)) {
 
                 </form>
 
+                <!-- Footer Copyright -->
+                <div class="w-full text-center mt-8 pt-4 border-t border-white/10 text-xs sm:text-sm text-gray-300/80 font-normal tracking-wide">
+                    &copy; 2026 GeoRubber Watch &bull; มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี
+                </div>
+
             </div>
 
         </div>
