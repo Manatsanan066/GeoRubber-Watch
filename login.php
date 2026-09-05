@@ -17,7 +17,7 @@ if (!empty($redirect)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - GeoRubber Watch</title>
+    <title>Sign In - GeoRubber Watch</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -114,15 +114,15 @@ if (!empty($redirect)) {
                     <div class="w-16 h-0.5 bg-white/30 mx-auto mt-5 rounded-full"></div>
                 </div>
 
-                <!-- 2. Sign Up Title (จัดวางตำแหน่งให้ตรงกับช่อง Email ด้านล่าง) -->
+                <!-- 2. Form Title -->
                 <h2 id="formTitle" class="text-3xl sm:text-4xl font-extrabold text-white text-left w-full mb-7 tracking-tight">
-                    Sign Up
+                    Sign In
                 </h2>
 
                 <form id="signupForm" onsubmit="handleSubmit(event)" class="w-full space-y-5">
                     
-                    <!-- 3. Email Field (ไอคอนใหม่สไตล์ Solid Envelope แบบคมชัด) -->
-                    <div id="emailFieldGroup" class="space-y-1.5">
+                    <!-- 3. Email Field (ซ่อนในโหมด Sign In) -->
+                    <div id="emailFieldGroup" class="hidden space-y-1.5">
                         <label for="email" class="block text-sm sm:text-base font-semibold text-gray-200">
                             Email
                         </label>
@@ -130,7 +130,6 @@ if (!empty($redirect)) {
                             <input type="email" 
                                    id="email" 
                                    name="email" 
-                                   required 
                                    class="w-full bg-transparent border-none outline-none text-white text-base sm:text-lg font-normal pr-3 placeholder-transparent">
                             <!-- Solid Mail Envelope Icon -->
                             <svg class="w-5 h-5 text-gray-300 shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -140,8 +139,8 @@ if (!empty($redirect)) {
                         </div>
                     </div>
 
-                    <!-- 4. Phone Number Field (อยู่บน Username) -->
-                    <div id="phoneFieldGroup" class="space-y-1.5 pt-1">
+                    <!-- 4. Phone Number Field (อยู่บน Username, ซ่อนในโหมด Sign In) -->
+                    <div id="phoneFieldGroup" class="hidden space-y-1.5 pt-1">
                         <label for="phone" class="block text-sm sm:text-base font-semibold text-gray-200">
                             Phone Number
                         </label>
@@ -149,7 +148,6 @@ if (!empty($redirect)) {
                             <input type="tel" 
                                    id="phone" 
                                    name="phone" 
-                                   required 
                                    class="w-full bg-transparent border-none outline-none text-white text-base sm:text-lg font-normal pr-3 placeholder-transparent">
                             <!-- Phone Icon -->
                             <svg class="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,7 +159,7 @@ if (!empty($redirect)) {
                     <!-- 5. Username Field (เพิ่มขนาด Label & Input & Icon) -->
                     <div class="space-y-1.5 pt-1">
                         <label id="usernameLabel" for="username" class="block text-sm sm:text-base font-semibold text-gray-200">
-                            Username
+                            Username / Email / Phone
                         </label>
                         <div class="line-input flex items-center justify-between pb-2">
                             <input type="text" 
@@ -176,7 +174,7 @@ if (!empty($redirect)) {
                         </div>
                     </div>
 
-                    <!-- 5. Password Field (เพิ่มขนาด Label & Input & Icon) -->
+                    <!-- 6. Password Field (เพิ่มขนาด Label & Input & Icon) -->
                     <div class="space-y-1.5 pt-1">
                         <label for="password" class="block text-sm sm:text-base font-semibold text-gray-200">
                             Password
@@ -194,12 +192,11 @@ if (!empty($redirect)) {
                         </div>
                     </div>
 
-                    <!-- Terms Checkbox (ขนาดใหญ่ขึ้น จัดกึ่งกลาง) -->
-                    <div id="termsGroup" class="pt-2 flex justify-center">
+                    <!-- Terms Checkbox (ซ่อนในโหมด Sign In) -->
+                    <div id="termsGroup" class="hidden pt-2 flex justify-center">
                         <label class="flex items-center gap-2.5 cursor-pointer text-xs sm:text-sm text-gray-200 select-none">
                             <input type="checkbox" 
                                    id="agreeTerms" 
-                                   required 
                                    class="w-4 h-4 rounded bg-transparent border border-white/50 accent-white cursor-pointer">
                             <span>
                                 I Agree To <b class="text-white font-bold">Terms</b> And <b class="text-white font-bold">Conditions</b> Of Service
@@ -210,22 +207,22 @@ if (!empty($redirect)) {
                     <!-- Feedback Banner -->
                     <div id="signupFeedback" class="hidden text-xs sm:text-sm rounded-xl p-3 text-center font-medium"></div>
 
-                    <!-- 6. Action Row: Sign Up > & Have An Account? (ขนาดใหญ่ขึ้น สมดุล) -->
+                    <!-- Action Row: Sign In > & Don't Have An Account? Sign Up -->
                     <div class="flex items-center justify-between pt-6 px-1">
                         <!-- Submit Button -->
                         <button type="submit" 
                                 id="btnSignup"
                                 class="btn-outline-pill rounded-full px-8 sm:px-10 py-2.5 sm:py-3 text-sm sm:text-base font-semibold tracking-wide text-white shadow-md flex items-center gap-2.5 cursor-pointer">
-                            <span id="btnText">Sign Up</span>
+                            <span id="btnText">Sign In</span>
                             <span class="font-extrabold text-sm sm:text-base">&gt;</span>
                         </button>
 
-                        <!-- Have An Account? Link -->
+                        <!-- Toggle Mode Link -->
                         <button type="button" 
                                 id="toggleModeBtn"
                                 onclick="toggleAuthMode()"
                                 class="text-sm sm:text-base text-gray-200 hover:text-white underline font-semibold transition cursor-pointer">
-                            Have An Account?
+                            Don't Have An Account? Sign Up
                         </button>
                     </div>
 
@@ -246,7 +243,7 @@ if (!empty($redirect)) {
     <script>
         const API_BASE = window.location.pathname.includes('/pages/') ? '../api' : 'api';
         const REDIRECT_URL = <?= json_encode($clean_redirect) ?>;
-        let isSignupMode = true;
+        let isSignupMode = false;
 
         function toggleAuthMode() {
             isSignupMode = !isSignupMode;
@@ -275,7 +272,7 @@ if (!empty($redirect)) {
                 termsGroup.classList.remove('hidden');
                 agreeTerms.required = true;
                 btnText.textContent = 'Sign Up';
-                toggleBtn.textContent = 'Have An Account?';
+                toggleBtn.textContent = 'Have An Account? Sign In';
             } else {
                 formTitle.textContent = 'Sign In';
                 document.title = 'Sign In - GeoRubber Watch';
