@@ -45,14 +45,15 @@ if (!empty($redirect)) {
             background-color: #0b1118;
         }
 
-        /* Fullscreen Bridge Background Layer (โหลดจาก Local Asset หมดปัญหาลิงก์หมดอายุ) */
+        /* Fullscreen Background Layer (ภาพจุดรับซื้อน้ำยางสดและชาวสวนยาง) */
         .bg-bridge {
             background-image: 
                 linear-gradient(to right, rgba(10, 15, 22, 0.35) 0%, rgba(10, 15, 22, 0.15) 50%, rgba(10, 15, 22, 0.35) 100%),
-                url('img/bridge_wallpaper.jpg'),
-                url('img/login_nature_hero.jpg');
+                url('img/login_bg.jpg'),
+                url('img/rubber_purchase_station.jpg'),
+                url('img/bridge_wallpaper.jpg');
             background-size: cover;
-            background-position: center;
+            background-position: center center;
             background-repeat: no-repeat;
         }
 
