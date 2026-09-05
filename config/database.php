@@ -31,16 +31,16 @@ if (!function_exists('str_ends_with')) {
     }
 }
 
-// Database driver: 'pgsql' (PostgreSQL)
+// Database driver: 'pgsql' (PostgreSQL - Supabase Cloud)
 $db_type = 'pgsql';
 
 // Database configurations (Primary: Supabase Cloud PostgreSQL, Fallback: Local / SQLite)
 $db_config = [
     'pgsql' => [
-        'host' => getenv('DB_HOST') ?: 'db.qwiuddkgdnfcaostzbov.supabase.co',
-        'port' => getenv('DB_PORT') ?: '5432',
+        'host' => getenv('DB_HOST') ?: 'aws-0-ap-northeast-1.pooler.supabase.com',
+        'port' => getenv('DB_PORT') ?: '6543',
         'dbname' => getenv('DB_NAME') ?: 'postgres',
-        'user' => getenv('DB_USER') ?: 'postgres',
+        'user' => getenv('DB_USER') ?: 'postgres.qwiuddkgdnfcaostzbov',
         'password' => getenv('DB_PASS') !== false ? getenv('DB_PASS') : 'Rabber@2548',
         'sslmode' => getenv('DB_SSLMODE') ?: 'require'
     ]
@@ -63,16 +63,28 @@ function getDatabaseConnection() {
 
     $ssl = !empty($cfg['sslmode']) ? ";sslmode={$cfg['sslmode']};sslcert=;sslkey=" : "";
 
-    // 1. Attempt PostgreSQL Connection (Supabase Cloud or Local)
+    // 1. Attempt PostgreSQL Connection (Primary: Supabase Cloud)
     try {
         $dsn = "pgsql:host={$cfg['host']};port={$cfg['port']};dbname={$cfg['dbname']}{$ssl}";
         $pdo = new PDO($dsn, $cfg['user'], $cfg['password'], [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_TIMEOUT => 8
+            PDO::ATTR_TIMEOUT => 6
         ]);
         return $pdo;
     } catch (Exception $e) {
+        // Try direct IPv4 or secondary host if pooler port 6543 is blocked
+        try {
+            $dsn2 = "pgsql:host=aws-0-ap-northeast-1.pooler.supabase.com;port=5432;dbname=postgres{$ssl}";
+            $pdo = new PDO($dsn2, $cfg['user'], $cfg['password'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_TIMEOUT => 5
+            ]);
+            return $pdo;
+        } catch (Exception $e2) {
+            // Supabase connection offline / unreachable
+        }
         // If on localhost and georubber_watch db does not exist, try to create via default 'postgres' database
         if ($cfg['host'] === '127.0.0.1' || $cfg['host'] === 'localhost') {
             try {
