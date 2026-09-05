@@ -45,12 +45,14 @@ if ($action === 'me') {
 // Login
 if ($method === 'POST' && $action === 'login') {
     $data = json_decode(file_get_contents('php://input'), true);
-    $username = trim($data['username'] ?? '');
+    if (!$data) $data = $_POST;
+
+    $username = trim($data['username'] ?? $data['email'] ?? $data['login_identifier'] ?? '');
     $password = trim($data['password'] ?? '');
 
     if (empty($username) || empty($password)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'กรุณากรอกชื่อผู้ใช้ / อีเมล / เบอร์โทร และรหัสผ่าน']);
+        echo json_encode(['status' => 'error', 'success' => false, 'message' => 'กรุณากรอกชื่อผู้ใช้ / อีเมล / เบอร์โทร และรหัสผ่าน'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -78,107 +80,117 @@ if ($method === 'POST' && $action === 'login') {
 
         unset($user['password_hash']);
         echo json_encode([
+            'status' => 'success',
             'success' => true,
             'message' => 'เข้าสู่ระบบสำเร็จ',
             'user' => $user
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
     } else {
         http_response_code(401);
-        echo json_encode(['success' => false, 'message' => 'ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง']);
+        echo json_encode(['status' => 'error', 'success' => false, 'message' => 'ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง'], JSON_UNESCAPED_UNICODE);
     }
     exit;
 }
 
-// Farmer Registration (Only Farmers can register publicly)
+// Farmer Registration (Supports Email + Username + Password as well as Full Name + Phone)
 if ($method === 'POST' && $action === 'register') {
     $data = json_decode(file_get_contents('php://input'), true);
+    if (!$data) $data = $_POST;
+
+    $email = trim($data['email'] ?? '');
+    $username = trim($data['username'] ?? '');
     $full_name = trim($data['full_name'] ?? '');
     $phone = trim($data['phone'] ?? '');
     $password = trim($data['password'] ?? '');
     $confirm_password = trim($data['confirm_password'] ?? '');
 
+    // Fallbacks
+    if (empty($username) && !empty($email)) {
+        $username = explode('@', $email)[0];
+    }
+    if (empty($full_name)) {
+        $full_name = !empty($username) ? $username : explode('@', $email)[0];
+    }
+    if (empty($phone)) {
+        $phone = '08' . mt_rand(10000000, 99999999);
+    }
+
     // Validation
-    if (empty($full_name) || empty($phone) || empty($password) || empty($confirm_password)) {
+    if (empty($password)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง']);
+        echo json_encode(['status' => 'error', 'success' => false, 'message' => 'กรุณากรอกรหัสผ่าน'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    if (mb_strlen($full_name, 'UTF-8') < 3) {
+    if (empty($username) && empty($email)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'ชื่อ-นามสกุลต้องมีความยาวอย่างน้อย 3 ตัวอักษร']);
+        echo json_encode(['status' => 'error', 'success' => false, 'message' => 'กรุณากรอกชื่อผู้ใช้หรืออีเมล'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     if (strlen($password) < 6) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร']);
+        echo json_encode(['status' => 'error', 'success' => false, 'message' => 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    if ($password !== $confirm_password) {
+    if (!empty($confirm_password) && $password !== $confirm_password) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน']);
+        echo json_encode(['status' => 'error', 'success' => false, 'message' => 'รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    // Clean Phone
-    $cleanPhone = str_replace(['-', ' '], '', $phone);
-    if (strlen($cleanPhone) < 9 || strlen($cleanPhone) > 12) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง (กรุณากรอก 9-10 หลัก)']);
-        exit;
+    // 1. Check Duplicate Email
+    if (!empty($email)) {
+        $checkEmailStmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))");
+        $checkEmailStmt->execute([$email]);
+        if ($checkEmailStmt->fetch()) {
+            http_response_code(409);
+            echo json_encode([
+                'status' => 'error',
+                'success' => false,
+                'message' => 'อีเมล "' . $email . '" ถูกใช้งานแล้วในระบบ กรุณาใช้อีเมลอื่น'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
     }
 
-    // 1. Check Duplicate Name (ห้ามชื่อซ้ำในระบบ)
-    $checkNameStmt = $pdo->prepare("
-        SELECT id, full_name FROM users 
-        WHERE LOWER(TRIM(full_name)) = LOWER(TRIM(?))
-    ");
-    $checkNameStmt->execute([$full_name]);
-    if ($existingName = $checkNameStmt->fetch()) {
-        http_response_code(409);
-        echo json_encode([
-            'success' => false, 
-            'message' => 'ชื่อ-นามสกุล "' . $full_name . '" มีอยู่ในระบบแล้ว ไม่สามารถสมัครบัญชีซ้ำได้'
-        ]);
-        exit;
+    // 2. Check Duplicate Username
+    if (!empty($username)) {
+        $checkUserStmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(TRIM(username)) = LOWER(TRIM(?))");
+        $checkUserStmt->execute([$username]);
+        if ($checkUserStmt->fetch()) {
+            http_response_code(409);
+            echo json_encode([
+                'status' => 'error',
+                'success' => false,
+                'message' => 'ชื่อผู้ใช้ (Username) "' . $username . '" มีอยู่ในระบบแล้ว ไม่สามารถสมัครซ้ำได้'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
     }
 
-    // 2. Check Duplicate Phone (ห้ามเบอร์โทรซ้ำ)
-    $checkPhoneStmt = $pdo->prepare("
-        SELECT id FROM users 
-        WHERE phone = ? OR username = ? OR REPLACE(REPLACE(phone, '-', ''), ' ', '') = ?
-    ");
-    $checkPhoneStmt->execute([$phone, $cleanPhone, $cleanPhone]);
-    if ($checkPhoneStmt->fetch()) {
-        http_response_code(409);
-        echo json_encode([
-            'success' => false, 
-            'message' => 'เบอร์โทรศัพท์ "' . $phone . '" ถูกลงทะเบียนในระบบแล้ว ไม่สามารถสมัครซ้ำได้'
-        ]);
-        exit;
-    }
-
-    // 3. Check Duplicate Password (ห้ามรหัสผ่านซ้ำกับบัญชีที่มีอยู่เดิมในระบบ)
+    // 3. Check Duplicate Password (ห้ามรหัสผ่านซ้ำกับบัญชีเดิม)
     $allUsersStmt = $pdo->query("SELECT id, username, full_name, password_hash FROM users");
     $existingUsers = $allUsersStmt->fetchAll();
     foreach ($existingUsers as $eu) {
         if (!empty($eu['password_hash']) && password_verify($password, $eu['password_hash'])) {
             http_response_code(400);
             echo json_encode([
+                'status' => 'error',
                 'success' => false,
                 'message' => 'รหัสผ่านนี้ถูกใช้งานแล้วในระบบ เพื่อความปลอดภัยกรุณากำหนดรหัสผ่านใหม่ที่ไม่ซ้ำกับบัญชีอื่น'
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
             exit;
         }
     }
     if ($password === 'admin123' || $password === 'adminrabber@123' || $password === 'farmer123') {
         http_response_code(400);
         echo json_encode([
+            'status' => 'error',
             'success' => false,
-            'message' => 'รหัสผ่านนี้เป็นรหัสผ่านตั้งต้นของระบบที่ถูกใช้งานแล้ว กรุณากำหนดรหัสผ่านใหม่ที่ไม่ซ้ำ'
-        ]);
+            'message' => 'รหัสผ่านนี้เป็นรหัสผ่านตั้งต้นของระบบ กรุณากำหนดรหัสผ่านใหม่ที่ไม่ซ้ำ'
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -201,18 +213,16 @@ if ($method === 'POST' && $action === 'register') {
     $lastName = $nameParts[1] ?? '';
 
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-    $username = 'farmer_' . $cleanPhone;
 
     try {
         // 1. Insert into users table
         $userStmt = $pdo->prepare("
-            INSERT INTO users (username, password_hash, full_name, phone, role) 
-            VALUES (?, ?, ?, ?, 'farmer')
+            INSERT INTO users (username, password_hash, full_name, email, phone, role) 
+            VALUES (?, ?, ?, ?, ?, 'farmer')
         ");
-        $userStmt->execute([$username, $passwordHash, $full_name, $phone]);
+        $userStmt->execute([$username, $passwordHash, $full_name, $email, $phone]);
         $userId = $pdo->lastInsertId();
 
-        // If lastInsertId is not returned directly in pgsql sequence without name
         if (!$userId) {
             $fetchIdStmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
             $fetchIdStmt->execute([$username]);
@@ -220,7 +230,7 @@ if ($method === 'POST' && $action === 'register') {
         }
 
         // 2. Generate farmer code
-        $farmerCode = 'FM-REG-' . str_pad($userId ?: mt_rand(100, 9999), 4, '0', STR_PAD_LEFT);
+        $farmerCode = 'FM-REG-' . str_pad((string)($userId ?: mt_rand(100, 9999)), 4, '0', STR_PAD_LEFT);
 
         // 3. Insert into farmers profile table
         $farmerStmt = $pdo->prepare("
@@ -248,26 +258,30 @@ if ($method === 'POST' && $action === 'register') {
         $_SESSION['role'] = 'farmer';
         $_SESSION['full_name'] = $full_name;
         $_SESSION['farmer_id'] = $farmerId;
+        $_SESSION['email'] = $email;
         $_SESSION['phone'] = $phone;
 
         echo json_encode([
+            'status' => 'success',
             'success' => true,
             'message' => 'ลงทะเบียนเกษตรกรสำเร็จ ยินดีต้อนรับสู่ GeoRubber Watch',
             'user' => [
                 'id' => $userId,
                 'username' => $username,
+                'email' => $email,
                 'full_name' => $full_name,
                 'role' => 'farmer',
                 'farmer_id' => $farmerId,
                 'farmer_code' => $farmerCode
             ]
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode([
+            'status' => 'error',
             'success' => false,
             'message' => 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage()
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
     }
     exit;
 }
