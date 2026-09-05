@@ -140,7 +140,26 @@ if (!empty($redirect)) {
                         </div>
                     </div>
 
-                    <!-- 4. Username Field (เพิ่มขนาด Label & Input & Icon) -->
+                    <!-- 4. Phone Number Field (อยู่บน Username) -->
+                    <div id="phoneFieldGroup" class="space-y-1.5 pt-1">
+                        <label for="phone" class="block text-sm sm:text-base font-semibold text-gray-200">
+                            Phone Number
+                        </label>
+                        <div class="line-input flex items-center justify-between pb-2">
+                            <input type="tel" 
+                                   id="phone" 
+                                   name="phone" 
+                                   placeholder="08X-XXX-XXXX"
+                                   required 
+                                   class="w-full bg-transparent border-none outline-none text-white text-base sm:text-lg font-normal pr-3 placeholder-white/30">
+                            <!-- Phone Icon -->
+                            <svg class="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 5. Username Field (เพิ่มขนาด Label & Input & Icon) -->
                     <div class="space-y-1.5 pt-1">
                         <label id="usernameLabel" for="username" class="block text-sm sm:text-base font-semibold text-gray-200">
                             Username
@@ -235,6 +254,8 @@ if (!empty($redirect)) {
             const formTitle = document.getElementById('formTitle');
             const emailGroup = document.getElementById('emailFieldGroup');
             const emailInput = document.getElementById('email');
+            const phoneGroup = document.getElementById('phoneFieldGroup');
+            const phoneInput = document.getElementById('phone');
             const usernameLabel = document.getElementById('usernameLabel');
             const termsGroup = document.getElementById('termsGroup');
             const agreeTerms = document.getElementById('agreeTerms');
@@ -249,6 +270,8 @@ if (!empty($redirect)) {
                 document.title = 'Sign Up - GeoRubber Watch';
                 emailGroup.classList.remove('hidden');
                 emailInput.required = true;
+                phoneGroup.classList.remove('hidden');
+                phoneInput.required = true;
                 usernameLabel.textContent = 'Username';
                 termsGroup.classList.remove('hidden');
                 agreeTerms.required = true;
@@ -259,7 +282,9 @@ if (!empty($redirect)) {
                 document.title = 'Sign In - GeoRubber Watch';
                 emailGroup.classList.add('hidden');
                 emailInput.required = false;
-                usernameLabel.textContent = 'Username / Email';
+                phoneGroup.classList.add('hidden');
+                phoneInput.required = false;
+                usernameLabel.textContent = 'Username / Email / Phone';
                 termsGroup.classList.add('hidden');
                 agreeTerms.required = false;
                 btnText.textContent = 'Sign In';
@@ -277,6 +302,7 @@ if (!empty($redirect)) {
             if (isSignupMode) {
                 // Sign Up Action
                 const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
                 const agree = document.getElementById('agreeTerms').checked;
 
                 if (!agree) {
@@ -293,6 +319,7 @@ if (!empty($redirect)) {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             email: email,
+                            phone: phone,
                             username: username,
                             full_name: username,
                             password: password

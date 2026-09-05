@@ -170,7 +170,23 @@ if ($method === 'POST' && $action === 'register') {
         }
     }
 
-    // 3. Check Duplicate Password (ห้ามรหัสผ่านซ้ำกับบัญชีเดิม)
+    // 3. Check Duplicate Phone
+    if (!empty($phone)) {
+        $cleanPhone = str_replace(['-', ' '], '', $phone);
+        $checkPhoneStmt = $pdo->prepare("SELECT id FROM users WHERE phone = ? OR REPLACE(REPLACE(phone, '-', ''), ' ', '') = ?");
+        $checkPhoneStmt->execute([$phone, $cleanPhone]);
+        if ($checkPhoneStmt->fetch()) {
+            http_response_code(409);
+            echo json_encode([
+                'status' => 'error',
+                'success' => false,
+                'message' => 'เบอร์โทรศัพท์ "' . $phone . '" ถูกใช้งานแล้วในระบบ กรุณาใช้เบอร์โทรอื่น'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+    }
+
+    // 4. Check Duplicate Password (ห้ามรหัสผ่านซ้ำกับบัญชีเดิม)
     $allUsersStmt = $pdo->query("SELECT id, username, full_name, password_hash FROM users");
     $existingUsers = $allUsersStmt->fetchAll();
     foreach ($existingUsers as $eu) {
