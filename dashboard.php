@@ -16,6 +16,7 @@ initDatabaseIfNeeded();
 $currentUser = getCurrentUser();
 $current_role = $currentUser['role'] ?? 'farmer';
 $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบบ';
+$isUserAdmin = isAdmin();
 
 $pdo = getDatabaseConnection();
 $dbConnected = ($pdo !== null);
@@ -47,94 +48,210 @@ function relativeTime(mixed $date): string
 }
 
 // -------------------------------------------------------------------------
-// DATA AGGREGATION: SURAT THANI RUBBER PLANTATION STATS
+// DATABASE QUERIES ACCORDING TO ROLE (RBAC)
 // -------------------------------------------------------------------------
-$totalPlots = 0;
-$totalArea = 0.0;
-
-$greenCount = 0;
-$greenArea = 0.0;
-
-$yellowCount = 0;
-$yellowArea = 0.0;
-
-$redCount = 0;
-$redArea = 0.0;
-
-$plotsList = [];
-$statusFilter = trim($_GET['status'] ?? '');
-$searchQuery = trim($_GET['q'] ?? '');
-
-if ($dbConnected && $pdo) {
-    try {
-        // Total Stats
-        $totalArea = (float)$pdo->query("SELECT COALESCE(SUM(area_rai + (area_ngan * 0.25) + (area_sqwah * 0.0025)), 0) FROM rubber_plots")->fetchColumn();
-        $totalPlots = (int)$pdo->query("SELECT COUNT(*) FROM rubber_plots")->fetchColumn();
-
-        // 🟢 Green: ผ่านเกณฑ์ (Compliant)
-        $greenCount = (int)$pdo->query("SELECT COUNT(*) FROM rubber_plots WHERE eudr_status = 'compliant'")->fetchColumn();
-        $greenArea = (float)$pdo->query("SELECT COALESCE(SUM(area_rai + (area_ngan * 0.25) + (area_sqwah * 0.0025)), 0) FROM rubber_plots WHERE eudr_status = 'compliant'")->fetchColumn();
-
-        // 🟡 Yellow: ควรเฝ้าระวัง (Under Review / Buffer 500m)
-        $yellowCount = (int)$pdo->query("SELECT COUNT(*) FROM rubber_plots WHERE eudr_status = 'under_review'")->fetchColumn();
-        $yellowArea = (float)$pdo->query("SELECT COALESCE(SUM(area_rai + (area_ngan * 0.25) + (area_sqwah * 0.0025)), 0) FROM rubber_plots WHERE eudr_status = 'under_review'")->fetchColumn();
-
-        // 🔴 Red: ซ้อนทับพื้นที่เขตป่าสงวน (Non-compliant / Overlap)
-        $redCount = (int)$pdo->query("SELECT COUNT(*) FROM rubber_plots WHERE eudr_status = 'non_compliant'")->fetchColumn();
-        $redArea = (float)$pdo->query("SELECT COALESCE(SUM(area_rai + (area_ngan * 0.25) + (area_sqwah * 0.0025)), 0) FROM rubber_plots WHERE eudr_status = 'non_compliant'")->fetchColumn();
-
-        // If no data in DB yet, provide realistic fallback
-        if ($totalPlots === 0) {
-            $totalPlots = 12;
-            $totalArea = 145.5;
-            $greenCount = 8;
-            $greenArea = 102.0;
-            $yellowCount = 3;
-            $yellowArea = 31.5;
-            $redCount = 1;
-            $redArea = 12.0;
-        }
-
-        // Filtered Plots List Query
-        $where = [];
-        $params = [];
-
-        if ($statusFilter !== '') {
-            $where[] = "p.eudr_status = ?";
-            $params[] = $statusFilter;
-        }
-        if ($searchQuery !== '') {
-            $where[] = "(p.plot_name LIKE ? OR p.plot_code LIKE ? OR p.title_deed_no LIKE ? OR f.first_name LIKE ? OR f.last_name LIKE ? OR f.district LIKE ?)";
-            $q = "%{$searchQuery}%";
-            $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q;
-        }
-
-        $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
-        $tableStmt = $pdo->prepare("
-            SELECT p.id, p.plot_code, p.plot_name, p.title_deed_type, p.title_deed_no,
-                   p.area_rai, p.rubber_clone, p.eudr_status, p.eudr_overlap_pct, p.updated_at,
-                   f.prefix, f.first_name, f.last_name, f.district, f.subdistrict
-            FROM rubber_plots p
-            LEFT JOIN farmers f ON f.id = p.farmer_id
-            {$whereClause}
-            ORDER BY CASE 
-                WHEN p.eudr_status = 'non_compliant' THEN 1 
-                WHEN p.eudr_status = 'under_review' THEN 2 
-                ELSE 3 
-            END, p.id DESC
-        ");
-        $tableStmt->execute($params);
-        $plotsList = $tableStmt->fetchAll(PDO::FETCH_ASSOC);
-
-    } catch (Throwable $e) {
-        // Fallback gracefully
+$farmerId = $currentUser['farmer_id'] ?? null;
+if (!$isUserAdmin && !$farmerId && isset($_SESSION['user_id'])) {
+    $fStmt = $pdo->prepare("SELECT id FROM farmers WHERE user_id = ?");
+    $fStmt->execute([$_SESSION['user_id']]);
+    $farmerId = (int)$fStmt->fetchColumn();
+    if ($farmerId) {
+        $_SESSION['farmer_id'] = $farmerId;
     }
 }
 
-// Percentages
-$greenPct = $totalArea > 0 ? round(($greenArea / $totalArea) * 100, 1) : 0;
-$yellowPct = $totalArea > 0 ? round(($yellowArea / $totalArea) * 100, 1) : 0;
-$redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
+$driver = $pdo ? $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) : 'pgsql';
+$dateExpr = ($driver === 'pgsql') ? "TO_CHAR(harvest_date, 'YYYY-MM-DD')" : "DATE(harvest_date)";
+$monthExpr = ($driver === 'pgsql') ? "TO_CHAR(harvest_date, 'YYYY-MM')" : "strftime('%Y-%m', harvest_date)";
+
+// Filter params for Admin
+$statusFilter = trim($_GET['status'] ?? '');
+$searchQuery = trim($_GET['q'] ?? '');
+
+if (!$isUserAdmin) {
+    // =========================================================================
+    // 1. FARMER PERSONAL DASHBOARD DATA
+    // =========================================================================
+    $fId = $farmerId ?: -1;
+
+    // Own Plot KPIs
+    $plotStmt = $pdo->prepare("
+        SELECT 
+            COUNT(*) as total_plots,
+            COALESCE(SUM(area_rai + (area_ngan * 0.25) + (area_sqwah * 0.0025)), 0) as total_rai,
+            COALESCE(SUM(area_hectare), 0) as total_ha,
+            COALESCE(SUM(tree_count), 0) as total_trees,
+            SUM(CASE WHEN eudr_status = 'compliant' THEN 1 ELSE 0 END) as compliant_plots,
+            SUM(CASE WHEN eudr_status = 'under_review' THEN 1 ELSE 0 END) as review_plots,
+            SUM(CASE WHEN eudr_status = 'non_compliant' THEN 1 ELSE 0 END) as non_compliant_plots,
+            SUM(CASE WHEN tapping_status = 'tapping' THEN 1 ELSE 0 END) as tapping_plots
+        FROM rubber_plots
+        WHERE farmer_id = ?
+    ");
+    $plotStmt->execute([$fId]);
+    $farmerPlots = $plotStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    // Own Yield KPIs
+    $yieldStmt = $pdo->prepare("
+        SELECT 
+            COUNT(*) as total_records,
+            COALESCE(SUM(fresh_latex_kg), 0) as total_fresh_kg,
+            COALESCE(SUM(dry_rubber_kg), 0) as total_dry_kg,
+            COALESCE(SUM(total_revenue), 0) as total_revenue,
+            COALESCE(AVG(drc_percent), 0) as avg_drc,
+            COALESCE(AVG(price_per_kg), 0) as avg_price
+        FROM yield_logs
+        WHERE farmer_id = ?
+    ");
+    $yieldStmt->execute([$fId]);
+    $farmerYields = $yieldStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    // Trend 1: Latex Yield Trend (กก. น้ำยางสด ตามรอบการกรีด/วันที่)
+    $trendStmt1 = $pdo->prepare("
+        SELECT {$dateExpr} as harvest_date, SUM(fresh_latex_kg) as daily_kg, AVG(drc_percent) as avg_drc
+        FROM yield_logs
+        WHERE farmer_id = ?
+        GROUP BY {$dateExpr}
+        ORDER BY harvest_date ASC
+        LIMIT 30
+    ");
+    $trendStmt1->execute([$fId]);
+    $yieldTrendData = $trendStmt1->fetchAll(PDO::FETCH_ASSOC);
+
+    // Trend 2: Price & Revenue Trend (ราคารับซื้อ และ รายได้รวม)
+    $trendStmt2 = $pdo->prepare("
+        SELECT {$dateExpr} as harvest_date, AVG(price_per_kg) as avg_price, SUM(total_revenue) as daily_revenue
+        FROM yield_logs
+        WHERE farmer_id = ?
+        GROUP BY {$dateExpr}
+        ORDER BY harvest_date ASC
+        LIMIT 30
+    ");
+    $trendStmt2->execute([$fId]);
+    $priceRevenueTrendData = $trendStmt2->fetchAll(PDO::FETCH_ASSOC);
+
+    // Own Plots List
+    $listStmt = $pdo->prepare("
+        SELECT p.*, f.prefix, f.first_name, f.last_name, f.district, f.subdistrict
+        FROM rubber_plots p
+        LEFT JOIN farmers f ON f.id = p.farmer_id
+        WHERE p.farmer_id = ?
+        ORDER BY p.id DESC
+    ");
+    $listStmt->execute([$fId]);
+    $personalPlotsList = $listStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $totalFarmerPlots = (int)($farmerPlots['total_plots'] ?? 0);
+    $compliantFarmerPlots = (int)($farmerPlots['compliant_plots'] ?? 0);
+    $farmerComplianceRate = $totalFarmerPlots > 0 ? round(($compliantFarmerPlots / $totalFarmerPlots) * 100, 1) : 100.0;
+
+} else {
+    // =========================================================================
+    // 2. ADMIN MACRO DASHBOARD DATA
+    // =========================================================================
+    $totalArea = (float)$pdo->query("SELECT COALESCE(SUM(area_rai + (area_ngan * 0.25) + (area_sqwah * 0.0025)), 0) FROM rubber_plots")->fetchColumn();
+    $totalPlots = (int)$pdo->query("SELECT COUNT(*) FROM rubber_plots")->fetchColumn();
+    $totalFarmers = (int)$pdo->query("SELECT COUNT(*) FROM farmers")->fetchColumn();
+
+    $greenCount = (int)$pdo->query("SELECT COUNT(*) FROM rubber_plots WHERE eudr_status = 'compliant'")->fetchColumn();
+    $greenArea = (float)$pdo->query("SELECT COALESCE(SUM(area_rai + (area_ngan * 0.25) + (area_sqwah * 0.0025)), 0) FROM rubber_plots WHERE eudr_status = 'compliant'")->fetchColumn();
+
+    $yellowCount = (int)$pdo->query("SELECT COUNT(*) FROM rubber_plots WHERE eudr_status = 'under_review'")->fetchColumn();
+    $yellowArea = (float)$pdo->query("SELECT COALESCE(SUM(area_rai + (area_ngan * 0.25) + (area_sqwah * 0.0025)), 0) FROM rubber_plots WHERE eudr_status = 'under_review'")->fetchColumn();
+
+    $redCount = (int)$pdo->query("SELECT COUNT(*) FROM rubber_plots WHERE eudr_status = 'non_compliant'")->fetchColumn();
+    $redArea = (float)$pdo->query("SELECT COALESCE(SUM(area_rai + (area_ngan * 0.25) + (area_sqwah * 0.0025)), 0) FROM rubber_plots WHERE eudr_status = 'non_compliant'")->fetchColumn();
+
+    $macroYieldStats = $pdo->query("
+        SELECT 
+            COALESCE(SUM(fresh_latex_kg), 0) as total_fresh_latex,
+            COALESCE(SUM(dry_rubber_kg), 0) as total_dry_rubber,
+            COALESCE(SUM(total_revenue), 0) as total_revenue,
+            COALESCE(AVG(price_per_kg), 0) as avg_price
+        FROM yield_logs
+    ")->fetch(PDO::FETCH_ASSOC);
+
+    // Clone Distribution
+    $cloneStats = $pdo->query("
+        SELECT rubber_clone, COUNT(*) as count, SUM(area_rai) as total_rai
+        FROM rubber_plots
+        GROUP BY rubber_clone
+        ORDER BY count DESC
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    // Tree Age Distribution
+    $currentYear = (int)date('Y');
+    $allPlots = $pdo->query("SELECT planting_year, area_rai FROM rubber_plots")->fetchAll(PDO::FETCH_ASSOC);
+    $ageGroups = [
+        'immature' => ['label' => 'ยังไม่เปิดกรีด (1-6 ปี)', 'count' => 0, 'rai' => 0],
+        'prime' => ['label' => 'ผลผลิตสูงสุด (7-15 ปี)', 'count' => 0, 'rai' => 0],
+        'mature' => ['label' => 'โตเต็มที่ (16-25 ปี)', 'count' => 0, 'rai' => 0],
+        'old' => ['label' => 'ควรปลูกแทน (>25 ปี)', 'count' => 0, 'rai' => 0]
+    ];
+    foreach ($allPlots as $p) {
+        $age = $currentYear - (int)$p['planting_year'];
+        if ($age <= 6) {
+            $ageGroups['immature']['count']++;
+            $ageGroups['immature']['rai'] += (float)$p['area_rai'];
+        } elseif ($age <= 15) {
+            $ageGroups['prime']['count']++;
+            $ageGroups['prime']['rai'] += (float)$p['area_rai'];
+        } elseif ($age <= 25) {
+            $ageGroups['mature']['count']++;
+            $ageGroups['mature']['rai'] += (float)$p['area_rai'];
+        } else {
+            $ageGroups['old']['count']++;
+            $ageGroups['old']['rai'] += (float)$p['area_rai'];
+        }
+    }
+
+    // Monthly Yield Production Trend
+    $monthlyYields = $pdo->query("
+        SELECT 
+            {$monthExpr} as harvest_month,
+            SUM(fresh_latex_kg) as monthly_fresh_kg,
+            SUM(total_revenue) as monthly_revenue
+        FROM yield_logs
+        GROUP BY {$monthExpr}
+        ORDER BY harvest_month ASC
+        LIMIT 12
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    // Filtered Plots List Query for Admin Table
+    $where = [];
+    $params = [];
+    if ($statusFilter !== '') {
+        $where[] = "p.eudr_status = ?";
+        $params[] = $statusFilter;
+    }
+    if ($searchQuery !== '') {
+        $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
+        $where[] = "(p.plot_name {$likeOp} ? OR p.plot_code {$likeOp} ? OR p.title_deed_no {$likeOp} ? OR f.first_name {$likeOp} ? OR f.last_name {$likeOp} ? OR f.district {$likeOp} ?)";
+        $q = "%{$searchQuery}%";
+        $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q; $params[] = $q;
+    }
+
+    $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
+    $tableStmt = $pdo->prepare("
+        SELECT p.id, p.plot_code, p.plot_name, p.title_deed_type, p.title_deed_no,
+               p.area_rai, p.rubber_clone, p.eudr_status, p.eudr_overlap_pct, p.updated_at,
+               f.prefix, f.first_name, f.last_name, f.district, f.subdistrict
+        FROM rubber_plots p
+        LEFT JOIN farmers f ON f.id = p.farmer_id
+        {$whereClause}
+        ORDER BY CASE 
+            WHEN p.eudr_status = 'non_compliant' THEN 1 
+            WHEN p.eudr_status = 'under_review' THEN 2 
+            ELSE 3 
+        END, p.id DESC
+    ");
+    $tableStmt->execute($params);
+    $macroPlotsList = $tableStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $greenPct = $totalArea > 0 ? round(($greenArea / $totalArea) * 100, 1) : 0;
+    $yellowPct = $totalArea > 0 ? round(($yellowArea / $totalArea) * 100, 1) : 0;
+    $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="th" class="scroll-smooth">
@@ -334,10 +451,10 @@ $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
           DECISION SUPPORT SYSTEM (DSS) • SURAT THANI
         </div>
         <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md">
-          แดชบอร์ดวิเคราะห์พื้นที่ปลูกและสถานะความสอดคล้อง
+          <?= !$isUserAdmin ? 'แดชบอร์ดสรุปข้อมูลแปลงปลูกและผลผลิตของคุณ' : 'แดชบอร์ดวิเคราะห์พื้นที่ปลูกและสถานะความสอดคล้อง' ?>
         </h1>
         <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow">
-          ติดตามภาพรวมพื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี และจำแนกสถานะแปลงผ่านเกณฑ์ เฝ้าระวัง และทับซ้อนเขตป่าสงวนแห่งชาติ
+          <?= !$isUserAdmin ? 'ติดตามภาพรวมแปลงปลูก สถิติผลผลิตน้ำยางสด รายได้สะสม และตรวจสอบความสอดคล้องตามมาตรฐาน EUDR ของคุณ' : 'ติดตามภาพรวมพื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี และจำแนกสถานะแปลงผ่านเกณฑ์ เฝ้าระวัง และทับซ้อนเขตป่าสงวนแห่งชาติ' ?>
         </p>
       </div>
     </div>
@@ -399,7 +516,273 @@ $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
        2. MAIN DASHBOARD: SPATIAL STATUS BREAKDOWN & DETAILED TABLE
        ========================================================================= -->
   <main class="w-full max-w-[1520px] 2xl:max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 -mt-20 sm:-mt-28 lg:-mt-32 relative z-20 py-2 sm:py-4 flex-1 space-y-6">
-    
+<?php if (!$isUserAdmin): ?>
+    <!-- =========================================================================
+         FARMER PERSONAL DASHBOARD VIEW
+         ========================================================================= -->
+    <!-- 4 PERSONAL KPI CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <!-- Card 1: My Plots & Area -->
+      <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] flex flex-col justify-between group hover:border-mezenc-brightCyan transition-all">
+        <div class="flex justify-between items-start">
+          <div>
+            <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-400 block">
+              แปลงปลูกของฉันทั้งหมด
+            </span>
+            <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-mezenc-teal mt-1">
+              <?= formatNumber($farmerPlots['total_plots'] ?? 0) ?> <span class="text-sm font-normal text-gray-500">แปลง</span>
+            </div>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-mezenc-lightCyan text-mezenc-teal flex items-center justify-center text-2xl shrink-0 border border-[#bee6e1] shadow-xs">
+            🌳
+          </div>
+        </div>
+        <div class="pt-4 border-t border-gray-100 mt-4 flex items-center justify-between text-xs">
+          <span class="text-gray-500 font-medium">เนื้อที่รวม: <b><?= formatNumber($farmerPlots['total_rai'] ?? 0, 1) ?> ไร่</b> (<?= formatNumber($farmerPlots['total_ha'] ?? 0, 2) ?> ha)</span>
+          <span class="bg-mezenc-lightCyan text-mezenc-teal px-2 py-0.5 rounded-full font-bold text-[10px]">
+            <?= formatNumber($farmerPlots['total_trees'] ?? 0) ?> ต้น
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 2: Fresh Latex Production -->
+      <div class="bg-gradient-to-br from-emerald-50/80 to-white rounded-3xl p-5 sm:p-6 shadow-[0_16px_40px_-10px_rgba(16,185,129,0.18)] border-2 border-emerald-300 flex flex-col justify-between group hover:border-emerald-500 transition-all">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-emerald-800">
+                ผลผลิตน้ำยางสดสะสม
+              </span>
+            </div>
+            <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-600 mt-1">
+              <?= formatNumber($farmerYields['total_fresh_kg'] ?? 0, 1) ?> <span class="text-sm font-normal text-gray-500">กก.</span>
+            </div>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl shrink-0 border border-emerald-300 shadow-xs">
+            🧪
+          </div>
+        </div>
+        <div class="pt-4 border-t border-emerald-100 mt-4 flex items-center justify-between text-xs">
+          <span class="text-emerald-700 font-semibold">DRC เฉลี่ย: <?= formatNumber($farmerYields['avg_drc'] ?? 0, 1) ?>%</span>
+          <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
+            ยางแห้ง <?= formatNumber($farmerYields['total_dry_kg'] ?? 0, 1) ?> กก.
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 3: Total Revenue -->
+      <div class="bg-gradient-to-br from-amber-50/80 to-white rounded-3xl p-5 sm:p-6 shadow-[0_16px_40px_-10px_rgba(245,158,11,0.18)] border-2 border-amber-300 flex flex-col justify-between group hover:border-amber-500 transition-all">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-amber-800">
+                รายได้สะสมรวม
+              </span>
+            </div>
+            <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-600 mt-1">
+              <?= formatNumber($farmerYields['total_revenue'] ?? 0, 2) ?> <span class="text-sm font-normal text-gray-500">฿</span>
+            </div>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl shrink-0 border border-amber-300 shadow-xs">
+            💰
+          </div>
+        </div>
+        <div class="pt-4 border-t border-amber-100 mt-4 flex items-center justify-between text-xs">
+          <span class="text-amber-700 font-semibold">เฉลี่ย <?= formatNumber($farmerYields['avg_price'] ?? 0, 2) ?> ฿/กก.</span>
+          <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
+            บันทึกแล้ว <?= formatNumber($farmerYields['total_records'] ?? 0) ?> รอบ
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 4: Personal EUDR Compliance -->
+      <div class="bg-gradient-to-br from-teal-50/80 to-white rounded-3xl p-5 sm:p-6 shadow-[0_16px_40px_-10px_rgba(14,77,78,0.18)] border-2 border-mezenc-mint flex flex-col justify-between group hover:border-mezenc-brightCyan transition-all">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-mezenc-brightCyan inline-block"></span>
+              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-mezenc-teal">
+                สถานะความสอดคล้อง EUDR
+              </span>
+            </div>
+            <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-mezenc-teal mt-1">
+              <?= $farmerComplianceRate ?>% <span class="text-sm font-normal text-gray-500">ปลอดภัย</span>
+            </div>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-mezenc-lightCyan text-mezenc-teal flex items-center justify-center text-2xl shrink-0 border border-mezenc-mint shadow-xs">
+            🛡️
+          </div>
+        </div>
+        <div class="pt-4 border-t border-teal-100 mt-4 flex items-center justify-between text-xs">
+          <span class="text-emerald-700 font-bold">🟢 ผ่าน <?= (int)($farmerPlots['compliant_plots'] ?? 0) ?></span>
+          <span class="text-amber-700 font-bold">🟡 เฝ้าระวัง <?= (int)($farmerPlots['review_plots'] ?? 0) ?></span>
+          <span class="text-rose-700 font-bold">🔴 เสี่ยง <?= (int)($farmerPlots['non_compliant_plots'] ?? 0) ?></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 FARMER TREND CHARTS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Chart 1: Latex Yield Trend (กก. น้ำยางสด & DRC %) -->
+      <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] p-5 sm:p-6">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2">
+              <span>📈 แนวโน้มผลผลิตน้ำยางสด (Latex Yield Trend)</span>
+            </h3>
+            <p class="text-xs text-gray-400 font-medium mt-0.5">
+              ปริมาณน้ำยางสด (กก.) และเปอร์เซ็นต์เนื้อยางแห้ง DRC (%) ตามรอบการกรีด
+            </p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
+            30 รอบล่าสุด
+          </span>
+        </div>
+        <div class="h-64 sm:h-72 w-full relative">
+          <canvas id="farmerYieldTrendCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Rubber Price & Total Revenue Trend -->
+      <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] p-5 sm:p-6">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2">
+              <span>💵 แนวโน้มราคารับซื้อและรายได้รวม (Price & Revenue Trend)</span>
+            </h3>
+            <p class="text-xs text-gray-400 font-medium mt-0.5">
+              ราคารับซื้อน้ำยางสด (บาท/กก.) และรายได้รวมต่อรอบการเก็บเกี่ยว (บาท)
+            </p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-200">
+            สถิติรายรับ
+          </span>
+        </div>
+        <div class="h-64 sm:h-72 w-full relative">
+          <canvas id="farmerPriceRevenueCanvas"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FARMER PERSONAL PLOTS REGISTRY TABLE -->
+    <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] overflow-hidden">
+      <div class="p-5 sm:p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 bg-white">
+        <div>
+          <h3 class="text-base sm:text-lg font-extrabold text-mezenc-teal flex items-center gap-2">
+            <span>📋 รายการแปลงปลูกของฉัน (My Rubber Plantations)</span>
+          </h3>
+          <p class="text-xs text-gray-400 font-medium mt-0.5">
+            สรุปข้อมูลแปลงปลูก พันธุ์ยาง เนื้อที่ และผลการประเมินความสอดคล้องตามมาตรฐาน EUDR
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a
+            href="yields.php"
+            class="px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs border border-emerald-200 transition-all flex items-center gap-1.5 shadow-xs"
+          >
+            <span>🧪</span> <span>บันทึกผลผลิต</span>
+          </a>
+          <a
+            href="map.php"
+            class="px-4 py-2 rounded-full bg-mezenc-teal hover:bg-mezenc-brightCyan text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs"
+          >
+            <span>➕</span> <span>เพิ่มแปลงปลูก</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="bg-[#f8faf9] border-b border-gray-200/80 text-mezenc-teal font-extrabold uppercase tracking-wider text-xs">
+              <th class="py-4 px-4 whitespace-nowrap">รหัส / ชื่อแปลงปลูก</th>
+              <th class="py-4 px-4 whitespace-nowrap">เอกสารสิทธิ์ / ที่ตั้ง</th>
+              <th class="py-4 px-4 whitespace-nowrap">พันธุ์ยาง</th>
+              <th class="py-4 px-4 whitespace-nowrap text-right">เนื้อที่ (ไร่)</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center">สถานะการกรีด</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center">สถานะ EUDR</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center">แผนที่ GIS</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 text-gray-700">
+            <?php if (!empty($personalPlotsList)): ?>
+              <?php foreach ($personalPlotsList as $plot): ?>
+                <?php 
+                  $st = $plot['eudr_status'] ?? 'compliant';
+                  if ($st === 'compliant') {
+                    $badgeCls = 'bg-emerald-50 text-emerald-700 border-emerald-300';
+                    $stText = '🟢 ผ่านเกณฑ์ (ปลอดภัย)';
+                    $descText = 'ไม่อยู่ในเขตป่าสงวน';
+                  } elseif ($st === 'under_review') {
+                    $badgeCls = 'bg-amber-50 text-amber-700 border-amber-300';
+                    $stText = '🟡 ควรเฝ้าระวัง';
+                    $descText = 'แนวกันชน Buffer 500m';
+                  } else {
+                    $badgeCls = 'bg-rose-50 text-rose-700 border-rose-300';
+                    $stText = '🔴 ซ้อนทับเขตป่าสงวน';
+                    $descText = 'ทับซ้อน Zone C ' . formatNumber($plot['eudr_overlap_pct'] ?? 10, 1) . '%';
+                  }
+                  $isTapping = ($plot['tapping_status'] ?? '') === 'tapping';
+                ?>
+                <tr class="hover:bg-[#f4faf7] transition-colors">
+                  <td class="py-4 px-4">
+                    <div class="font-bold text-gray-900 text-sm"><?= e($plot['plot_name']) ?></div>
+                    <div class="text-[11px] text-gray-400 font-mono"><?= e($plot['plot_code']) ?></div>
+                  </td>
+                  <td class="py-4 px-4">
+                    <div class="text-gray-700"><?= e($plot['title_deed_no'] ?: 'น.ส. 4 จ') ?></div>
+                    <div class="text-[11px] text-gray-400">อ.<?= e($plot['district'] ?? 'เมืองสุราษฎร์ธานี') ?> จ.สุราษฎร์ธานี</div>
+                  </td>
+                  <td class="py-4 px-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f8faf9] text-gray-600 border border-gray-200">
+                      <?= e($plot['rubber_clone'] ?: 'RRIM 600') ?>
+                    </span>
+                  </td>
+                  <td class="py-4 px-4 text-right font-extrabold text-mezenc-teal whitespace-nowrap text-sm sm:text-base">
+                    <?= formatNumber($plot['area_rai'] ?? 10, 1) ?>
+                  </td>
+                  <td class="py-4 px-4 text-center whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold <?= $isTapping ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-600 border border-gray-200' ?>">
+                      <?= $isTapping ? '🟢 เปิดกรีดแล้ว' : '⚪ ยังไม่เปิดกรีด' ?>
+                    </span>
+                  </td>
+                  <td class="py-4 px-4 text-center whitespace-nowrap">
+                    <span class="inline-flex flex-col items-center px-3 py-1 rounded-xl text-xs font-extrabold border <?= $badgeCls ?>">
+                      <span><?= $stText ?></span>
+                      <span class="text-[10px] font-normal opacity-85"><?= $descText ?></span>
+                    </span>
+                  </td>
+                  <td class="py-4 px-4 text-center whitespace-nowrap">
+                    <a 
+                      href="map.php?plot_id=<?= (int)$plot['id'] ?>" 
+                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#f8faf9] hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-xs border border-gray-200 hover:border-mezenc-brightCyan transition-all shadow-xs"
+                      title="ดูพิกัดแปลงปลูกบนแผนที่ GIS"
+                    >
+                      <span>📍</span> <span>ดูแปลง</span>
+                    </a>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <tr>
+                <td colspan="7" class="text-center py-12 text-gray-400 text-xs sm:text-sm">
+                  ยังไม่มีข้อมูลแปลงปลูกของคุณในระบบ <a href="map.php" class="text-mezenc-teal font-bold underline ml-1">เพิ่มแปลงปลูกใหม่เลย</a>
+                </td>
+              </tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+<?php else: ?>
+    <!-- =========================================================================
+         ADMIN MACRO-LEVEL DASHBOARD VIEW
+         ========================================================================= -->
     <!-- 4 MAIN STATS CARDS: TOTAL AREA + 3 COLOR-CODED RISK CATEGORIES -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
       
@@ -420,7 +803,7 @@ $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
         </div>
         
         <div class="pt-4 border-t border-gray-100 mt-4 flex items-center justify-between text-xs">
-          <span class="text-gray-500 font-medium">จำนวนแปลงในระบบ:</span>
+          <span class="text-gray-500 font-medium">จำนวนเกษตรกร: <b><?= formatNumber($totalFarmers) ?></b> ราย</span>
           <span class="font-extrabold text-mezenc-teal text-sm"><?= formatNumber($totalPlots) ?> แปลง</span>
         </div>
       </div>
@@ -640,7 +1023,52 @@ $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
 
     </div>
 
-    <!-- DETAILED DATA TABLE: PLOTS REGISTRY -->
+    <!-- MACRO INSIGHTS: CLONE DISTRIBUTION & MONTHLY TREND -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <!-- Clone Distribution Chart -->
+      <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] p-5 sm:p-6">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2">
+              <span>🧬 สัดส่วนสายพันธุ์ยางพารา (Clone Distribution)</span>
+            </h3>
+            <p class="text-xs text-gray-400 font-medium mt-0.5">
+              การกระจายตัวของพันธุ์ยางพาราในพื้นที่ จ.สุราษฎร์ธานี
+            </p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-mezenc-lightCyan text-mezenc-teal text-[11px] font-bold border border-mezenc-mint">
+            ภาพรวมจังหวัด
+          </span>
+        </div>
+        <div class="h-64 sm:h-72 w-full relative">
+          <canvas id="adminCloneChartCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Monthly Yield Trend Chart -->
+      <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] p-5 sm:p-6">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2">
+              <span>📅 แนวโน้มผลผลิตและรายได้รายเดือน (Monthly Provincial Trends)</span>
+            </h3>
+            <p class="text-xs text-gray-400 font-medium mt-0.5">
+              ปริมาณน้ำยางสด (กก.) และมูลค่ารวมรายเดือนทั้งจังหวัด
+            </p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
+            รายเดือน
+          </span>
+        </div>
+        <div class="h-64 sm:h-72 w-full relative">
+          <canvas id="adminMonthlyChartCanvas"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DETAILED DATA TABLE: PLOTS REGISTRY (ADMIN) -->
     <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] overflow-hidden">
       
       <!-- Table Header Bar -->
@@ -695,8 +1123,8 @@ $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 text-gray-700">
-            <?php if (!empty($plotsList)): ?>
-              <?php foreach ($plotsList as $plot): ?>
+            <?php if (!empty($macroPlotsList)): ?>
+              <?php foreach ($macroPlotsList as $plot): ?>
                 <?php 
                   $st = $plot['eudr_status'] ?? 'compliant';
                   if ($st === 'compliant') {
@@ -784,6 +1212,7 @@ $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
       </div>
 
     </div>
+<?php endif; ?>
 
   </main>
 
@@ -850,7 +1279,7 @@ $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
   <!-- App Global JavaScript -->
   <script src="assets/js/app.js"></script>
 
-  <!-- Status Breakdown Donut Chart JavaScript -->
+  <!-- Dashboard Dynamic Charts JavaScript -->
   <script>
     // Mobile Drawer Toggle
     function toggleMobileDrawer() {
@@ -876,13 +1305,148 @@ $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
       }
     }
 
-    // Initialize Donut Chart
-    (function initStatusDonut() {
-      try {
-        const ctx = document.getElementById('statusChartCanvas');
-        if (!ctx || typeof Chart === 'undefined') return;
+    <?php if (!$isUserAdmin): ?>
+    // -------------------------------------------------------------------------
+    // FARMER CHARTS INITIALIZATION
+    // -------------------------------------------------------------------------
+    (function initFarmerCharts() {
+      if (typeof Chart === 'undefined') return;
 
-        new Chart(ctx, {
+      const yieldTrendData = <?= json_encode($yieldTrendData, JSON_UNESCAPED_UNICODE) ?> || [];
+      const priceRevenueData = <?= json_encode($priceRevenueTrendData, JSON_UNESCAPED_UNICODE) ?> || [];
+
+      // 1. Yield Trend Line Chart
+      const yieldCanvas = document.getElementById('farmerYieldTrendCanvas');
+      if (yieldCanvas) {
+        const labels = yieldTrendData.map(d => d.harvest_date);
+        const kgData = yieldTrendData.map(d => parseFloat(d.daily_kg) || 0);
+        const drcData = yieldTrendData.map(d => parseFloat(d.avg_drc) || 0);
+
+        new Chart(yieldCanvas, {
+          type: 'line',
+          data: {
+            labels: labels.length ? labels : ['ไม่มีข้อมูล'],
+            datasets: [
+              {
+                label: 'น้ำยางสด (กก.)',
+                data: kgData.length ? kgData : [0],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 2.5,
+                tension: 0.35,
+                fill: true,
+                yAxisID: 'y'
+              },
+              {
+                label: 'DRC (%)',
+                data: drcData.length ? drcData : [0],
+                borderColor: '#0e4d4e',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [4, 4],
+                tension: 0.35,
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: { display: true, text: 'น้ำยางสด (กก.)', font: { size: 11 } }
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                min: 0,
+                max: 50,
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: 'DRC (%)', font: { size: 11 } }
+              }
+            },
+            plugins: {
+              legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+            }
+          }
+        });
+      }
+
+      // 2. Price & Revenue Dual Chart
+      const priceCanvas = document.getElementById('farmerPriceRevenueCanvas');
+      if (priceCanvas) {
+        const labels = priceRevenueData.map(d => d.harvest_date);
+        const priceData = priceRevenueData.map(d => parseFloat(d.avg_price) || 0);
+        const revData = priceRevenueData.map(d => parseFloat(d.daily_revenue) || 0);
+
+        new Chart(priceCanvas, {
+          data: {
+            labels: labels.length ? labels : ['ไม่มีข้อมูล'],
+            datasets: [
+              {
+                type: 'bar',
+                label: 'รายได้รวม (บาท)',
+                data: revData.length ? revData : [0],
+                backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                borderColor: '#f59e0b',
+                borderRadius: 6,
+                yAxisID: 'y'
+              },
+              {
+                type: 'line',
+                label: 'ราคารับซื้อ (บาท/กก.)',
+                data: priceData.length ? priceData : [0],
+                borderColor: '#0e4d4e',
+                backgroundColor: '#0e4d4e',
+                borderWidth: 2.5,
+                tension: 0.3,
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: { display: true, text: 'รายได้ (บาท)', font: { size: 11 } }
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: 'ราคา (บาท/กก.)', font: { size: 11 } }
+              }
+            },
+            plugins: {
+              legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+            }
+          }
+        });
+      }
+    })();
+
+    <?php else: ?>
+    // -------------------------------------------------------------------------
+    // ADMIN CHARTS INITIALIZATION
+    // -------------------------------------------------------------------------
+    (function initAdminCharts() {
+      if (typeof Chart === 'undefined') return;
+
+      // 1. Status Donut Chart
+      const donutCtx = document.getElementById('statusChartCanvas');
+      if (donutCtx) {
+        new Chart(donutCtx, {
           type: 'doughnut',
           data: {
             labels: [
@@ -923,10 +1487,99 @@ $redPct = $totalArea > 0 ? round(($redArea / $totalArea) * 100, 1) : 0;
             }
           }
         });
-      } catch (e) {
-        console.error("Donut Chart error:", e);
+      }
+
+      // 2. Clone Distribution Doughnut Chart
+      const cloneCtx = document.getElementById('adminCloneChartCanvas');
+      if (cloneCtx) {
+        const cloneData = <?= json_encode($cloneStats, JSON_UNESCAPED_UNICODE) ?> || [];
+        const cloneLabels = cloneData.map(c => c.rubber_clone || 'ไม่ระบุ');
+        const cloneCounts = cloneData.map(c => parseInt(c.count) || 0);
+
+        new Chart(cloneCtx, {
+          type: 'bar',
+          data: {
+            labels: cloneLabels.length ? cloneLabels : ['ไม่มีข้อมูล'],
+            datasets: [{
+              label: 'จำนวนแปลง (แปลง)',
+              data: cloneCounts.length ? cloneCounts : [0],
+              backgroundColor: ['#0e4d4e', '#00a699', '#5ebbb6', '#93c5fd', '#f59e0b', '#10b981'],
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: 'จำนวนแปลง' } }
+            }
+          }
+        });
+      }
+
+      // 3. Monthly Yield Trend Chart
+      const monthlyCtx = document.getElementById('adminMonthlyChartCanvas');
+      if (monthlyCtx) {
+        const monthlyData = <?= json_encode($monthlyYields, JSON_UNESCAPED_UNICODE) ?> || [];
+        const mLabels = monthlyData.map(m => m.harvest_month);
+        const mKg = monthlyData.map(m => parseFloat(m.monthly_fresh_kg) || 0);
+        const mRev = monthlyData.map(m => parseFloat(m.monthly_revenue) || 0);
+
+        new Chart(monthlyCtx, {
+          data: {
+            labels: mLabels.length ? mLabels : ['ไม่มีข้อมูล'],
+            datasets: [
+              {
+                type: 'bar',
+                label: 'น้ำยางสดรวม (กก.)',
+                data: mKg.length ? mKg : [0],
+                backgroundColor: 'rgba(0, 166, 153, 0.65)',
+                borderColor: '#00a699',
+                borderRadius: 6,
+                yAxisID: 'y'
+              },
+              {
+                type: 'line',
+                label: 'มูลค่ารวม (บาท)',
+                data: mRev.length ? mRev : [0],
+                borderColor: '#f59e0b',
+                backgroundColor: '#f59e0b',
+                borderWidth: 2.5,
+                tension: 0.35,
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: { display: true, text: 'น้ำยางสด (กก.)', font: { size: 11 } }
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: 'มูลค่า (บาท)', font: { size: 11 } }
+              }
+            },
+            plugins: {
+              legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+            }
+          }
+        });
       }
     })();
+    <?php endif; ?>
   </script>
 </body>
 </html>

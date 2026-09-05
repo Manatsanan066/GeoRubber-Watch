@@ -9,20 +9,52 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
 
 $pdo = getDatabaseConnection();
 
-// Fetch plots with farmer profile details for dynamic form filling
+$isUserAdmin = isAdmin();
+$farmerId = $currentUser['farmer_id'] ?? null;
+if (!$isUserAdmin && !$farmerId && isset($_SESSION['user_id'])) {
+    $fStmt = $pdo->prepare("SELECT id FROM farmers WHERE user_id = ?");
+    $fStmt->execute([$_SESSION['user_id']]);
+    $farmerId = (int)$fStmt->fetchColumn();
+    if ($farmerId) {
+        $_SESSION['farmer_id'] = $farmerId;
+    }
+}
+
+// Fetch plots with farmer profile details (RBAC: Farmer only sees own plots, Admin sees all)
 $plots = [];
 try {
-    $plots = $pdo->query("
-        SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai,
-               p.centroid_lat, p.centroid_lng, p.title_deed_no,
-               f.id as farmer_id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
-               f.subdistrict, f.district, f.province
-        FROM rubber_plots p
-        LEFT JOIN farmers f ON f.id = p.farmer_id
-        ORDER BY p.plot_name ASC
-    ")->fetchAll(PDO::FETCH_ASSOC);
+    if (!$isUserAdmin) {
+        $stmt = $pdo->prepare("
+            SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai,
+                   p.centroid_lat, p.centroid_lng, p.title_deed_no,
+                   f.id as farmer_id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
+                   f.subdistrict, f.district, f.province
+            FROM rubber_plots p
+            LEFT JOIN farmers f ON f.id = p.farmer_id
+            WHERE p.farmer_id = ?
+            ORDER BY p.plot_name ASC
+        ");
+        $stmt->execute([$farmerId ?: -1]);
+        $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $plots = $pdo->query("
+            SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai,
+                   p.centroid_lat, p.centroid_lng, p.title_deed_no,
+                   f.id as farmer_id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
+                   f.subdistrict, f.district, f.province
+            FROM rubber_plots p
+            LEFT JOIN farmers f ON f.id = p.farmer_id
+            ORDER BY p.plot_name ASC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+    }
 } catch (Exception $e) {
-    $plots = $pdo->query("SELECT id, plot_code, plot_name, rubber_clone, area_rai FROM rubber_plots ORDER BY plot_name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    if (!$isUserAdmin) {
+        $stmt = $pdo->prepare("SELECT id, plot_code, plot_name, rubber_clone, area_rai FROM rubber_plots WHERE farmer_id = ? ORDER BY plot_name ASC");
+        $stmt->execute([$farmerId ?: -1]);
+        $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $plots = $pdo->query("SELECT id, plot_code, plot_name, rubber_clone, area_rai FROM rubber_plots ORDER BY plot_name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -354,42 +386,97 @@ try {
       </div>
     </div>
 
-    <!-- Action Buttons & Toolbar -->
-    <div class="flex flex-wrap items-center justify-between gap-3 bg-white/80 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-gray-200 shadow-xs">
+    <!-- Action Buttons & Toolbar (Admin Search + Dropdown Filter) -->
+    <div class="bg-white/90 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-3xl border-2 border-[#bee6e1] shadow-md space-y-3">
       
-      <!-- Filter Dropdown -->
-      <div class="flex items-center gap-2.5">
-        <span class="text-xs sm:text-sm font-bold text-gray-700">🔎 ตัวกรองแปลงปลูก:</span>
-        <select 
-          id="filter-yield-plot" 
-          class="bg-[#f8faf9] text-gray-800 font-semibold text-xs sm:text-sm rounded-xl px-3 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-56 sm:w-72 cursor-pointer" 
-          onchange="loadYields()"
-        >
-          <option value="">-- แสดงข้อมูลทุกแปลงปลูก --</option>
-          <?php foreach ($plots as $p): ?>
-            <option value="<?= $p['id'] ?>">
-              <?= htmlspecialchars($p['plot_name']) ?> (<?= htmlspecialchars($p['plot_code']) ?>)
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+      <!-- Top Row: Filters & Search Inputs -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        
+        <!-- Plot Dropdown Filter -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs sm:text-sm font-bold text-gray-700 whitespace-nowrap">🔎 แปลงปลูก:</span>
+          <select 
+            id="filter-yield-plot" 
+            class="bg-[#f8faf9] text-gray-800 font-semibold text-xs sm:text-sm rounded-xl px-3 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-48 sm:w-64 cursor-pointer" 
+            onchange="loadYields()"
+          >
+            <option value="">-- ทุกแปลงปลูก <?= $isUserAdmin ? '(ทั้งหมด)' : '(ของฉัน)' ?> --</option>
+            <?php foreach ($plots as $p): ?>
+              <option value="<?= $p['id'] ?>">
+                <?= htmlspecialchars($p['plot_name']) ?> (<?= htmlspecialchars($p['plot_code']) ?>)
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center gap-2.5">
-        <a 
-          href="api/export.php?type=yields_csv" 
-          class="px-4 py-2.5 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-xs sm:text-sm border-2 border-[#bee6e1] shadow-xs hover:border-mezenc-brightCyan transition-all flex items-center gap-2"
-        >
-          <span>📥</span> <span>ส่งออก CSV</span>
-        </a>
+        <?php if ($isUserAdmin): ?>
+        <!-- Admin Search Inputs (Farmer Name, Plot Code, Title Deed) -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Search Farmer Name -->
+          <div class="relative">
+            <input 
+              type="text" 
+              id="search-name" 
+              placeholder="ค้นหาชื่อเกษตรกร..." 
+              class="bg-[#f8faf9] text-gray-800 text-xs rounded-xl pl-3 pr-7 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-36 sm:w-44"
+              oninput="debounceLoadYields()"
+            >
+            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">👨‍🌾</span>
+          </div>
 
-        <button 
-          type="button" 
-          onclick="openAddYieldModal()" 
-          class="px-5 py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
-        >
-          <span>➕</span> <span>บันทึกผลผลิตรอบใหม่</span>
-        </button>
+          <!-- Search Plot Code / Name -->
+          <div class="relative">
+            <input 
+              type="text" 
+              id="search-plot-code" 
+              placeholder="รหัส/ชื่อแปลง..." 
+              class="bg-[#f8faf9] text-gray-800 text-xs rounded-xl pl-3 pr-7 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-32 sm:w-40"
+              oninput="debounceLoadYields()"
+            >
+            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">🌲</span>
+          </div>
+
+          <!-- Search Title Deed No -->
+          <div class="relative">
+            <input 
+              type="text" 
+              id="search-title-deed" 
+              placeholder="เลขที่โฉนด..." 
+              class="bg-[#f8faf9] text-gray-800 text-xs rounded-xl pl-3 pr-7 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-28 sm:w-36"
+              oninput="debounceLoadYields()"
+            >
+            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">📄</span>
+          </div>
+
+          <button 
+            type="button" 
+            onclick="clearAdminFilters()" 
+            class="px-2.5 py-1.5 text-xs text-gray-400 hover:text-rose-500 underline"
+            title="ล้างการค้นหา"
+          >
+            ล้างตัวกรอง
+          </button>
+        </div>
+        <?php endif; ?>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2.5 ml-auto">
+          <a 
+            href="api/export.php?type=yields_csv" 
+            class="px-3.5 py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-xs sm:text-sm border-2 border-[#bee6e1] shadow-xs hover:border-mezenc-brightCyan transition-all flex items-center gap-1.5"
+          >
+            <span>📥</span> <span>ส่งออก CSV</span>
+          </a>
+
+          <button 
+            type="button" 
+            onclick="openAddYieldModal()" 
+            class="px-4 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>➕</span> <span>บันทึกผลผลิตใหม่</span>
+          </button>
+        </div>
+
       </div>
 
     </div>
@@ -725,6 +812,98 @@ try {
   </div>
 
   <!-- =========================================================================
+       MODAL: EDIT YIELD REGISTRY (แก้ไขข้อมูลผลผลิตน้ำยางสด)
+       ========================================================================= -->
+  <div id="editYieldModal" class="modal-overlay">
+    <div class="modal-card w-full max-w-3xl max-h-[92vh] flex flex-col justify-between overflow-hidden bg-white rounded-3xl shadow-2xl border-2 border-[#bee6e1]">
+      
+      <!-- Modal Header -->
+      <div class="p-5 sm:p-6 text-white bg-mezenc-teal relative flex items-center justify-between border-b border-white/10 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-xl shadow-inner border border-white/20">
+            ✏️
+          </div>
+          <div>
+            <div class="text-[11px] uppercase tracking-widest font-bold text-mezenc-mint">
+              EDIT YIELD RECORD • แก้ไขข้อมูลผลผลิตน้ำยางสด
+            </div>
+            <h3 class="text-lg sm:text-xl font-black text-white" id="edit-modal-title">
+              แก้ไขข้อมูลผลผลิต
+            </h3>
+          </div>
+        </div>
+
+        <button 
+          type="button" 
+          onclick="closeEditYieldModal()" 
+          class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer hover:rotate-90"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <form id="edit-yield-form" onsubmit="handleSaveEditYield(event)" class="overflow-y-auto custom-scrollbar p-5 sm:p-7 space-y-6 flex-1 text-xs sm:text-sm">
+        <input type="hidden" id="edit-yield-id">
+        <input type="hidden" id="edit-plot-id">
+
+        <div class="bg-[#f8faf9] p-4 sm:p-5 rounded-2xl border border-gray-200/80 space-y-2">
+          <div class="font-bold text-mezenc-teal flex items-center gap-2">
+            <span>📍</span> <span>แปลงปลูก:</span> <span id="edit-disp-plot-info" class="text-gray-800 font-semibold">-</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="block font-bold text-gray-700 mb-1.5">วันที่เก็บเกี่ยว *</label>
+            <input type="date" id="edit-yield-date" class="w-full bg-white text-gray-800 text-xs sm:text-sm rounded-xl px-3 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs" required>
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-1.5">รอบการกรีดที่</label>
+            <input type="number" id="edit-yield-round" min="1" class="w-full bg-white text-gray-800 text-xs sm:text-sm rounded-xl px-3 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs">
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-1.5">สถานที่ส่งมอบ / ผู้รับซื้อ</label>
+            <input type="text" id="edit-yield-buyer" class="w-full bg-white text-gray-800 text-xs sm:text-sm rounded-xl px-3 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-gray-700 mb-1.5">ปริมาณน้ำยางสด (กก.) *</label>
+            <input type="number" step="0.01" id="edit-yield-fresh-kg" class="w-full bg-white text-gray-800 font-extrabold text-sm sm:text-base rounded-xl px-3.5 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs" oninput="calculateEditRevenue()" required>
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-1.5">ราคารับซื้อต่อ กก. (บาท) *</label>
+            <input type="number" step="0.25" id="edit-yield-price" class="w-full bg-white text-gray-800 font-extrabold text-sm sm:text-base rounded-xl px-3.5 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs" oninput="calculateEditRevenue()" required>
+          </div>
+        </div>
+
+        <!-- Revenue Highlight Box -->
+        <div class="bg-gradient-to-r from-emerald-50 to-[#e6f7f6] p-4 rounded-2xl border-2 border-[#bee6e1] flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-mezenc-teal">💵 ยอดเงินรวมคำนวณอัตโนมัติ</span>
+          <span id="edit-calc-revenue-display" class="text-2xl font-black text-mezenc-teal">฿0.00</span>
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 mb-1.5">หมายเหตุเพิ่มเติม</label>
+          <textarea id="edit-yield-notes" rows="2" class="w-full bg-white text-gray-800 text-xs sm:text-sm rounded-xl px-3.5 py-2 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs"></textarea>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="pt-2 flex flex-col sm:flex-row items-center gap-3">
+          <button type="button" onclick="closeEditYieldModal()" class="w-full sm:flex-1 py-3 rounded-full border-2 border-gray-300 hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm transition-all cursor-pointer text-center">
+            ยกเลิก
+          </button>
+          <button type="submit" id="btn-save-edit-yield" class="w-full sm:flex-1 py-3 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all cursor-pointer text-center flex items-center justify-center gap-2">
+            <span>💾</span> <span>บันทึกการแก้ไข</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
        4. FOOTER (ข้อมูลโครงการ / ผู้พัฒนา / สถิติพื้นที่ - ข้อมูลทางการ ม.อ. สุราษฎร์ธานี 14px)
        ========================================================================= -->
   <footer id="footer-section" class="bg-mezenc-teal text-white pt-12 sm:pt-14 pb-10 border-t border-white/10 mt-12 sm:mt-16 relative z-20">
@@ -790,6 +969,24 @@ try {
   <!-- Pass Plot & Farmer Data to JavaScript -->
   <script>
     const PLOTS_DATA = <?= json_encode($plots, JSON_UNESCAPED_UNICODE) ?>;
+    window.CURRENT_USER = <?= json_encode($currentUser, JSON_UNESCAPED_UNICODE) ?>;
+    window.IS_ADMIN = <?= $isUserAdmin ? 'true' : 'false' ?>;
+
+    let debounceTimer = null;
+    function debounceLoadYields() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        loadYields();
+      }, 350);
+    }
+
+    function clearAdminFilters() {
+      if (document.getElementById('search-name')) document.getElementById('search-name').value = '';
+      if (document.getElementById('search-plot-code')) document.getElementById('search-plot-code').value = '';
+      if (document.getElementById('search-title-deed')) document.getElementById('search-title-deed').value = '';
+      if (document.getElementById('filter-yield-plot')) document.getElementById('filter-yield-plot').value = '';
+      loadYields();
+    }
 
     // Mobile Drawer Toggle
     function toggleMobileDrawer() {
@@ -815,7 +1012,7 @@ try {
       }
     }
 
-    // Modal Handlers
+    // Modal Handlers (Add Yield)
     function openAddYieldModal() {
       const modal = document.getElementById('addYieldModal');
       modal.classList.add('active');
@@ -826,6 +1023,92 @@ try {
       const modal = document.getElementById('addYieldModal');
       modal.classList.remove('active');
       document.body.style.overflow = '';
+    }
+
+    // Modal Handlers (Edit Yield)
+    async function openEditYieldModal(id) {
+      try {
+        const res = await fetch(`api/yields.php?id=${id}`);
+        const data = await res.json();
+        if (!data.success || !data.yield) {
+          alert('ไม่พบข้อมูลผลผลิต');
+          return;
+        }
+        const y = data.yield;
+        document.getElementById('edit-yield-id').value = y.id;
+        document.getElementById('edit-plot-id').value = y.plot_id;
+        document.getElementById('edit-disp-plot-info').textContent = `${y.plot_name} (${y.plot_code || '-'}) | พันธุ์ ${y.rubber_clone || 'RRIM 600'}`;
+        document.getElementById('edit-yield-date').value = y.harvest_date;
+        document.getElementById('edit-yield-round').value = y.tapping_round || 1;
+        document.getElementById('edit-yield-fresh-kg').value = parseFloat(y.fresh_latex_kg) || 0;
+        document.getElementById('edit-yield-price').value = parseFloat(y.price_per_kg) || 0;
+        document.getElementById('edit-yield-buyer').value = y.buyer_name || '';
+        document.getElementById('edit-yield-notes').value = y.notes || '';
+        calculateEditRevenue();
+
+        const modal = document.getElementById('editYieldModal');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      } catch (e) {
+        console.error('Error fetching yield for edit:', e);
+      }
+    }
+
+    function closeEditYieldModal() {
+      const modal = document.getElementById('editYieldModal');
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function calculateEditRevenue() {
+      const fresh = parseFloat(document.getElementById('edit-yield-fresh-kg').value) || 0;
+      const price = parseFloat(document.getElementById('edit-yield-price').value) || 0;
+      const rev = (fresh * price).toFixed(2);
+      document.getElementById('edit-calc-revenue-display').textContent = `฿${parseFloat(rev).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    async function handleSaveEditYield(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save-edit-yield');
+      btn.disabled = true;
+      btn.innerHTML = `<span>⏳</span> <span>กำลังบันทึก...</span>`;
+
+      const id = parseInt(document.getElementById('edit-yield-id').value);
+      const payload = {
+        id: id,
+        plot_id: parseInt(document.getElementById('edit-plot-id').value),
+        harvest_date: document.getElementById('edit-yield-date').value,
+        tapping_round: parseInt(document.getElementById('edit-yield-round').value) || 1,
+        fresh_latex_kg: parseFloat(document.getElementById('edit-yield-fresh-kg').value) || 0,
+        price_per_kg: parseFloat(document.getElementById('edit-yield-price').value) || 0,
+        buyer_name: document.getElementById('edit-yield-buyer').value,
+        notes: document.getElementById('edit-yield-notes').value
+      };
+
+      try {
+        const res = await fetch('api/yields.php', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (window.App && typeof window.App.showToast === 'function') {
+            App.showToast('แก้ไขข้อมูลผลผลิตเรียบร้อยแล้ว', 'success');
+          } else {
+            alert('แก้ไขข้อมูลผลผลิตเรียบร้อยแล้ว');
+          }
+          closeEditYieldModal();
+          loadYields();
+        } else {
+          alert(data.message || 'ไม่สามารถแก้ไขข้อมูลได้');
+        }
+      } catch (err) {
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>💾</span> <span>บันทึกการแก้ไข</span>`;
+      }
     }
 
     // Dynamic Plot Select Callback
@@ -864,9 +1147,18 @@ try {
 
     // Load Yields Table via AJAX
     async function loadYields() {
-      const plotId = document.getElementById('filter-yield-plot').value;
-      let url = 'api/yields.php';
-      if (plotId) url += `?plot_id=${plotId}`;
+      const plotId = document.getElementById('filter-yield-plot') ? document.getElementById('filter-yield-plot').value : '';
+      const sName = document.getElementById('search-name') ? document.getElementById('search-name').value.trim() : '';
+      const sCode = document.getElementById('search-plot-code') ? document.getElementById('search-plot-code').value.trim() : '';
+      const sDeed = document.getElementById('search-title-deed') ? document.getElementById('search-title-deed').value.trim() : '';
+
+      let params = new URLSearchParams();
+      if (plotId) params.append('plot_id', plotId);
+      if (sName) params.append('search_name', sName);
+      if (sCode) params.append('search_plot_code', sCode);
+      if (sDeed) params.append('search_title_deed', sDeed);
+
+      let url = 'api/yields.php' + (params.toString() ? '?' + params.toString() : '');
 
       try {
         const res = await fetch(url);
@@ -889,9 +1181,11 @@ try {
 
         const tbody = document.getElementById('yields-table-body');
         if (!data.yields || data.yields.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-12 text-gray-400 text-xs">ยังไม่มีข้อมูลผลผลิตในแปลงนี้</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-12 text-gray-400 text-xs">ยังไม่มีข้อมูลผลผลิตในเงื่อนไขนี้</td></tr>';
           return;
         }
+
+        const canDelete = data.can_delete === true || window.IS_ADMIN === true;
 
         let html = '';
         data.yields.forEach(y => {
@@ -900,11 +1194,11 @@ try {
               <td class="py-4 px-4 font-bold text-gray-800 whitespace-nowrap">${y.harvest_date}</td>
               <td class="py-4 px-4">
                 <span class="font-bold text-mezenc-teal">${y.plot_name}</span> 
-                <span class="text-[11px] text-gray-400 font-mono block">(${y.plot_code})</span>
+                <span class="text-[11px] text-gray-400 font-mono block">(${y.plot_code || '-'})</span>
               </td>
               <td class="py-4 px-4 whitespace-nowrap">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f8faf9] text-gray-700 border border-gray-200">
-                  ${y.rubber_clone}
+                  ${y.rubber_clone || 'RRIM 600'}
                 </span>
               </td>
               <td class="py-4 px-4 text-gray-800 font-medium">
@@ -924,13 +1218,23 @@ try {
                 ${y.buyer_name || '-'}
               </td>
               <td class="py-4 px-4 text-center whitespace-nowrap">
-                <button 
-                  onclick="deleteYield(${y.id})" 
-                  class="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-all shadow-xs cursor-pointer mx-auto"
-                  title="ลบรายการนี้"
-                >
-                  🗑️
-                </button>
+                <div class="flex items-center justify-center gap-1.5">
+                  <button 
+                    onclick="openEditYieldModal(${y.id})" 
+                    class="w-8 h-8 rounded-full bg-[#dcf5f5] hover:bg-[#00a699] text-[#00a699] hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer"
+                    title="แก้ไขผลผลิตรอบนี้"
+                  >
+                    ✏️
+                  </button>
+                  ${canDelete ? `
+                  <button 
+                    onclick="deleteYield(${y.id})" 
+                    class="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-all shadow-xs cursor-pointer"
+                    title="ลบรายการนี้"
+                  >
+                    🗑️
+                  </button>` : ''}
+                </div>
               </td>
             </tr>
           `;
@@ -1005,6 +1309,8 @@ try {
             alert('ลบรายการผลผลิตแล้ว');
           }
           loadYields();
+        } else {
+          alert(data.message || 'ไม่สามารถลบข้อมูลได้');
         }
       } catch (e) {
         alert('ไม่สามารถลบข้อมูลได้');

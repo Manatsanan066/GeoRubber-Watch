@@ -2,7 +2,7 @@
 /**
  * GeoRubber Watch - Rubber Plots Management API
  */
-session_start();
+require_once __DIR__ . '/../includes/auth_check.php';
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../config/database.php';
@@ -10,6 +10,9 @@ initDatabaseIfNeeded();
 
 $pdo = getDatabaseConnection();
 $method = $_SERVER['REQUEST_METHOD'];
+$currentUser = getCurrentUser();
+$isUserAdmin = isAdmin();
+$currentFarmerId = $currentUser['farmer_id'] ?? null;
 
 // Helper: Calculate polygon area in Sqm from Lat/Lng coordinates
 function calculatePolygonAreaSqm($coords) {
@@ -56,12 +59,17 @@ if ($method === 'GET') {
     $status = $_GET['status'] ?? null;
     $format = $_GET['format'] ?? 'json'; // 'json' or 'geojson'
 
-    // If logged-in user is a farmer, only show their plots (unless admin)
-    $currentUserRole = $_SESSION['role'] ?? 'admin';
-    $currentFarmerId = $_SESSION['farmer_id'] ?? null;
-
-    if ($currentUserRole === 'farmer' && $currentFarmerId && !$farmer_id && !$id && !$token) {
-        $farmer_id = $currentFarmerId;
+    // RBAC: Farmers only view their own plots
+    if (!$isUserAdmin) {
+        if (!$currentFarmerId && isset($_SESSION['user_id'])) {
+            $fStmt = $pdo->prepare("SELECT id FROM farmers WHERE user_id = ?");
+            $fStmt->execute([$_SESSION['user_id']]);
+            $currentFarmerId = $fStmt->fetchColumn();
+            if ($currentFarmerId) {
+                $_SESSION['farmer_id'] = (int)$currentFarmerId;
+            }
+        }
+        $farmer_id = $currentFarmerId ?: -1;
     }
 
     // Query Search by Deed / Plot Code / Farmer Name / Token
@@ -257,6 +265,7 @@ if ($method === 'GET') {
                     'eudr_deforestation_free' => (bool)$p['eudr_deforestation_free'],
                     'centroid' => ['lat' => (float)$p['centroid_lat'], 'lng' => (float)$p['centroid_lng']],
                     'traceability_token' => $p['traceability_token'],
+                    'can_delete' => $isUserAdmin,
                     'created_at' => $p['created_at']
                 ],
                 'geometry' => $geometry
@@ -265,12 +274,18 @@ if ($method === 'GET') {
 
         echo json_encode([
             'type' => 'FeatureCollection',
+            'can_delete' => $isUserAdmin,
             'features' => $features
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    echo json_encode(['success' => true, 'count' => count($plots), 'plots' => $plots], JSON_UNESCAPED_UNICODE);
+    echo json_encode([
+        'success' => true,
+        'count' => count($plots),
+        'can_delete' => $isUserAdmin,
+        'plots' => $plots
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -348,11 +363,11 @@ if ($method === 'POST') {
             exit;
         }
 
-        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-
-        // Dynamic Farmer Handling: Support custom typed farmer name
+        // RBAC: If user is Farmer, strictly bind plot to own farmer_id
         $farmer_id = 1;
-        if (!empty($farmer_name)) {
+        if (!$isUserAdmin && $currentFarmerId) {
+            $farmer_id = (int)$currentFarmerId;
+        } elseif (!empty($farmer_name)) {
             if (is_numeric($farmer_name) && (int)$farmer_name > 0) {
                 $farmer_id = (int)$farmer_name;
             } else {
@@ -515,7 +530,7 @@ if ($method === 'POST') {
 }
 
 // -----------------------------------------------------------------------------
-// PUT: Update Existing Plot
+// PUT: Update Existing Plot (Farmers can only edit their own plot)
 // -----------------------------------------------------------------------------
 if ($method === 'PUT') {
     $data = json_decode(file_get_contents('php://input'), true);
@@ -525,6 +540,17 @@ if ($method === 'PUT') {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Missing Plot ID']);
         exit;
+    }
+
+    // RBAC: Check ownership for Farmers
+    if (!$isUserAdmin) {
+        $chkStmt = $pdo->prepare("SELECT id FROM rubber_plots WHERE id = ? AND farmer_id = ?");
+        $chkStmt->execute([$id, $currentFarmerId]);
+        if (!$chkStmt->fetch()) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'ไม่อนุญาต: ท่านสามารถแก้ไขได้เฉพาะแปลงปลูกของตนเองเท่านั้น'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
     }
 
     $plot_name = trim($data['plot_name'] ?? '');
@@ -564,11 +590,20 @@ if ($method === 'PUT') {
 }
 
 // -----------------------------------------------------------------------------
-// DELETE: Remove Plot
+// DELETE: Remove Plot (Only Admin & SUPER_ADMIN allowed)
 // -----------------------------------------------------------------------------
 if ($method === 'DELETE') {
-    $id = $_GET['id'] ?? null;
-    if (!$id) {
+    if (!$isUserAdmin) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'message' => 'ไม่อนุญาต: เกษตรกรไม่มีสิทธิ์ลบข้อมูลแปลงปลูก กรุณาติดต่อผู้ดูแลระบบ'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $id = (int)($_GET['id'] ?? 0);
+    if ($id <= 0) {
         http_response_code(400);
         echo json_encode(['error' => 'Missing plot ID']);
         exit;
@@ -581,7 +616,7 @@ if ($method === 'DELETE') {
     $stmt = $pdo->prepare("DELETE FROM rubber_plots WHERE id = ?");
     $stmt->execute([$id]);
 
-    echo json_encode(['success' => true, 'message' => 'ลบข้อมูลแปลงปลูกออกจากฐานข้อมูลเรียบร้อยแล้ว']);
+    echo json_encode(['success' => true, 'message' => 'ลบข้อมูลแปลงปลูกออกจากฐานข้อมูลเรียบร้อยแล้ว'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

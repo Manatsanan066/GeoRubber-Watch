@@ -15,6 +15,23 @@ function isLoggedIn(): bool {
 }
 
 /**
+ * Check if the current user has administrative rights
+ */
+function isAdmin(): bool {
+    $role = $_SESSION['role'] ?? '';
+    $adminRoles = ['admin', 'SUPER_ADMIN', 'FORESTRY_ADMIN', 'LAND_ADMIN', 'RAOT_ADMIN', 'COOP_ADMIN', 'RABBER_ADMIN'];
+    return in_array($role, $adminRoles, true);
+}
+
+/**
+ * Check if the current user is a farmer
+ */
+function isFarmer(): bool {
+    $role = $_SESSION['role'] ?? 'farmer';
+    return !isAdmin();
+}
+
+/**
  * Get current authenticated user details
  */
 function getCurrentUser(): ?array {
@@ -22,13 +39,14 @@ function getCurrentUser(): ?array {
         return null;
     }
     return [
-        'id' => $_SESSION['user_id'] ?? null,
+        'id' => (int)($_SESSION['user_id'] ?? 0),
         'username' => $_SESSION['username'] ?? '',
         'full_name' => $_SESSION['full_name'] ?? 'ผู้ใช้งาน',
         'role' => $_SESSION['role'] ?? 'farmer',
-        'farmer_id' => $_SESSION['farmer_id'] ?? null,
+        'farmer_id' => isset($_SESSION['farmer_id']) ? (int)$_SESSION['farmer_id'] : null,
         'email' => $_SESSION['email'] ?? '',
-        'phone' => $_SESSION['phone'] ?? ''
+        'phone' => $_SESSION['phone'] ?? '',
+        'is_admin' => isAdmin()
     ];
 }
 

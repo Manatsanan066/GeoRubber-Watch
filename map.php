@@ -32,8 +32,12 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   <!-- QRCode.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- Platform Core JS Helper -->
+  <!-- Platform Core JS Helper & Session Globals -->
   <script src="assets/js/app.js"></script>
+  <script>
+    window.CURRENT_USER = <?= json_encode($currentUser, JSON_UNESCAPED_UNICODE) ?>;
+    window.IS_ADMIN = <?= $currentUser['is_admin'] ? 'true' : 'false' ?>;
+  </script>
 
   <!-- Tailwind Theme Configuration (Exact Mezenc Natural Teal System) -->
   <script>
@@ -1162,7 +1166,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                     type="text" 
                     id="form-farmer-name" 
                     list="farmer-suggestions" 
-                    value="นางสาวมนัสนันท์ อนันตณรงค์" 
+                    value="<?= htmlspecialchars($user_name) ?>" 
                     class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" 
                     placeholder="พิมพ์ชื่อ-นามสกุล เกษตรกรเจ้าของแปลง"
                   >
