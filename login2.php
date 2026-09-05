@@ -398,7 +398,27 @@ $destination_title = $page_titles[$safe_redirect] ?? 'ระบบสารส�
                   </button>
                 </div>
 
-                <!-- 6. Sample Farmer Account -->
+                <!-- 6. Rubber Admin (RABBER_ADMIN) -->
+                <div class="p-2 rounded-xl bg-[#f0f8f7] border border-[#cbebe7] hover:border-mezenc-brightCyan flex items-center justify-between gap-2 transition-all">
+                  <div class="flex items-center gap-2.5 overflow-hidden">
+                    <div class="w-7 h-7 rounded-lg bg-purple-700 text-white flex items-center justify-center text-xs shrink-0 font-bold">
+                      🛡️
+                    </div>
+                    <div class="truncate">
+                      <div class="text-[11px] font-bold text-purple-950 truncate">ผู้ดูแลระบบ (RABBER_ADMIN)</div>
+                      <div class="text-[10px] text-gray-500 font-mono truncate">georubber.admin@psu.ac.th</div>
+                    </div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onclick="autoFillAndLogin('georubber.admin@psu.ac.th', 'adminrabber@123', 'RABBER_ADMIN')" 
+                    class="shrink-0 px-2.5 py-1 bg-white hover:bg-purple-700 text-purple-700 hover:text-white border border-purple-300 rounded-lg text-[10px] font-bold transition-all shadow-2xs"
+                  >
+                    ⚡ ทดสอบ
+                  </button>
+                </div>
+
+                <!-- 7. Sample Farmer Account -->
                 <div class="p-2 rounded-xl bg-[#f0f8f7] border border-[#cbebe7] hover:border-mezenc-brightCyan flex items-center justify-between gap-2 transition-all">
                   <div class="flex items-center gap-2.5 overflow-hidden">
                     <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0 font-bold">
@@ -693,12 +713,17 @@ $destination_title = $page_titles[$safe_redirect] ?? 'ระบบสารส�
           <div>รหัสผ่าน: <code class="bg-gray-200 px-1.5 py-0.5 rounded font-mono">admin123</code></div>
         </div>
         <div class="p-2.5 rounded-xl bg-gray-50 border">
-          <div class="font-bold text-teal-800">5. สหกรณ์กองทุนสวนยาง</div>
+          <div class="font-bold text-teal-800">5. สหกรณ์กองทุนสวนยางสุราษฎร์ธานี (COOP_ADMIN)</div>
           <div>อีเมล: <code class="bg-gray-200 px-1.5 py-0.5 rounded font-mono">manager@suratrubber-coop.com</code></div>
           <div>รหัสผ่าน: <code class="bg-gray-200 px-1.5 py-0.5 rounded font-mono">admin123</code></div>
         </div>
         <div class="p-2.5 rounded-xl bg-gray-50 border">
-          <div class="font-bold text-emerald-800">6. เกษตรกรชาวสวนยาง (Farmer)</div>
+          <div class="font-bold text-purple-800">6. ผู้ดูแลระบบ (RABBER_ADMIN)</div>
+          <div>อีเมล: <code class="bg-gray-200 px-1.5 py-0.5 rounded font-mono">georubber.admin@psu.ac.th</code></div>
+          <div>รหัสผ่าน: <code class="bg-gray-200 px-1.5 py-0.5 rounded font-mono">adminrabber@123</code></div>
+        </div>
+        <div class="p-2.5 rounded-xl bg-gray-50 border">
+          <div class="font-bold text-emerald-800">7. เกษตรกรชาวสวนยาง (Farmer)</div>
           <div>เบอร์โทร / ผู้ใช้: <code class="bg-gray-200 px-1.5 py-0.5 rounded font-mono">093-578-2399</code> หรือ <code class="bg-gray-200 px-1.5 py-0.5 rounded font-mono">matinee</code></div>
           <div>รหัสผ่าน: <code class="bg-gray-200 px-1.5 py-0.5 rounded font-mono">farmer123</code></div>
         </div>

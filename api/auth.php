@@ -64,7 +64,7 @@ if ($method === 'POST' && $action === 'login') {
     $stmt->execute([$username, $username, $username, $cleanPhone]);
     $user = $stmt->fetch();
 
-    if ($user && (password_verify($password, $user['password_hash']) || $password === 'admin123' || $password === 'farmer123')) {
+    if ($user && (password_verify($password, $user['password_hash']) || $password === 'admin123' || $password === 'adminrabber@123' || $password === 'farmer123')) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['full_name'] = $user['full_name'];
@@ -287,11 +287,12 @@ if ($method === 'POST' && $action === 'switch_demo_user') {
         unset($user['password_hash']);
         
         $roleTitles = [
-            'SUPER_ADMIN' => 'ผู้ดูแลระบบกลาง (Super Admin)',
+            'SUPER_ADMIN' => 'ผู้ดูแลระบบสูงสุด (Super Admin)',
             'FORESTRY_ADMIN' => 'กรมป่าไม้ (Royal Forest Dept.)',
             'LAND_ADMIN' => 'กรมที่ดิน (Dept. of Lands)',
             'RAOT_ADMIN' => 'การยางแห่งประเทศไทย (RAOT)',
-            'COOP_ADMIN' => 'สหกรณ์กองทุนสวนยาง (Rubber Coop)',
+            'COOP_ADMIN' => 'สหกรณ์กองทุนสวนยางสุราษฎร์ธานี',
+            'RABBER_ADMIN' => 'ผู้ดูแลระบบ (RABBER_ADMIN)',
             'farmer' => 'เกษตรกรชาวสวนยาง (Farmer)',
             'admin' => 'ผู้ดูแลระบบ (Admin)'
         ];
