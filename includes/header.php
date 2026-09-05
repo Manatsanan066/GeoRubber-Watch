@@ -1,10 +1,10 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/auth_check.php';
+
 $current_page = basename($_SERVER['PHP_SELF']);
-$current_role = $_SESSION['role'] ?? 'admin';
-$user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ดร.สุพัตรา พุฒิเนาวรัตน์' : 'นางสาวมาทินี โรยนรินทร์');
+$user = getCurrentUser();
+$current_role = $user['role'] ?? 'farmer';
+$user_name = $user['full_name'] ?? 'ผู้ใช้งานระบบ';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -78,8 +78,8 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
             </a>
           </li>
           <li>
-            <a href="login.php" class="nav-item <?= ($current_page === 'login.php') ? 'active' : '' ?>">
-              👤 เข้าสู่ระบบ
+            <a href="logout.php" class="nav-item" title="ออกจากระบบ" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+              🚪 ออกจากระบบ
             </a>
           </li>
         </ul>
@@ -87,23 +87,19 @@ $user_name = $_SESSION['full_name'] ?? ($current_role === 'admin' ? 'รศ.ด�
 
       <!-- Right Nav Actions -->
       <div class="nav-actions">
-        <!-- Quick Role Switcher -->
-        <div style="display: flex; align-items: center; gap: 4px; background: var(--bg-main); border: 1px solid var(--border-subtle); padding: 3px 6px; border-radius: var(--radius-pill); font-size: 11px;">
-          <button onclick="App.switchRole('admin')" class="btn btn-sm <?= $current_role === 'admin' ? 'btn-primary' : 'btn-outline' ?>" style="padding: 2px 8px; font-size: 11px; height: 26px;">
-            Admin
-          </button>
-          <button onclick="App.switchRole('farmer')" class="btn btn-sm <?= $current_role === 'farmer' ? 'btn-primary' : 'btn-outline' ?>" style="padding: 2px 8px; font-size: 11px; height: 26px;">
-            Farmer
-          </button>
-        </div>
-
         <div style="text-align: right;">
           <div id="user-name-display" style="font-size: 0.85rem; font-weight: 700; color: var(--text-dark);"><?= htmlspecialchars($user_name) ?></div>
-          <span id="user-role-badge" class="role-badge <?= $current_role === 'admin' ? 'role-admin' : 'role-farmer' ?>">
-            <?= $current_role === 'admin' ? 'ผู้ดูแลระบบ (Admin)' : 'เกษตรกร (Farmer)' ?>
+          <span id="user-role-badge" class="role-badge <?= in_array($current_role, ['admin', 'SUPER_ADMIN', 'FORESTRY_ADMIN', 'LAND_ADMIN', 'RAOT_ADMIN', 'COOP_ADMIN', 'RABBER_ADMIN']) ? 'role-admin' : 'role-farmer' ?>">
+            <?= htmlspecialchars($current_role) ?>
           </span>
         </div>
+        <a href="logout.php" class="btn btn-sm btn-outline" style="padding: 3px 8px; font-size: 11px; height: 26px; border-color: #ef4444; color: #ef4444;" title="ออกจากระบบ">
+          Logout
+        </a>
       </div>
+
+    </div>
+  </header>
 
     </div>
   </header>

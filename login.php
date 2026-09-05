@@ -26,6 +26,10 @@ if (!empty($redirect)) {
 }
 
 $destination_title = $page_titles[$safe_redirect] ?? 'ระบบสารสนเทศ GeoRubber Watch';
+$msg = $_GET['msg'] ?? '';
+$is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+$logged_in_name = $_SESSION['full_name'] ?? '';
+$logged_in_role = $_SESSION['role'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -127,6 +131,28 @@ $destination_title = $page_titles[$safe_redirect] ?? 'ระบบสารส�
         <!-- Middle Content Area -->
         <div class="my-auto py-4 sm:py-6">
           
+          <!-- Logout Message Notice -->
+          <?php if ($msg === 'logged_out'): ?>
+          <div class="mb-4 p-3 rounded-2xl bg-amber-50 border-2 border-amber-200 text-xs text-amber-800 font-semibold shadow-xs flex items-center gap-2">
+            <span>🚪</span>
+            <span>ออกจากระบบเรียบร้อยแล้ว ท่านสามารถเข้าสู่ระบบใหม่ได้ตลอดเวลา</span>
+          </div>
+          <?php endif; ?>
+
+          <!-- Already Logged In Notice -->
+          <?php if ($is_logged_in): ?>
+          <div class="mb-4 p-3 rounded-2xl bg-[#e8f7f5] border-2 border-[#bee6e1] text-xs text-mezenc-teal shadow-xs flex items-center justify-between">
+            <div>
+              <div class="font-bold">เข้าสู่ระบบอยู่ในขณะนี้</div>
+              <div class="text-[11px] text-gray-600"><?= htmlspecialchars($logged_in_name) ?> (<?= htmlspecialchars($logged_in_role) ?>)</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <a href="<?= htmlspecialchars($safe_redirect) ?>" class="px-3 py-1.5 bg-mezenc-teal text-white rounded-full font-bold text-xs hover:bg-mezenc-brightCyan transition-colors">ต่อไปยังระบบ →</a>
+              <a href="logout.php" class="px-2 py-1 text-xs text-red-600 hover:text-red-800 font-bold underline">สลับบัญชี</a>
+            </div>
+          </div>
+          <?php endif; ?>
+
           <!-- Destination Redirect Pill Notice (If redirected from a feature) -->
           <?php if (!empty($redirect)): ?>
           <div class="mb-4 p-2.5 sm:p-3 rounded-2xl bg-[#f4faf9] border-2 border-[#bee6e1] text-xs text-mezenc-teal flex items-center gap-2.5 shadow-xs">

@@ -1,6 +1,11 @@
 <?php
+require_once __DIR__ . '/includes/auth_check.php';
 require_once __DIR__ . '/config/database.php';
 initDatabaseIfNeeded();
+
+$currentUser = getCurrentUser();
+$current_role = $currentUser['role'] ?? 'farmer';
+$user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบบ';
 
 $pdo = getDatabaseConnection();
 $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FROM farmers ORDER BY first_name ASC")->fetchAll();
@@ -438,36 +443,23 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
       <!-- RIGHT NAV ACTIONS & MOBILE MENU BUTTON -->
       <div class="flex items-center gap-2.5 sm:gap-3.5">
-        <!-- User / Login Button -->
-        <button
-          onclick="location.href='login.php'"
-          class="
-            text-white
-            hover:text-mezenc-mint
-            flex
-            items-center
-            justify-center
-            w-9
-            h-9
-            sm:w-10
-            sm:h-10
-            rounded-full
-            bg-white/15
-            hover:bg-white/25
-            backdrop-blur-md
-            transition-all
-            hover:scale-105
-            border
-            border-white/20
-            shadow-md
-            cursor-pointer
-          "
-          title="เข้าสู่ระบบ (Login)"
-        >
-          <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-          </svg>
-        </button>
+        <!-- USER PROFILE & LOGOUT BUTTON (Desktop/iPad) -->
+        <div class="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full py-1.5 px-3.5 border border-white/20 text-xs shadow-md">
+          <div class="text-right leading-tight">
+            <div class="font-bold text-white"><?= htmlspecialchars($user_name) ?></div>
+            <div class="text-[10px] text-mezenc-mint font-semibold"><?= htmlspecialchars($current_role) ?></div>
+          </div>
+          <a
+            href="logout.php"
+            class="text-white/80 hover:text-red-300 flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-red-500/30 transition-all cursor-pointer ml-1"
+            title="ออกจากระบบ (Logout)"
+            onclick="return confirm('ต้องการออกจากระบบหรือไม่?');"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </a>
+        </div>
 
         <!-- Mobile Drawer Toggle Button -->
         <button
@@ -555,8 +547,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           <a href="contact.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
             <span>📞</span> <span>ติดต่อเรา</span>
           </a>
-          <a href="login.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3 text-mezenc-mint font-bold">
-            <span>👤</span> <span>เข้าสู่ระบบ (Login)</span>
+          <a href="logout.php" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/40 transition-colors flex items-center gap-3 text-red-300 font-bold" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+            <span>🚪</span> <span>ออกจากระบบ (Logout)</span>
           </a>
         </nav>
       </div>

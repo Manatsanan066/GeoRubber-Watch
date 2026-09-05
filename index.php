@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/includes/auth_check.php';
+$currentUser = getCurrentUser();
+?>
 <!DOCTYPE html>
 <html lang="th" class="scroll-smooth">
 <head>
@@ -361,47 +365,23 @@
           </div>
         </div>
 
-        <!-- USER / LOGIN BUTTON (Desktop/iPad) -->
-        <button
-          class="
-            text-white
-            hover:text-mezenc-mint
-            flex
-            items-center
-            justify-center
-            w-9
-            h-9
-            sm:w-10
-            sm:h-10
-            rounded-full
-            bg-white/15
-            hover:bg-white/25
-            backdrop-blur-md
-            transition-all
-            hover:scale-105
-            border
-            border-white/20
-            shadow-md
-            cursor-pointer
-          "
-          onclick="location.href='login.php'"
-          title="เข้าสู่ระบบ (Login)"
-        >
-          <svg
-            class="w-4 h-4 sm:w-5 sm:h-5 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <!-- USER PROFILE & LOGOUT BUTTON (Desktop/iPad) -->
+        <div class="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full py-1.5 px-3.5 border border-white/20 text-xs shadow-md">
+          <div class="text-right leading-tight">
+            <div class="font-bold text-white"><?= htmlspecialchars($currentUser['full_name'] ?? 'ผู้ใช้งาน') ?></div>
+            <div class="text-[10px] text-mezenc-mint font-semibold"><?= htmlspecialchars($currentUser['role'] ?? 'User') ?></div>
+          </div>
+          <a
+            href="logout.php"
+            class="text-white/80 hover:text-red-300 flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-red-500/30 transition-all cursor-pointer ml-1"
+            title="ออกจากระบบ (Logout)"
+            onclick="return confirm('ต้องการออกจากระบบหรือไม่?');"
           >
-            <path
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            >
-            </path>
-          </svg>
-        </button>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </a>
+        </div>
 
         <!-- MOBILE / IPAD HAMBURGER MENU BUTTON -->
         <button 
@@ -471,9 +451,16 @@
         </div>
 
         <!-- Drawer Footer Action -->
-        <div class="pt-6 border-t border-white/15">
-          <a href="overview.php" class="w-full py-3 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-mint text-white font-bold text-center block shadow transition-all" data-i18n="sec3_btn">
+        <div class="pt-6 border-t border-white/15 space-y-2.5">
+          <div class="text-xs text-white/80 px-1">
+            ผู้ใช้งาน: <strong class="text-white"><?= htmlspecialchars($currentUser['full_name'] ?? 'ผู้ใช้งาน') ?></strong> 
+            <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full ml-1"><?= htmlspecialchars($currentUser['role'] ?? '') ?></span>
+          </div>
+          <a href="overview.php" class="w-full py-3 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-mint text-white font-bold text-center block shadow transition-all text-sm" data-i18n="sec3_btn">
             เปิดแผนที่ระบบภูมิสารสนเทศ (Full GIS Map) ➔
+          </a>
+          <a href="logout.php" class="w-full py-2.5 rounded-xl bg-red-500/80 hover:bg-red-600 text-white font-bold text-center block text-xs transition-all" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+            🚪 ออกจากระบบ (Logout)
           </a>
         </div>
 
