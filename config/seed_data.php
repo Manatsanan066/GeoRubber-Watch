@@ -223,18 +223,39 @@ function seedDatabase($pdo) {
         ");
     }
 
-    // 2. Insert Users (Admin & Farmers)
+    // 2. Insert Users (Agency Admins & Farmers)
     $password_admin = password_hash('admin123', PASSWORD_DEFAULT);
     $password_farmer = password_hash('farmer123', PASSWORD_DEFAULT);
 
     try {
         $stmt = $pdo->prepare("INSERT INTO users (username, password_hash, full_name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute(['admin', $password_admin, 'ดร. สุพัตรา พุฒิเนาวรัตน์ (ผู้ดูแลระบบ GIS)', 'admin@georubber.psu.ac.th', '085-077-7847', 'admin']);
+        
+        // Super Admin & System Developer
+        $stmt->execute(['admin', $password_admin, 'ผู้ดูแลระบบสูงสุด (Super Admin)', 'admin@georubberwatch.com', '085-077-7847', 'SUPER_ADMIN']);
+        $stmt->execute(['dev_team', $password_admin, 'ทีมพัฒนาระบบ GeoRubber Watch', 'dev.team@georubberwatch.com', '085-077-7848', 'SUPER_ADMIN']);
+        
+        // 1. กรมป่าไม้ (Royal Forest Department)
+        $stmt->execute(['forest_surat', $password_admin, 'ศูนย์ปฏิบัติการป่าไม้สุราษฎร์ธานี (กรมป่าไม้)', 'suratthani.forest@forest.go.th', '077-282-141', 'FORESTRY_ADMIN']);
+        $stmt->execute(['somchai_f', $password_admin, 'นายสมชาย รักษ์ป่า (เจ้าหน้าที่ดูแลแนวเขตป่าสงวน)', 'somchai.f@forest.go.th', '089-789-0123', 'FORESTRY_ADMIN']);
+        
+        // 2. กรมที่ดิน (Department of Lands)
+        $stmt->execute(['land_surat', $password_admin, 'สำนักงานที่ดินจังหวัดสุราษฎร์ธานี (กรมที่ดิน)', 'land.surat@dol.go.th', '077-272-581', 'LAND_ADMIN']);
+        $stmt->execute(['nattaporn_l', $password_admin, 'นางสาวณัฐพร เอกสารสิทธิ์ (ฝ่ายทะเบียนที่ดิน)', 'nattaporn.l@dol.go.th', '081-456-7890', 'LAND_ADMIN']);
+        
+        // 3. การยางแห่งประเทศไทย: กยท. (RAOT)
+        $stmt->execute(['raot_surat', $password_admin, 'ฝ่ายส่งเสริมและรับรองมาตรฐาน EUDR (กยท.สุราษฎร์ธานี)', 'surat.eudr@raot.co.th', '077-283-421', 'RAOT_ADMIN']);
+        $stmt->execute(['krisada_r', $password_admin, 'นายกฤษดา การยาง (เจ้าหน้าที่รับรอง EUDR)', 'krisada.r@raot.co.th', '086-123-4567', 'RAOT_ADMIN']);
+        
+        // 4. สหกรณ์กองทุนสวนยาง / สหกรณ์การเกษตร
+        $stmt->execute(['coop_manager', $password_admin, 'ผู้จัดการสหกรณ์กองทุนสวนยางสุราษฎร์ธานี จำกัด', 'manager@suratrubber-coop.com', '077-381-120', 'COOP_ADMIN']);
+        $stmt->execute(['coop_staff', $password_admin, 'ฝ่ายบันทึกผลผลิต สหกรณ์สวนยาง', 'staff.rubbercoop@coop.or.th', '084-567-8901', 'COOP_ADMIN']);
+        
+        // เกษตรกร (Farmers)
         $stmt->execute(['matinee', $password_farmer, 'นางสาวมาทินี โรยนรินทร์', '6640011044@psu.ac.th', '093-578-2399', 'farmer']);
         $stmt->execute(['manatsanan', $password_farmer, 'นางสาวมนัสนันท์ อนันตณรงค์', '6640011066@psu.ac.th', '095-331-8033', 'farmer']);
         $stmt->execute(['somchai', $password_farmer, 'นายสมชาย ยางเจริญสุข', 'somchai.rubber@gmail.com', '081-234-5678', 'farmer']);
     } catch (Exception $e) {
-        // Users already exist
+        // Users already exist or conflict handled
     }
 
     // 3. Insert Farmer Profiles (10 Farmers matching Supabase)
