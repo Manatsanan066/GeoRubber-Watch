@@ -37,6 +37,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   <script>
     window.CURRENT_USER = <?= json_encode($currentUser, JSON_UNESCAPED_UNICODE) ?>;
     window.IS_ADMIN = <?= $currentUser['is_admin'] ? 'true' : 'false' ?>;
+    window.SERVER_LAN_IP = '192.168.1.139';
   </script>
 
   <!-- Tailwind Theme Configuration (Exact Mezenc Natural Teal System) -->

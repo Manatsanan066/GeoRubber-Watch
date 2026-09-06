@@ -120,9 +120,20 @@ const App = {
     qrContainer.innerHTML = '';
 
     // Generate Verification URL
-    const url = `${window.location.origin}${window.location.pathname.replace(/\/[^/]*$/, '')}/trace.php?token=${encodeURIComponent(token)}`;
-    document.getElementById('qr-url-link').href = url;
-    document.getElementById('qr-url-link').textContent = url;
+    let origin = window.location.origin;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      const serverIp = window.SERVER_LAN_IP || '192.168.1.139';
+      const port = window.location.port ? `:${window.location.port}` : '';
+      origin = `${window.location.protocol}//${serverIp}${port}`;
+    }
+
+    const basePath = window.location.pathname.replace(/\/[^/]*$/, '');
+    const url = `${origin}${basePath}/trace.php?token=${encodeURIComponent(token)}`;
+    const linkEl = document.getElementById('qr-url-link');
+    if (linkEl) {
+      linkEl.href = url;
+      linkEl.textContent = '🌐 เปิดตรวจสอบหนังสือรับรอง (EUDR Passport)';
+    }
 
     // Use QRCode.js library
     if (typeof QRCode !== 'undefined') {
