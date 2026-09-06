@@ -220,6 +220,8 @@ try {
         </a>
       </nav>
 
+      <!-- RIGHT ACTIONS (User / Login / Mobile Menu) -->
+      <div class="flex items-center gap-2.5 sm:gap-3.5">
         <!-- USER PROFILE & LOGOUT BUTTON (Desktop/iPad) -->
         <div class="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full py-1.5 px-3.5 border border-white/20 text-xs shadow-md">
           <div class="text-right leading-tight">
