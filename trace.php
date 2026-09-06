@@ -3,7 +3,9 @@
  * GeoRubber Watch - Public EUDR Traceability Passport & Due Diligence Verification
  * Designed with Clean Eco-Minimalist Scandinavian Nature Aesthetics
  */
-require_once __DIR__ . '/includes/auth_check.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/config/database.php';
 initDatabaseIfNeeded();
 
