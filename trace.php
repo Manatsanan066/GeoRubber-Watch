@@ -22,7 +22,8 @@ if (!empty($token) || !empty($plot_code) || $plot_id > 0) {
     $where = [];
     $params = [];
     if (!empty($token)) {
-        $where[] = "p.traceability_token = ?";
+        $where[] = "(p.traceability_token = ? OR p.plot_code = ?)";
+        $params[] = $token;
         $params[] = $token;
     }
     if (!empty($plot_code)) {
