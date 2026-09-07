@@ -289,6 +289,9 @@ if (!empty($redirect)) {
             }
         }
 
+        const SUCCESS_ICON_SVG = `<svg fill="#ffffff" class="w-5 h-5 shrink-0 inline-block text-white" viewBox="0 0 200 200" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><title></title><path fill="#ffffff" d="M177.6,80.43a10,10,0,1,0-19.5,4.5,60.76,60.76,0,0,1-6,44.5c-16.5,28.5-53.5,38.5-82,22-28.5-16-38.5-53-22-81.5s53.5-38.5,82-22a9.86,9.86,0,1,0,10-17c-38.5-22.5-87-9.5-109.5,29a80.19,80.19,0,1,0,147,20.5Zm-109.5,11a10.12,10.12,0,0,0-11,17l40,25a10.08,10.08,0,0,0,5.5,1.5,10.44,10.44,0,0,0,8-4l52.5-67.5c3.5-4.5,2.5-10.5-2-14s-10.5-2.5-14,2l-47,60Z"></path></g></svg>`;
+        const ERROR_ICON_SVG = `<svg class="w-5 h-5 shrink-0 inline-block text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
         async function handleSubmit(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSignup');
@@ -303,7 +306,9 @@ if (!empty($redirect)) {
                 const agree = document.getElementById('agreeTerms').checked;
 
                 if (!agree) {
-                    alert("กรุณายอมรับเงื่อนไขและข้อตกลงการให้บริการ");
+                    feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
+                    feedback.innerHTML = `${ERROR_ICON_SVG} <span>กรุณายอมรับเงื่อนไขและข้อตกลงการให้บริการ</span>`;
+                    feedback.classList.remove('hidden');
                     return;
                 }
 
@@ -326,22 +331,22 @@ if (!empty($redirect)) {
                     const data = await res.json();
 
                     if (data.status === 'success' || data.success === true) {
-                        feedback.className = 'text-xs sm:text-sm rounded-xl p-3 text-center font-medium bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 shadow-lg';
-                        feedback.textContent = '✅ ลงทะเบียนสำเร็จ! กำลังพาเข้าสู่ระบบ...';
+                        feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2.5 font-medium bg-white/15 backdrop-blur-md text-white border border-white/30 shadow-lg';
+                        feedback.innerHTML = `${SUCCESS_ICON_SVG} <span>ลงทะเบียนสำเร็จ กำลังเข้าสู่ระบบ</span>`;
                         feedback.classList.remove('hidden');
 
                         setTimeout(() => {
                             window.location.href = REDIRECT_URL;
                         }, 1000);
                     } else {
-                        feedback.className = 'text-xs sm:text-sm rounded-xl p-3 text-center font-medium bg-red-950/80 text-red-300 border border-red-700/60 shadow-lg';
-                        feedback.textContent = `❌ ${data.message || 'ไม่สามารถลงทะเบียนได้'}`;
+                        feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
+                        feedback.innerHTML = `${ERROR_ICON_SVG} <span>${data.message || 'ไม่สามารถลงทะเบียนได้'}</span>`;
                         feedback.classList.remove('hidden');
                         resetBtn('Sign Up');
                     }
                 } catch (err) {
-                    feedback.className = 'text-xs sm:text-sm rounded-xl p-3 text-center font-medium bg-red-950/80 text-red-300 border border-red-700/60 shadow-lg';
-                    feedback.textContent = '⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+                    feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
+                    feedback.innerHTML = `${ERROR_ICON_SVG} <span>เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</span>`;
                     feedback.classList.remove('hidden');
                     resetBtn('Sign Up');
                 }
@@ -364,22 +369,22 @@ if (!empty($redirect)) {
                     const data = await res.json();
 
                     if (data.status === 'success' || data.success === true) {
-                        feedback.className = 'text-xs sm:text-sm rounded-xl p-3 text-center font-medium bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 shadow-lg';
-                        feedback.textContent = '✅ เข้าสู่ระบบสำเร็จ! กำลังพาไปยังระบบ...';
+                        feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2.5 font-medium bg-white/15 backdrop-blur-md text-white border border-white/30 shadow-lg';
+                        feedback.innerHTML = `${SUCCESS_ICON_SVG} <span>เข้าสู่ระบบสำเร็จ กำลังเข้าสู่ระบบ</span>`;
                         feedback.classList.remove('hidden');
 
                         setTimeout(() => {
                             window.location.href = REDIRECT_URL;
                         }, 800);
                     } else {
-                        feedback.className = 'text-xs sm:text-sm rounded-xl p-3 text-center font-medium bg-red-950/80 text-red-300 border border-red-700/60 shadow-lg';
-                        feedback.textContent = `❌ ${data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'}`;
+                        feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
+                        feedback.innerHTML = `${ERROR_ICON_SVG} <span>${data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'}</span>`;
                         feedback.classList.remove('hidden');
                         resetBtn('Sign In');
                     }
                 } catch (err) {
-                    feedback.className = 'text-xs sm:text-sm rounded-xl p-3 text-center font-medium bg-red-950/80 text-red-300 border border-red-700/60 shadow-lg';
-                    feedback.textContent = '⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+                    feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
+                    feedback.innerHTML = `${ERROR_ICON_SVG} <span>เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</span>`;
                     feedback.classList.remove('hidden');
                     resetBtn('Sign In');
                 }
