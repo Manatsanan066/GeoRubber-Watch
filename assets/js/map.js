@@ -349,6 +349,11 @@ const GeoMap = {
             statusBadge = '<span class="badge" style="background:#ffedd5; color:#9a3412; border:1.5px solid #fb923c; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">🟠 มีความเสี่ยง (โซนเฝ้าระวัง)</span>';
           }
 
+          const safeToken = (p.traceability_token || p.plot_code || '').replace(/'/g, "\\'");
+          const safeName = (p.plot_name || '').replace(/'/g, "\\'");
+          const safeCode = (p.plot_code || '').replace(/'/g, "\\'");
+          const tokenParam = encodeURIComponent(p.traceability_token || p.plot_code || '');
+
           const popupContent = `
             <div style="min-width: 270px; font-family: 'Open Sans', 'Google Sans', 'Sarabun', sans-serif; color: #1e293b; padding: 6px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; gap: 8px;">
@@ -366,10 +371,10 @@ const GeoMap = {
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-                <button onclick="App.showQRCodeModal('${p.traceability_token}', '${p.plot_name}', '${p.plot_code}')" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px;">
+                <button onclick="App.showQRCodeModal('${safeToken}', '${safeName}', '${safeCode}')" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px;">
                   📱 QR Code
                 </button>
-                <a href="trace.php?token=${p.traceability_token}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center;">
+                <a href="trace.php?token=${tokenParam}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center;">
                   🛡️ Passport
                 </a>
               </div>
@@ -461,6 +466,10 @@ const GeoMap = {
         `;
       }
 
+      const safeToken = (p.traceability_token || p.plot_code || '').replace(/'/g, "\\'");
+      const safeName = (p.plot_name || '').replace(/'/g, "\\'");
+      const safeCode = (p.plot_code || '').replace(/'/g, "\\'");
+
       html += `
         <tr id="plot-row-${p.id}" class="${rowClass}" onclick="GeoMap.zoomToPlot(${p.centroid.lat}, ${p.centroid.lng}, ${p.id})">
           <!-- 1. Selection Circle -->
@@ -516,7 +525,7 @@ const GeoMap = {
               <!-- QR Code / Passport Button -->
               <button 
                 type="button" 
-                onclick="App.showQRCodeModal('${p.traceability_token}', '${p.plot_name}', '${p.plot_code}')" 
+                onclick="App.showQRCodeModal('${safeToken}', '${safeName}', '${safeCode}')" 
                 title="QR Code ตรวจสอบย้อนกลับ (Digital Passport)" 
                 class="w-9 h-9 rounded-full bg-slate-100 hover:bg-mezenc-lightCyan text-gray-600 hover:text-mezenc-teal flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
               >
@@ -527,7 +536,7 @@ const GeoMap = {
               <button 
                 type="button" 
                 onclick="GeoMap.openEditPlotModal(${p.id})" 
-                title="แก้ไขข้อมูลแปลงปลูก" 
+                title="แก้ไขข้อมูลแปลงปลูก"  
                 class="w-9 h-9 rounded-full bg-[#dcf5f5] hover:bg-[#00a699] text-[#00a699] hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

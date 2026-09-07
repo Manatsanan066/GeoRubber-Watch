@@ -10,30 +10,51 @@ require_once __DIR__ . '/config/database.php';
 initDatabaseIfNeeded();
 
 $pdo = getDatabaseConnection();
-$token = $_GET['token'] ?? '';
-$plot_code = $_GET['code'] ?? '';
+$token = trim($_GET['token'] ?? '');
+$plot_code = trim($_GET['code'] ?? '');
+$plot_id = intval($_GET['id'] ?? ($_GET['plot_id'] ?? 0));
+
+if ($token === 'undefined' || $token === 'null') $token = '';
+if ($plot_code === 'undefined' || $plot_code === 'null') $plot_code = '';
 
 $plot = null;
-if (!empty($token) || !empty($plot_code)) {
+if (!empty($token) || !empty($plot_code) || $plot_id > 0) {
+    $where = [];
+    $params = [];
+    if (!empty($token)) {
+        $where[] = "p.traceability_token = ?";
+        $params[] = $token;
+    }
+    if (!empty($plot_code)) {
+        $where[] = "p.plot_code = ?";
+        $params[] = $plot_code;
+    }
+    if ($plot_id > 0) {
+        $where[] = "p.id = ?";
+        $params[] = $plot_id;
+    }
+    
+    $whereClause = implode(' OR ', $where);
     $sql = "
         SELECT p.*, f.farmer_code, f.prefix, f.first_name, f.last_name, f.phone as farmer_phone,
                f.id_card_num, f.address as farmer_address, f.subdistrict, f.district, f.province
         FROM rubber_plots p
-        JOIN farmers f ON f.id = p.farmer_id
-        WHERE " . (!empty($token) ? "p.traceability_token = ?" : "p.plot_code = ?") . "
+        LEFT JOIN farmers f ON f.id = p.farmer_id
+        WHERE {$whereClause}
+        LIMIT 1
     ";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([!empty($token) ? $token : $plot_code]);
+    $stmt->execute($params);
     $plot = $stmt->fetch();
 }
 
-// Fallback to Plot 1 if accessed directly
+// Fallback to Plot 1 if accessed directly or not found
 if (!$plot) {
     $stmt = $pdo->query("
         SELECT p.*, f.farmer_code, f.prefix, f.first_name, f.last_name, f.phone as farmer_phone,
                f.id_card_num, f.address as farmer_address, f.subdistrict, f.district, f.province
         FROM rubber_plots p
-        JOIN farmers f ON f.id = p.farmer_id
+        LEFT JOIN farmers f ON f.id = p.farmer_id
         ORDER BY p.id ASC LIMIT 1
     ");
     $plot = $stmt->fetch();
@@ -41,7 +62,7 @@ if (!$plot) {
 
 // Fetch harvest batch logs
 $yieldStmt = $pdo->prepare("SELECT * FROM yield_logs WHERE plot_id = ? ORDER BY harvest_date DESC LIMIT 8");
-$yieldStmt->execute([$plot['id']]);
+$yieldStmt->execute([$plot['id'] ?? 0]);
 $yields = $yieldStmt->fetchAll();
 
 $isCompliant = ($plot['eudr_status'] === 'compliant');

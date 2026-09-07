@@ -248,7 +248,7 @@ const DSSCharts = {
           <td style="padding: 12px 16px;"><span style="color:var(--danger); font-weight:700;">${p.eudr_overlap_pct}%</span></td>
           <td style="padding: 12px 16px;">${badge}</td>
           <td style="padding: 12px 16px; text-align: center;">
-            <a href="trace.php?token=${p.traceability_token}" target="_blank" class="btn btn-outline btn-sm">
+            <a href="trace.php?token=${encodeURIComponent(p.traceability_token || p.plot_code || p.id)}" target="_blank" class="btn btn-outline btn-sm">
               🛡️ ตรวจสอบ
             </a>
           </td>

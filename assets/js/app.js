@@ -9,10 +9,12 @@ const App = {
   currentPlotName: null,
   currentPlotCode: null,
   currentGeneratedUrl: null,
+  detectedNgrokUrl: null,
 
   // Initialize App
   init() {
     this.checkSession();
+    this.detectNgrokUrl(false); // Background auto-detect
   },
 
   // Check logged-in user session
@@ -112,8 +114,8 @@ const App = {
     }
   },
 
-  // Resolve base public / ngrok URL
-  async getResolvedBaseUrl(forceDetect = false) {
+  // Synchronous Quick Base URL Resolver (0ms instant response)
+  getInstantBaseUrl() {
     const hostname = window.location.hostname;
     const isDirectPublic = (!hostname.includes('localhost') && !hostname.includes('127.0.0.1') && !hostname.match(/^\d+\.\d+\.\d+\.\d+$/));
     
@@ -126,33 +128,8 @@ const App = {
       };
     }
 
-    // 2. User-configured custom URL in localStorage (if not forcing fresh detection)
+    // 2. User-configured custom URL in localStorage
     const savedCustomUrl = localStorage.getItem('georubber_public_url');
-    if (!forceDetect && savedCustomUrl && savedCustomUrl.startsWith('http')) {
-      return {
-        url: savedCustomUrl.replace(/\/+$/, ''),
-        isNgrok: savedCustomUrl.includes('ngrok'),
-        source: 'local_storage'
-      };
-    }
-
-    // 3. Query backend ngrok tunnel detection API
-    try {
-      const res = await fetch('api/get_public_url.php');
-      const data = await res.json();
-      if (data.success && data.public_url) {
-        localStorage.setItem('georubber_public_url', data.public_url);
-        return {
-          url: data.public_url.replace(/\/+$/, ''),
-          isNgrok: Boolean(data.is_ngrok),
-          source: data.source || 'ngrok_api'
-        };
-      }
-    } catch (e) {
-      console.warn('Ngrok detection failed:', e);
-    }
-
-    // 4. Fallback if saved URL exists
     if (savedCustomUrl && savedCustomUrl.startsWith('http')) {
       return {
         url: savedCustomUrl.replace(/\/+$/, ''),
@@ -161,43 +138,55 @@ const App = {
       };
     }
 
-    // 5. Fallback to LAN IP
-    const serverIp = window.SERVER_LAN_IP || '192.168.1.139';
-    const port = window.location.port ? `:${window.location.port}` : '';
+    // 3. Detected ngrok URL from earlier background scan
+    if (this.detectedNgrokUrl && this.detectedNgrokUrl.startsWith('http')) {
+      return {
+        url: this.detectedNgrokUrl.replace(/\/+$/, ''),
+        isNgrok: true,
+        source: 'ngrok_api'
+      };
+    }
+
+    // 4. Default: current origin (localhost) or server LAN IP
     return {
-      url: `${window.location.protocol}//${serverIp}${port}`,
+      url: window.location.origin,
       isNgrok: false,
-      source: 'lan_fallback'
+      source: 'local_origin'
     };
   },
 
-  // Display QR Code Modal with ngrok integration
-  async showQRCodeModal(token, plotName, plotCode) {
+  // Display QR Code Modal (Instant sync open + async ngrok verify)
+  showQRCodeModal(token, plotName, plotCode) {
     const modal = document.getElementById('qrModal');
     if (!modal) return;
 
-    this.currentQRToken = token;
-    this.currentPlotName = plotName;
-    this.currentPlotCode = plotCode;
+    this.currentQRToken = (token && token !== 'undefined' && token !== 'null') ? token : (plotCode || 'EUDR-SAMPLE');
+    this.currentPlotName = plotName || 'แปลงปลูกยางพารา';
+    this.currentPlotCode = plotCode || '-';
 
     const titleEl = document.getElementById('qr-plot-title');
     const codeEl = document.getElementById('qr-plot-code');
     const tokenEl = document.getElementById('qr-token-display');
     const customInputEl = document.getElementById('qr-custom-url-input');
 
-    if (titleEl) titleEl.textContent = plotName;
-    if (codeEl) codeEl.textContent = `รหัสแปลง: ${plotCode}`;
-    if (tokenEl) tokenEl.textContent = token;
+    if (titleEl) titleEl.textContent = this.currentPlotName;
+    if (codeEl) codeEl.textContent = `รหัสแปลง: ${this.currentPlotCode}`;
+    if (tokenEl) tokenEl.textContent = this.currentQRToken;
 
+    // Open Modal Instantly
     this.openModal('qrModal');
 
-    // Resolve Best Public / Ngrok URL
-    const resolved = await this.getResolvedBaseUrl(false);
+    // 1. Render immediately with instant base URL (0ms lag)
+    const instantBase = this.getInstantBaseUrl();
     if (customInputEl) {
-      customInputEl.value = (resolved.source === 'local_storage' || resolved.isNgrok) ? resolved.url : '';
+      customInputEl.value = (instantBase.source === 'local_storage' || instantBase.isNgrok) ? instantBase.url : '';
     }
+    this.buildAndRenderQR(instantBase.url, instantBase.isNgrok);
 
-    this.buildAndRenderQR(resolved.url, resolved.isNgrok);
+    // 2. Check for active ngrok tunnel asynchronously without blocking
+    if (!instantBase.isNgrok && instantBase.source !== 'direct_domain') {
+      this.detectNgrokUrl(false);
+    }
   },
 
   // Construct full URL and draw QR Code
@@ -212,8 +201,15 @@ const App = {
     if (!basePath.startsWith('/')) basePath = '/' + basePath;
     if (basePath === '/') basePath = '';
 
-    const cleanBase = baseUrl.replace(/\/+$/, '');
-    const fullUrl = `${cleanBase}${basePath}/trace.php?token=${encodeURIComponent(this.currentQRToken)}`;
+    let cleanBase = (baseUrl || window.location.origin).replace(/\/+$/, '');
+    
+    // Prevent duplicate subpath
+    let fullUrl;
+    if (cleanBase.endsWith(basePath) && basePath !== '') {
+      fullUrl = `${cleanBase}/trace.php?token=${encodeURIComponent(this.currentQRToken)}`;
+    } else {
+      fullUrl = `${cleanBase}${basePath}/trace.php?token=${encodeURIComponent(this.currentQRToken)}`;
+    }
     this.currentGeneratedUrl = fullUrl;
 
     // Update Links & Displays
@@ -239,16 +235,32 @@ const App = {
       }
     }
 
-    // Generate QR with QRCode.js
-    if (typeof QRCode !== 'undefined') {
-      new QRCode(qrContainer, {
-        text: fullUrl,
-        width: 220,
-        height: 220,
-        colorDark: isNgrok ? "#008779" : "#064e3b",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-      });
+    // Generate QR with QRCode.js or Fallback
+    try {
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(qrContainer, {
+          text: fullUrl,
+          width: 200,
+          height: 200,
+          colorDark: isNgrok ? "#008779" : "#064e3b",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } else {
+        // Fallback to high-speed QR API if JS library is blocked
+        const img = document.createElement('img');
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullUrl)}`;
+        img.alt = 'QR Code';
+        img.className = 'w-[200px] h-[200px] rounded-lg shadow-sm';
+        qrContainer.appendChild(img);
+      }
+    } catch (e) {
+      console.warn('QRCode canvas generation fallback:', e);
+      const img = document.createElement('img');
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullUrl)}`;
+      img.alt = 'QR Code';
+      img.className = 'w-[200px] h-[200px] rounded-lg shadow-sm';
+      qrContainer.appendChild(img);
     }
   },
 
@@ -263,11 +275,16 @@ const App = {
       const data = await res.json();
 
       if (data.success && data.public_url) {
+        this.detectedNgrokUrl = data.public_url;
         localStorage.setItem('georubber_public_url', data.public_url);
         const inputEl = document.getElementById('qr-custom-url-input');
         if (inputEl) inputEl.value = data.public_url;
 
-        this.buildAndRenderQR(data.public_url, true);
+        // Re-render QR Code with ngrok URL
+        if (this.currentQRToken) {
+          this.buildAndRenderQR(data.public_url, true);
+        }
+
         if (interactive) {
           this.showToast(`✅ เชื่อมต่อ ngrok สำเร็จ: ${data.public_url}`, 'success');
         }
@@ -291,8 +308,10 @@ const App = {
     let customUrl = inputEl.value.trim();
     if (!customUrl) {
       localStorage.removeItem('georubber_public_url');
+      this.detectedNgrokUrl = null;
       this.showToast('ล้างการตั้งค่า URL แล้ว กำลังคืนค่าตามค่าเริ่มต้น', 'info');
-      this.detectNgrokUrl(false);
+      const instantBase = this.getInstantBaseUrl();
+      this.buildAndRenderQR(instantBase.url, instantBase.isNgrok);
       return;
     }
 
@@ -304,6 +323,7 @@ const App = {
     customUrl = customUrl.replace(/\/+$/, '');
 
     localStorage.setItem('georubber_public_url', customUrl);
+    this.detectedNgrokUrl = customUrl;
     
     // Also sync to backend
     fetch('api/get_public_url.php', {

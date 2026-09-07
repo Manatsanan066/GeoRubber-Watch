@@ -79,8 +79,8 @@ $ngrokData = null;
 if (function_exists('curl_init')) {
     $ch = curl_init($ngrokApiUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 800);
-    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1200);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 300);
+    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
@@ -93,7 +93,7 @@ if (function_exists('curl_init')) {
 if (!$ngrokData && ini_get('allow_url_fopen')) {
     $ctx = stream_context_create([
         'http' => [
-            'timeout' => 1.0,
+            'timeout' => 0.4,
             'ignore_errors' => true
         ]
     ]);
