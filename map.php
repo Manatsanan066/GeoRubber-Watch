@@ -1680,6 +1680,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       <!-- QR Code Canvas Container -->
       <div id="qrcode-canvas" class="flex justify-center p-3.5 bg-white rounded-2xl border border-gray-200 shadow-inner my-1"></div>
 
+      <div class="text-[12px] font-bold text-gray-700 mt-1 mb-0.5 flex items-center justify-center gap-1">
+        <span>📸</span> <span>เปิดกล้องมือถือสแกน QR Code นี้ เพื่อเปิดดู EUDR Passport</span>
+      </div>
+
       <!-- Scannable URL Text -->
       <div class="text-xs text-gray-600 break-all font-mono p-2.5 bg-[#f8faf9] rounded-xl border border-gray-200 leading-relaxed text-left">
         <div class="text-[11px] font-bold text-gray-500 mb-0.5">🔗 ลิงก์ที่ฝังใน QR Code (Public URL):</div>

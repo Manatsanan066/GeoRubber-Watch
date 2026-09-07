@@ -128,7 +128,16 @@ const App = {
       };
     }
 
-    // 2. User-configured custom URL in localStorage
+    // 2. Detected ngrok URL from active tunnel
+    if (this.detectedNgrokUrl && this.detectedNgrokUrl.startsWith('http')) {
+      return {
+        url: this.detectedNgrokUrl.replace(/\/+$/, ''),
+        isNgrok: true,
+        source: 'ngrok_api'
+      };
+    }
+
+    // 3. User-configured custom URL in localStorage
     const savedCustomUrl = localStorage.getItem('georubber_public_url');
     if (savedCustomUrl && savedCustomUrl.startsWith('http')) {
       return {
@@ -138,20 +147,16 @@ const App = {
       };
     }
 
-    // 3. Detected ngrok URL from earlier background scan
-    if (this.detectedNgrokUrl && this.detectedNgrokUrl.startsWith('http')) {
-      return {
-        url: this.detectedNgrokUrl.replace(/\/+$/, ''),
-        isNgrok: true,
-        source: 'ngrok_api'
-      };
-    }
+    // 4. Local Machine Fallback: NEVER encode "localhost" in QR code!
+    // Encode Server LAN IP so any phone on Wi-Fi/LAN can scan & open it immediately!
+    const serverIp = window.SERVER_LAN_IP || (hostname !== 'localhost' && hostname !== '127.0.0.1' ? hostname : '192.168.1.139');
+    const port = (window.location.port && !['80', '443'].includes(window.location.port)) ? `:${window.location.port}` : '';
+    const lanOrigin = `${window.location.protocol}//${serverIp}${port}`;
 
-    // 4. Default: current origin (localhost) or server LAN IP
     return {
-      url: window.location.origin,
+      url: lanOrigin,
       isNgrok: false,
-      source: 'local_origin'
+      source: 'lan_origin'
     };
   },
 
@@ -201,7 +206,12 @@ const App = {
     if (!basePath.startsWith('/')) basePath = '/' + basePath;
     if (basePath === '/') basePath = '';
 
-    let cleanBase = (baseUrl || window.location.origin).replace(/\/+$/, '');
+    const serverIp = window.SERVER_LAN_IP || '192.168.1.139';
+    let cleanBase = (baseUrl || '').replace(/\/+$/, '');
+    if (!cleanBase || cleanBase.includes('localhost') || cleanBase.includes('127.0.0.1')) {
+      const port = (window.location.port && !['80', '443'].includes(window.location.port)) ? `:${window.location.port}` : '';
+      cleanBase = `${window.location.protocol}//${serverIp}${port}`;
+    }
     
     // Prevent duplicate subpath
     let fullUrl;
@@ -224,42 +234,41 @@ const App = {
     }
 
     const badgeEl = document.getElementById('qr-network-badge');
-    const badgeTextEl = document.getElementById('qr-network-status');
-    if (badgeEl && badgeTextEl) {
+    if (badgeEl) {
       if (isNgrok || (!fullUrl.includes('localhost') && !fullUrl.includes('127.0.0.1') && !fullUrl.includes('192.168.'))) {
         badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-2xs';
         badgeEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span id="qr-network-status">🟢 ลิงก์สาธารณะ ngrok (สแกนได้จากทุกที่ทั่วโลก)</span>';
       } else {
-        badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs';
-        badgeEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> <span id="qr-network-status">🟡 เครือข่าย LAN/Localhost (เฉพาะวง Wi-Fi เดียวกัน)</span>';
+        badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-300 shadow-2xs';
+        badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500"></span> <span id="qr-network-status">📶 เครือข่าย Wi-Fi/LAN (${serverIp})</span>`;
       }
     }
 
-    // Generate QR with QRCode.js or Fallback
+    // Generate High-Contrast Crisp QR Code for Smartphone Camera Scanning
     try {
       if (typeof QRCode !== 'undefined') {
         new QRCode(qrContainer, {
           text: fullUrl,
-          width: 200,
-          height: 200,
-          colorDark: isNgrok ? "#008779" : "#064e3b",
+          width: 220,
+          height: 220,
+          colorDark: "#000000",
           colorLight: "#ffffff",
           correctLevel: QRCode.CorrectLevel.M
         });
       } else {
         // Fallback to high-speed QR API if JS library is blocked
         const img = document.createElement('img');
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullUrl)}`;
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(fullUrl)}`;
         img.alt = 'QR Code';
-        img.className = 'w-[200px] h-[200px] rounded-lg shadow-sm';
+        img.className = 'w-[220px] h-[220px] rounded-lg shadow-sm';
         qrContainer.appendChild(img);
       }
     } catch (e) {
       console.warn('QRCode canvas generation fallback:', e);
       const img = document.createElement('img');
-      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullUrl)}`;
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(fullUrl)}`;
       img.alt = 'QR Code';
-      img.className = 'w-[200px] h-[200px] rounded-lg shadow-sm';
+      img.className = 'w-[220px] h-[220px] rounded-lg shadow-sm';
       qrContainer.appendChild(img);
     }
   },

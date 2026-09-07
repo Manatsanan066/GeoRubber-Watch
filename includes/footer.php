@@ -36,8 +36,12 @@
           </div>
         </div>
         
-        <div id="qrcode-canvas" style="display: flex; justify-content: center; padding: 16px; background: white; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); margin-bottom: 12px;"></div>
+        <div id="qrcode-canvas" style="display: flex; justify-content: center; padding: 16px; background: white; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); margin-bottom: 8px;"></div>
         
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--pine-900); margin-bottom: 10px;">
+          📸 เปิดกล้องมือถือสแกน QR Code นี้ เพื่อเปิดดู EUDR Passport
+        </div>
+
         <div style="font-size: 0.75rem; background: var(--sage-50); border: 1px solid var(--sage-200); padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; word-break: break-all; text-align: left;">
           <strong style="color: var(--pine-800);">🔗 ลิงก์ที่ฝังใน QR Code:</strong><br>
           <span id="qr-full-url-display" style="font-family: monospace; color: var(--sage-600); font-weight: 700; word-break: break-all;">-</span>

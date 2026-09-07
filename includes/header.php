@@ -24,6 +24,9 @@ $user_name = $user['full_name'] ?? 'ผู้ใช้งานระบบ';
 
   <!-- Platform Stylesheet (Clean Eco-Minimalist Theme) -->
   <link rel="stylesheet" href="assets/css/style.css">
+  <script>
+    window.SERVER_LAN_IP = '<?= $_SERVER['SERVER_ADDR'] ?? (gethostbyname(gethostname()) ?: '192.168.1.139') ?>';
+  </script>
 </head>
 <body>
 
