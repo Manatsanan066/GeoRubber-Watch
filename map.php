@@ -1657,27 +1657,78 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   </div>
 
   <!-- =========================================================================
-       5. MODAL: QR Code & Traceability Verification
+       5. MODAL: QR Code & Traceability Verification (With Dynamic ngrok Public URL)
        ========================================================================= -->
   <div id="qrModal" class="modal-overlay">
-    <div class="modal-card max-w-md text-center p-6 space-y-4 text-[16px]">
+    <div class="modal-card max-w-md text-center p-6 space-y-3.5 text-[15px]">
       <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-        <h3 class="font-extrabold text-mezenc-teal text-lg" id="qr-plot-title">QR Code หนังสือรับรอง</h3>
+        <div class="text-left">
+          <h3 class="font-extrabold text-mezenc-teal text-lg" id="qr-plot-title">QR Code หนังสือรับรอง</h3>
+          <div class="text-xs text-mezenc-brightCyan font-mono font-bold" id="qr-plot-code"></div>
+        </div>
         <button onclick="App.closeModal('qrModal')" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-[16px] flex items-center justify-center">✕</button>
       </div>
 
-      <div class="text-[16px] text-mezenc-brightCyan font-mono font-bold" id="qr-plot-code"></div>
+      <!-- Network / ngrok Status Badge -->
+      <div class="flex justify-center pt-1">
+        <div id="qr-network-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-2xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="qr-network-status">🌐 ตรวจสอบลิงก์สาธารณะ ngrok...</span>
+        </div>
+      </div>
 
-      <div id="qrcode-canvas" class="flex justify-center p-4 bg-white rounded-2xl border border-gray-100 shadow-inner my-2"></div>
+      <!-- QR Code Canvas Container -->
+      <div id="qrcode-canvas" class="flex justify-center p-3.5 bg-white rounded-2xl border border-gray-200 shadow-inner my-1"></div>
 
-      <div class="text-[16px] text-gray-600 break-all font-mono p-2.5 bg-[#f8faf9] rounded-xl border border-gray-100 leading-relaxed" id="qr-token-display"></div>
+      <!-- Scannable URL Text -->
+      <div class="text-xs text-gray-600 break-all font-mono p-2.5 bg-[#f8faf9] rounded-xl border border-gray-200 leading-relaxed text-left">
+        <div class="text-[11px] font-bold text-gray-500 mb-0.5">🔗 ลิงก์ที่ฝังใน QR Code (Public URL):</div>
+        <div id="qr-full-url-display" class="text-mezenc-teal font-bold break-all select-all">-</div>
+      </div>
 
-      <div class="pt-2 flex flex-col gap-2">
-        <a id="qr-url-link" href="#" target="_blank" class="w-full py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-md transition-all">
-          🌐 เปิดตรวจสอบหนังสือรับรอง (EUDR Passport)
+      <!-- ngrok Auto-Detect & Custom URL Toolbar -->
+      <div class="bg-gray-50/90 p-3 rounded-xl border border-gray-200 text-left space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-gray-700 flex items-center gap-1">
+            <span>⚡</span> ngrok / Public Tunnel:
+          </span>
+          <button 
+            type="button" 
+            onclick="App.detectNgrokUrl(true)" 
+            title="ตรวจจับ ngrok tunnel บนพอร์ต 4040 อัตโนมัติ"
+            class="text-[11px] px-2.5 py-1 rounded-lg bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+          >
+            <span>🔄 ค้นหา ngrok อัตโนมัติ</span>
+          </button>
+        </div>
+        
+        <div class="flex items-center gap-1.5">
+          <input 
+            type="url" 
+            id="qr-custom-url-input" 
+            placeholder="เช่น https://xxxx.ngrok-free.app" 
+            class="flex-1 px-2.5 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-mezenc-brightCyan font-mono"
+          >
+          <button 
+            type="button" 
+            onclick="App.applyCustomUrlInput()" 
+            class="px-3 py-1.5 bg-mezenc-teal hover:bg-mezenc-deepTeal text-white text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap"
+          >
+            บันทึก
+          </button>
+        </div>
+        <div class="text-[10px] text-gray-500 leading-tight">
+          💡 สแกนได้ด้วยมือถือทุกเครื่องจากทุกที่ (ทั้ง 4G/5G และภายนอก) เมื่อรัน ngrok
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-1 flex flex-col sm:flex-row gap-2">
+        <a id="qr-url-link" href="#" target="_blank" class="flex-1 py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-1.5">
+          <span>🌐 เปิดหน้า EUDR Passport</span>
         </a>
-        <button onclick="App.copyToClipboard(document.getElementById('qr-url-link').href)" class="w-full py-2 rounded-full bg-white hover:bg-gray-50 text-mezenc-teal font-bold text-[16px] border border-gray-200 transition-all cursor-pointer">
-          📋 คัดลอกลิงก์ตรวจสอบ
+        <button onclick="App.copyCurrentQrUrl()" class="py-2.5 px-4 rounded-xl bg-white hover:bg-gray-50 text-mezenc-teal font-bold text-sm border border-gray-200 transition-all cursor-pointer flex items-center justify-center gap-1">
+          <span>📋 คัดลอกลิงก์</span>
         </button>
       </div>
     </div>
