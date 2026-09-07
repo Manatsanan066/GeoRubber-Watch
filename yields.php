@@ -1019,7 +1019,7 @@ try {
   </footer>
 
   <!-- App Global JavaScript -->
-  <script src="assets/js/app.js"></script>
+  <script src="assets/js/app.js?v=<?= time() ?>"></script>
 
   <!-- Pass Plot & Farmer Data to JavaScript -->
   <script>

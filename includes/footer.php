@@ -61,6 +61,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <!-- Platform Core Scripts -->
-  <script src="assets/js/app.js"></script>
+  <script src="assets/js/app.js?v=<?= time() ?>"></script>
 </body>
 </html>

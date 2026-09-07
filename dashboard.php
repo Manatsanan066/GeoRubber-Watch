@@ -1327,7 +1327,7 @@ if (!$isUserAdmin) {
   </footer>
 
   <!-- App Global JavaScript -->
-  <script src="assets/js/app.js"></script>
+  <script src="assets/js/app.js?v=<?= time() ?>"></script>
 
   <!-- Dashboard Dynamic Charts JavaScript -->
   <script>

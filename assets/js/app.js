@@ -125,55 +125,10 @@ const App = {
 
   // Synchronous Quick Base URL Resolver (0ms instant response)
   getInstantBaseUrl() {
-    const hostname = window.location.hostname;
-    const isDirectPublic = (!hostname.includes('localhost') && !hostname.includes('127.0.0.1') && !hostname.match(/^\d+\.\d+\.\d+\.\d+$/));
-    
-    // 1. Direct public domain (e.g. running on cloud or accessed directly via ngrok)
-    if (isDirectPublic) {
-      return {
-        url: window.location.origin,
-        isNgrok: hostname.includes('ngrok'),
-        source: 'direct_domain'
-      };
-    }
-
-    // 2. Active Detected ngrok URL from tunnel
-    if (this.detectedNgrokUrl && this.detectedNgrokUrl.startsWith('http')) {
-      return {
-        url: this.detectedNgrokUrl.replace(/\/+$/, ''),
-        isNgrok: true,
-        source: 'ngrok_api'
-      };
-    }
-
-    // 3. User-configured custom URL in localStorage
-    const savedCustomUrl = localStorage.getItem('georubber_public_url');
-    if (savedCustomUrl && savedCustomUrl.startsWith('http')) {
-      return {
-        url: savedCustomUrl.replace(/\/+$/, ''),
-        isNgrok: savedCustomUrl.includes('ngrok'),
-        source: 'local_storage'
-      };
-    }
-
-    // 4. Configured Default Ngrok Public URL (https://earthling-retype-aroma.ngrok-free.dev)
-    if (this.defaultNgrokUrl && this.defaultNgrokUrl.startsWith('http')) {
-      return {
-        url: this.defaultNgrokUrl.replace(/\/+$/, ''),
-        isNgrok: true,
-        source: 'default_ngrok'
-      };
-    }
-
-    // 5. Local Machine Fallback: Server LAN IP
-    const serverIp = window.SERVER_LAN_IP || (hostname !== 'localhost' && hostname !== '127.0.0.1' ? hostname : '192.168.1.139');
-    const port = (window.location.port && !['80', '443'].includes(window.location.port)) ? `:${window.location.port}` : '';
-    const lanOrigin = `${window.location.protocol}//${serverIp}${port}`;
-
     return {
-      url: lanOrigin,
-      isNgrok: false,
-      source: 'lan_origin'
+      url: 'https://earthling-retype-aroma.ngrok-free.dev',
+      isNgrok: true,
+      source: 'default_ngrok'
     };
   },
 
@@ -200,11 +155,6 @@ const App = {
     // 1. Render immediately with instant base URL (0ms lag)
     const instantBase = this.getInstantBaseUrl();
     this.buildAndRenderQR(instantBase.url, instantBase.isNgrok);
-
-    // 2. Check for active ngrok tunnel asynchronously without blocking
-    if (!instantBase.isNgrok && instantBase.source !== 'direct_domain') {
-      this.detectNgrokUrl(false);
-    }
   },
 
   // Construct full URL and draw QR Code
@@ -219,11 +169,10 @@ const App = {
     if (!basePath.startsWith('/')) basePath = '/' + basePath;
     if (basePath === '/') basePath = '';
 
-    const serverIp = window.SERVER_LAN_IP || '192.168.1.139';
-    let cleanBase = (baseUrl || '').replace(/\/+$/, '');
-    if (!cleanBase || cleanBase.includes('localhost') || cleanBase.includes('127.0.0.1')) {
-      const port = (window.location.port && !['80', '443'].includes(window.location.port)) ? `:${window.location.port}` : '';
-      cleanBase = `${window.location.protocol}//${serverIp}${port}`;
+    // Enforce ngrok public URL directly
+    let cleanBase = 'https://earthling-retype-aroma.ngrok-free.dev';
+    if (baseUrl && !baseUrl.includes('localhost') && !baseUrl.includes('127.0.0.1')) {
+      cleanBase = baseUrl.replace(/\/+$/, '');
     }
     
     // Prevent duplicate subpath

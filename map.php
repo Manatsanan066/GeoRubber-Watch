@@ -34,14 +34,15 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
   <!-- Core App Styles & Bilingual i18n Engine -->
   <link rel="stylesheet" href="assets/css/style.css">
-  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/i18n.js?v=<?= time() ?>"></script>
 
   <!-- Platform Core JS Helper & Session Globals -->
-  <script src="assets/js/app.js"></script>
+  <script src="assets/js/app.js?v=<?= time() ?>"></script>
   <script>
     window.CURRENT_USER = <?= json_encode($currentUser, JSON_UNESCAPED_UNICODE) ?>;
     window.IS_ADMIN = <?= $currentUser['is_admin'] ? 'true' : 'false' ?>;
     window.SERVER_LAN_IP = '192.168.1.139';
+    window.NGROK_PUBLIC_URL = 'https://earthling-retype-aroma.ngrok-free.dev';
   </script>
 
   <!-- Tailwind Theme Configuration (Exact Mezenc Natural Teal System) -->
