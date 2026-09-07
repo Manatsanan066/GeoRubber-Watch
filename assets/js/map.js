@@ -371,7 +371,7 @@ const GeoMap = {
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-                <button onclick="App.showQRCodeModal('${safeToken}', '${safeName}', '${safeCode}')" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px;">
+                <button type="button" onclick="GeoMap.showPlotQR(${p.id})" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: pointer;">
                   📱 QR Code
                 </button>
                 <a href="trace.php?token=${tokenParam}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center;">
@@ -525,7 +525,7 @@ const GeoMap = {
               <!-- QR Code / Passport Button -->
               <button 
                 type="button" 
-                onclick="App.showQRCodeModal('${safeToken}', '${safeName}', '${safeCode}')" 
+                onclick="GeoMap.showPlotQR(${p.id})" 
                 title="QR Code ตรวจสอบย้อนกลับ (Digital Passport)" 
                 class="w-9 h-9 rounded-full bg-slate-100 hover:bg-mezenc-lightCyan text-gray-600 hover:text-mezenc-teal flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
               >
@@ -592,6 +592,16 @@ const GeoMap = {
       }
     } catch (e) {
       alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+    }
+  },
+
+  // Show QR Code Modal for Plot
+  showPlotQR(plotId) {
+    const p = this.plotsData.find(item => item.id === Number(plotId));
+    if (p) {
+      App.showQRCodeModal(p.traceability_token || p.plot_code, p.plot_name, p.plot_code);
+    } else {
+      App.showQRCodeModal('EUDR-SAMPLE', 'แปลงปลูกยางพารา', '-');
     }
   },
 

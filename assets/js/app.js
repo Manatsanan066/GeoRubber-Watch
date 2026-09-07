@@ -104,6 +104,10 @@ const App = {
     const modal = document.getElementById(modalId);
     if (modal) {
       modal.classList.add('active');
+      modal.style.display = 'flex';
+      modal.style.opacity = '1';
+      modal.style.pointerEvents = 'auto';
+      document.body.style.overflow = 'hidden';
     }
   },
 
@@ -111,6 +115,10 @@ const App = {
     const modal = document.getElementById(modalId);
     if (modal) {
       modal.classList.remove('active');
+      modal.style.display = 'none';
+      modal.style.opacity = '0';
+      modal.style.pointerEvents = 'none';
+      document.body.style.overflow = '';
     }
   },
 
@@ -172,7 +180,6 @@ const App = {
     const titleEl = document.getElementById('qr-plot-title');
     const codeEl = document.getElementById('qr-plot-code');
     const tokenEl = document.getElementById('qr-token-display');
-    const customInputEl = document.getElementById('qr-custom-url-input');
 
     if (titleEl) titleEl.textContent = this.currentPlotName;
     if (codeEl) codeEl.textContent = `รหัสแปลง: ${this.currentPlotCode}`;
@@ -183,9 +190,6 @@ const App = {
 
     // 1. Render immediately with instant base URL (0ms lag)
     const instantBase = this.getInstantBaseUrl();
-    if (customInputEl) {
-      customInputEl.value = (instantBase.source === 'local_storage' || instantBase.isNgrok) ? instantBase.url : '';
-    }
     this.buildAndRenderQR(instantBase.url, instantBase.isNgrok);
 
     // 2. Check for active ngrok tunnel asynchronously without blocking
@@ -228,30 +232,19 @@ const App = {
       linkEl.href = fullUrl;
     }
 
-    const urlDisplayEl = document.getElementById('qr-full-url-display');
-    if (urlDisplayEl) {
-      urlDisplayEl.textContent = fullUrl;
+    const tokenEl = document.getElementById('qr-token-display');
+    if (tokenEl) {
+      tokenEl.textContent = this.currentQRToken;
     }
 
-    const badgeEl = document.getElementById('qr-network-badge');
-    if (badgeEl) {
-      if (isNgrok || (!fullUrl.includes('localhost') && !fullUrl.includes('127.0.0.1') && !fullUrl.includes('192.168.'))) {
-        badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-2xs';
-        badgeEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span id="qr-network-status">🟢 ลิงก์สาธารณะ ngrok (สแกนได้จากทุกที่ทั่วโลก)</span>';
-      } else {
-        badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-300 shadow-2xs';
-        badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500"></span> <span id="qr-network-status">📶 เครือข่าย Wi-Fi/LAN (${serverIp})</span>`;
-      }
-    }
-
-    // Generate High-Contrast Crisp QR Code for Smartphone Camera Scanning
+    // Generate High-Contrast Crisp QR Code in dark pine green matching reference
     try {
       if (typeof QRCode !== 'undefined') {
         new QRCode(qrContainer, {
           text: fullUrl,
           width: 220,
           height: 220,
-          colorDark: "#000000",
+          colorDark: "#064e3b",
           colorLight: "#ffffff",
           correctLevel: QRCode.CorrectLevel.M
         });

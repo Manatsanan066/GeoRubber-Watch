@@ -17,58 +17,38 @@
     </div>
   </footer>
 
-  <!-- QR Code Modal Component (Clean Minimalist with ngrok support) -->
+  <!-- QR Code Modal Component (Matching Reference UI) -->
   <div id="qrModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 440px;">
-      <div class="modal-header">
-        <h3 class="font-heading" style="font-size: 1.2rem; color: var(--pine-900);">📱 EUDR Traceability QR Code</h3>
-        <button onclick="App.closeModal('qrModal')" style="background:none; border:none; font-size:1.5rem; color:var(--text-light); cursor:pointer;">&times;</button>
+    <div class="modal-card max-w-[420px] w-full text-center p-6 bg-white rounded-3xl shadow-2xl space-y-3" style="max-width: 420px; border-radius: 24px; padding: 24px; background: #ffffff;">
+      <!-- Header with title and circular close button -->
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 4px;">
+        <h3 id="qr-plot-title" style="font-weight: 800; color: #064e3b; font-size: 1.15rem; margin: 0; text-align: left; font-family: 'Open Sans', 'Google Sans', sans-serif;">แปลงยางขุนทะเล</h3>
+        <button type="button" onclick="App.closeModal('qrModal')" style="width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; border: none; color: #64748b; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
       </div>
-      <div class="modal-body" style="text-align: center;">
-        <div id="qr-plot-title" style="font-weight: 700; font-size: 1.15rem; margin-bottom: 2px; color: var(--pine-900); font-family: 'Open Sans', 'Google Sans', sans-serif;">-</div>
-        <div id="qr-plot-code" style="font-size: 0.85rem; color: var(--sage-500); font-family: monospace; font-weight: 700; margin-bottom: 8px;">-</div>
 
-        <!-- Network / ngrok Status Badge -->
-        <div style="display: flex; justify-content: center; margin-bottom: 10px;">
-          <div id="qr-network-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7;">
-            <span style="width: 8px; height: 8px; border-radius: 9999px; background: #10b981;"></span>
-            <span id="qr-network-status">🌐 ตรวจสอบลิงก์สาธารณะ ngrok...</span>
-          </div>
-        </div>
-        
-        <div id="qrcode-canvas" style="display: flex; justify-content: center; padding: 16px; background: white; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); margin-bottom: 8px;"></div>
-        
-        <div style="font-size: 0.8rem; font-weight: 700; color: var(--pine-900); margin-bottom: 10px;">
-          📸 เปิดกล้องมือถือสแกน QR Code นี้ เพื่อเปิดดู EUDR Passport
-        </div>
+      <!-- Plot Code Subtitle -->
+      <div id="qr-plot-code" style="text-align: center; font-weight: 700; color: #00a699; font-size: 15px; font-family: monospace; letter-spacing: 0.02em; margin-bottom: 12px;">
+        รหัสแปลง: -
+      </div>
 
-        <div style="font-size: 0.75rem; background: var(--sage-50); border: 1px solid var(--sage-200); padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; word-break: break-all; text-align: left;">
-          <strong style="color: var(--pine-800);">🔗 ลิงก์ที่ฝังใน QR Code:</strong><br>
-          <span id="qr-full-url-display" style="font-family: monospace; color: var(--sage-600); font-weight: 700; word-break: break-all;">-</span>
-        </div>
+      <!-- QR Code Canvas Container with rounded border -->
+      <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 12px;">
+        <div id="qrcode-canvas" style="display: flex; align-items: center; justify-content: center;"></div>
+      </div>
 
-        <!-- ngrok Auto-Detect & Custom URL Toolbar -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); padding: 10px; margin-bottom: 12px; text-align: left;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-size: 0.75rem; font-weight: 700; color: #334155;">⚡ ngrok / Public Tunnel:</span>
-            <button type="button" onclick="App.detectNgrokUrl(true)" style="font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: #00a896; color: white; border: none; cursor: pointer;">
-              🔄 ค้นหา ngrok อัตโนมัติ
-            </button>
-          </div>
-          <div style="display: flex; gap: 6px;">
-            <input type="url" id="qr-custom-url-input" placeholder="เช่น https://xxxx.ngrok-free.app" style="flex: 1; padding: 4px 8px; font-size: 0.75rem; font-family: monospace; border: 1px solid #cbd5e1; border-radius: 4px;">
-            <button type="button" onclick="App.applyCustomUrlInput()" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 700; background: #0e4d4e; color: white; border: none; border-radius: 4px; cursor: pointer;">บันทึก</button>
-          </div>
-        </div>
+      <!-- Traceability Token Box -->
+      <div id="qr-token-display" style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 10px 16px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 700; color: #475569; letter-spacing: 0.05em; margin-bottom: 14px; user-select: all;">
+        -
+      </div>
 
-        <div style="display: flex; gap: 8px;">
-          <a id="qr-url-link" href="#" target="_blank" class="btn btn-primary btn-sm" style="flex: 1;">
-            🌐 เปิดหน้า Passport
-          </a>
-          <button onclick="App.copyCurrentQrUrl()" class="btn btn-outline btn-sm">
-            📋 คัดลอกลิงก์
-          </button>
-        </div>
+      <!-- Action Buttons Matching Screenshot -->
+      <div style="padding-top: 6px; display: flex; flex-direction: column; gap: 10px;">
+        <a id="qr-url-link" href="#" target="_blank" style="width: 100%; box-sizing: border-box; padding: 12px 20px; border-radius: 9999px; background: #00a699; color: #ffffff; font-weight: 700; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,166,153,0.2);">
+          <span>🌐</span> <span>เปิดตรวจสอบหนังสือรับรอง (EUDR Passport)</span>
+        </a>
+        <button type="button" onclick="App.copyCurrentQrUrl()" style="width: 100%; box-sizing: border-box; padding: 10px 20px; border-radius: 9999px; background: #ffffff; color: #064e3b; font-weight: 700; font-size: 14px; border: 1px solid #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span>📋</span> <span>คัดลอกลิงก์ตรวจสอบ</span>
+        </button>
       </div>
     </div>
   </div>
