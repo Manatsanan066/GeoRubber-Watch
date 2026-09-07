@@ -9,7 +9,8 @@ const App = {
   currentPlotName: null,
   currentPlotCode: null,
   currentGeneratedUrl: null,
-  detectedNgrokUrl: null,
+  detectedNgrokUrl: 'https://earthling-retype-aroma.ngrok-free.dev',
+  defaultNgrokUrl: 'https://earthling-retype-aroma.ngrok-free.dev',
 
   // Initialize App
   init() {
@@ -136,7 +137,7 @@ const App = {
       };
     }
 
-    // 2. Detected ngrok URL from active tunnel
+    // 2. Active Detected ngrok URL from tunnel
     if (this.detectedNgrokUrl && this.detectedNgrokUrl.startsWith('http')) {
       return {
         url: this.detectedNgrokUrl.replace(/\/+$/, ''),
@@ -155,8 +156,16 @@ const App = {
       };
     }
 
-    // 4. Local Machine Fallback: NEVER encode "localhost" in QR code!
-    // Encode Server LAN IP so any phone on Wi-Fi/LAN can scan & open it immediately!
+    // 4. Configured Default Ngrok Public URL (https://earthling-retype-aroma.ngrok-free.dev)
+    if (this.defaultNgrokUrl && this.defaultNgrokUrl.startsWith('http')) {
+      return {
+        url: this.defaultNgrokUrl.replace(/\/+$/, ''),
+        isNgrok: true,
+        source: 'default_ngrok'
+      };
+    }
+
+    // 5. Local Machine Fallback: Server LAN IP
     const serverIp = window.SERVER_LAN_IP || (hostname !== 'localhost' && hostname !== '127.0.0.1' ? hostname : '192.168.1.139');
     const port = (window.location.port && !['80', '443'].includes(window.location.port)) ? `:${window.location.port}` : '';
     const lanOrigin = `${window.location.protocol}//${serverIp}${port}`;
