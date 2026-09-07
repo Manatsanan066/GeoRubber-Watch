@@ -28,6 +28,10 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 
+  <!-- Core Eco-GIS Styles & Centralized i18n Engine -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="assets/js/i18n.js"></script>
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -294,6 +298,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             drop-shadow-sm
           "
           href="index.php"
+          data-i18n="nav_home"
         >
           หน้าแรก
         </a>
@@ -310,6 +315,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             drop-shadow-sm
           "
           href="overview.php"
+          data-i18n="nav_gis"
         >
           แผนที่ GIS
         </a>
@@ -323,6 +329,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             drop-shadow-sm
           "
           href="dashboard.php"
+          data-i18n="nav_dashboard"
         >
           แดชบอร์ด
         </a>
@@ -336,6 +343,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             drop-shadow-sm
           "
           href="map.php"
+          data-i18n="nav_plots"
         >
           แปลงปลูก
         </a>
@@ -349,6 +357,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             drop-shadow-sm
           "
           href="yields.php"
+          data-i18n="nav_yields"
         >
           ผลผลิต
         </a>
@@ -362,13 +371,45 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             drop-shadow-sm
           "
           href="contact.php"
+          data-i18n="nav_contact"
         >
           ติดต่อเรา
         </a>
       </nav>
 
-      <!-- NAV ICONS & MOBILE MENU BUTTON (Exact Match) -->
-      <div class="flex items-center gap-2.5 sm:gap-3.5">
+      <!-- NAV ICONS & MOBILE MENU BUTTON -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- [LANGUAGE TOGGLE SWITCH (TH / EN)] - Segmented Pill Slider Design -->
+        <div 
+          onclick="toggleLanguage()"
+          class="toggle-track-dark w-[82px] sm:w-[90px] h-[34px] sm:h-[36px] p-[3px] flex items-center relative cursor-pointer mr-0.5 sm:mr-1 shrink-0"
+          title="คลิกเพื่อสลับภาษา TH / EN (Switch Language)"
+          id="lang-toggle-btn"
+        >
+          <!-- Sliding White Thumb -->
+          <div 
+            id="nav-thumb" 
+            class="toggle-thumb-dark w-[36px] sm:w-[40px] h-[28px] sm:h-[30px] transition-all duration-300 left-[3px]"
+          ></div>
+          
+          <!-- TH Label -->
+          <div 
+            id="nav-label-th" 
+            class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none"
+          >
+            TH
+          </div>
+          
+          <!-- EN Label -->
+          <div 
+            id="nav-label-en" 
+            class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none"
+          >
+            EN
+          </div>
+        </div>
+
         <!-- USER PROFILE & LOGOUT BUTTON (Desktop/iPad) -->
         <div class="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full py-1.5 px-3.5 border border-white/20 text-xs shadow-md">
           <div class="text-right leading-tight">
@@ -379,6 +420,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             href="logout.php"
             class="text-white/80 hover:text-red-300 flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-red-500/30 transition-all cursor-pointer ml-1"
             title="ออกจากระบบ (Logout)"
+            data-i18n-title="nav_logout"
             onclick="return confirm('ต้องการออกจากระบบหรือไม่?');"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,6 +434,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           class="lg:hidden text-white w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-md transition-all active:scale-95 cursor-pointer" 
           onclick="toggleMobileDrawer()"
           aria-label="เปิดเมนูนำทาง"
+          data-i18n-title="nav_menu_label"
         >
           <svg
             class="w-5 h-5 sm:w-6 sm:h-6"
@@ -415,14 +458,14 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
     <!-- HERO CONTENT (Centered typography over landscape background) -->
     <div class="relative z-20 w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 my-auto py-6 sm:py-10 text-center">
       <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
-        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow">
-          WEB-GIS SPATIAL EXPLORER & MONITORING
+        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow" data-i18n="ov_hero_tag">
+          🌲 WEB-GIS FOREST CONSERVATION & LAND BOUNDARIES
         </div>
-        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md">
-          แผนที่ภูมิสารสนเทศภาพรวมและการเฝ้าระวังเชิงพื้นที่
+        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md" data-i18n="ov_hero_title">
+          แผนที่ภูมิสารสนเทศป่าสงวนแห่งชาติ 26 แห่ง
         </h1>
-        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow">
-          ศูนย์กลางข้อมูลเชิงพื้นที่ 26 แนวเขตป่าสงวนแห่งชาติและแปลงปลูกยางพารา จังหวัดสุราษฎร์ธานี แสดงผลในรูปแบบ Web-GIS พร้อมระบบตรวจสอบความสอดคล้องตามมาตรฐาน EUDR (Zero Deforestation)
+        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow" data-i18n="ov_hero_sub">
+          ศูนย์กลางข้อมูลเชิงพื้นที่แสดงแนวเขตป่าสงวนแห่งชาติ จ.สุราษฎร์ธานี (Zone C) ระยะกันชน Buffer Zone 500 ม. และพิกัดแปลงปลูกยางพาราเพื่อการเฝ้าระวังอย่างยั่งยืน
         </p>
       </div>
     </div>
@@ -437,45 +480,59 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
       
       <div>
         <!-- Drawer Header -->
-        <div class="flex items-center justify-between pb-6 border-b border-white/15">
+        <div class="flex items-center justify-between pb-4 border-b border-white/15">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
               🌲
             </div>
-            <span class="font-extrabold text-base">GeoRubber Watch</span>
+            <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
           </div>
           <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
             ✕
           </button>
         </div>
 
+        <!-- Mobile Language Toggle Switch -->
+        <div class="py-3 flex items-center justify-between border-b border-white/10">
+          <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+          <div 
+            onclick="toggleLanguage()"
+            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+            id="lang-toggle-btn-mobile"
+          >
+            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+            <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
+            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+          </div>
+        </div>
+
         <!-- Drawer Navigation Links -->
-        <nav class="flex flex-col gap-2 pt-6 text-sm font-medium">
+        <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
           <a href="index.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🏠</span> <span>หน้าแรก</span>
+            <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
           </a>
           <a href="overview.php" class="px-4 py-3 rounded-xl bg-white/15 text-white font-bold transition-colors flex items-center gap-3">
-            <span>🛰️</span> <span>แผนที่ GIS</span>
+            <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
           <a href="dashboard.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📊</span> <span>แดชบอร์ด</span>
+            <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
           <a href="map.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📍</span> <span>แปลงปลูก</span>
+            <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
           <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🧪</span> <span>ผลผลิต</span>
+            <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
           <a href="contact.php" onclick="toggleMobileDrawer()" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📞</span> <span>ติดต่อเรา</span>
+            <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
           </a>
           <a href="logout.php" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/40 transition-colors flex items-center gap-3 text-red-300 font-bold" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            <span>🚪</span> <span>ออกจากระบบ (Logout)</span>
+            <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </nav>
       </div>
 
-      <div class="pt-6 border-t border-white/15 text-center text-xs text-white/60">
+      <div class="pt-4 border-t border-white/15 text-center text-xs text-white/60">
         GeoRubber Watch • ม.อ. สุราษฎร์ธานี
       </div>
 
@@ -498,11 +555,11 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           <!-- Title & Map Icon -->
           <h2 class="text-[16px] sm:text-lg font-extrabold text-mezenc-teal tracking-tight flex items-center gap-2">
             <img src="img/map_icon.png" alt="Map Icon" class="w-5 h-5 object-contain inline-block drop-shadow-xs" onerror="this.style.display='none'">
-            <span>แผนที่แนวเขตป่าสงวนแห่งชาติ จังหวัดสุราษฎร์ธานี</span>
+            <span data-i18n="ov_sec_map_title">แผนที่แนวเขตป่าสงวนแห่งชาติ จังหวัดสุราษฎร์ธานี</span>
           </h2>
 
           <!-- Badges -->
-          <span class="inline-flex items-center px-3 py-0.5 rounded-full text-[14px] sm:text-[15px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]">
+          <span class="inline-flex items-center px-3 py-0.5 rounded-full text-[14px] sm:text-[15px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]" data-i18n="ov_psu_campus">
             ม.อ. สุราษฎร์ธานี
           </span>
         </div>
@@ -513,6 +570,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             type="button" 
             onclick="GeoMap.map.flyTo([9.0805, 99.3515], 14, { duration: 1.2 })" 
             class="px-4 py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-[14px] sm:text-[15px] border-2 border-[#bee6e1] shadow-xs hover:border-mezenc-brightCyan transition-all cursor-pointer"
+            data-i18n="ov_btn_reset"
           >
             กลับจุดเริ่มต้น
           </button>
@@ -521,7 +579,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             href="map.php" 
             class="px-4 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[14px] sm:text-[15px] shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <span>ตรวจสอบแปลงปลูก</span>
+            <span data-i18n="ov_btn_check_plot">ตรวจสอบแปลงปลูก</span>
           </a>
         </div>
 
@@ -544,8 +602,8 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           <!-- Panel Header with Close Button ✕ -->
           <div class="flex items-center justify-between pb-3 border-b border-gray-100">
             <div>
-              <h3 class="font-extrabold text-[16px] text-mezenc-teal leading-tight">แผงควบคุมแผนที่</h3>
-              <span class="text-[14px] text-gray-500 font-medium block mt-0.5">Layer Control &amp; Tools</span>
+              <h3 class="font-extrabold text-[16px] text-mezenc-teal leading-tight" data-i18n="ov_layer_panel">แผงควบคุมแผนที่</h3>
+              <span class="text-[14px] text-gray-500 font-medium block mt-0.5" data-i18n="ov_layer_panel_sub">Layer Control &amp; Tools</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-[13px] font-bold text-mezenc-brightCyan px-2.5 py-0.5 rounded-full bg-mezenc-lightCyan border border-[#bee6e1] shrink-0">
@@ -567,7 +625,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             <div class="flex items-center justify-between">
               <label for="forest-search-input" class="text-[15px] font-bold text-gray-700 flex items-center gap-1.5 cursor-pointer">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 inline-block"><path d="M15.7955 15.8111L21 21M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" stroke="#00a896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                <span>ค้นหาป่าสงวนแห่งชาติ</span>
+                <span data-i18n="ov_lbl_search_forest">ค้นหาป่าสงวนแห่งชาติ</span>
               </label>
               <span id="search-result-count" class="text-[14px] font-bold text-mezenc-brightCyan bg-mezenc-lightCyan px-2.5 py-0.5 rounded-lg border border-[#bee6e1]/70 shrink-0">
                 26 ผืนป่า
@@ -580,6 +638,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
                 type="text" 
                 id="forest-search-input" 
                 placeholder="พิมพ์รหัส เช่น R1.001 หรือชื่อเขตป่าสงวน" 
+                data-i18n-placeholder="ov_search_ph"
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl pl-9 pr-8 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all shadow-xs"
                 oninput="GeoOverview.filterForestList(this.value)"
                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); GeoOverview.handleSearchEnter(); }"
@@ -607,7 +666,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl px-3 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all cursor-pointer shadow-xs leading-relaxed"
                 onchange="GeoOverview.zoomToForest(this.value)"
               >
-                <option value="">เลือกพื้นที่เขตป่าสงวนแห่งชาติ</option>
+                <option value="" data-i18n="ov_opt_select_forest">เลือกพื้นที่เขตป่าสงวนแห่งชาติ</option>
               </select>
             </div>
           </div>
@@ -647,7 +706,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
                 title="คลิกปุ่มนี้แล้วคลิกบนแผนที่เพื่อปักหมุด"
               >
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 inline-block group-hover:scale-110 transition-transform"><path d="M5.7 15C4.03377 15.6353 3 16.5205 3 17.4997C3 19.4329 7.02944 21 12 21C16.9706 21 21 19.4329 21 17.4997C21 16.5205 19.9662 15.6353 18.3 15M12 9H12.01M18 9C18 13.0637 13.5 15 12 18C10.5 15 6 13.0637 6 9C6 5.68629 8.68629 3 12 3C15.3137 3 18 5.68629 18 9ZM13 9C13 9.55228 12.5523 10 12 10C11.4477 10 11 9.55228 11 9C11 8.44772 11.4477 8 12 8C12.5523 8 13 8.44772 13 9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                <span>ปักหมุดตรวจพิกัด</span>
+                <span data-i18n="ov_btn_pin_tool">ปักหมุดตรวจพิกัด</span>
               </button>
 
               <!-- GPS Locate Button -->
@@ -658,8 +717,8 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
                 class="py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#d4f1ee] to-[#e8f7f5] hover:from-mezenc-brightCyan hover:to-mezenc-teal text-mezenc-teal hover:text-white font-bold text-[14px] border-2 border-[#bee6e1] shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer group"
                 title="ระบุตำแหน่ง GPS ปัจจุบัน"
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 inline-block group-hover:scale-110 transition-transform"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10v-1c-0.6,0.9-1.2,1.7-1.7,2.4c-0.4,2.2-1.6,4.1-3.3,5.4 c-0.1-0.3-0.2-0.7-0.3-1c-0.1-0.4-0.2-0.8-0.4-1.2c-0.1-0.4-0.2-0.8-0.4-1.1c-0.1-0.1-0.3-0.2-0.5-0.3c-0.7-0.2-1.6,0.1-2.1-0.6 c-0.2-0.3-0.2-0.6-0.1-1c0.2-0.3,0.3-0.6,0.5-0.9c0.2-0.4,0.5-0.9,0.6-1.4c-0.8-1.2-1.6-2.6-2-3.9h-0.1c-0.1,0-0.1,0-0.2-0.1 c-0.2-0.2-0.3-0.7-0.2-1c0-0.5,0.3-0.8,0.2-1.3c0-0.1-0.1-0.9-0.1-0.9c-0.3,0-0.8,0-0.7-0.5V3.5H12h0.5c0.2-0.6,0.6-1.1,0.9-1.5H12z M18,2c-2.2,0-4,1.8-4,4s4,7,4,7s4-4.8,4-7S20.2,2,18,2z M18,4.5c0.8,0,1.5,0.7,1.5,1.5S18.8,7.5,18,7.5S16.5,6.8,16.5,6 S17.2,4.5,18,4.5z M8,5.1c0.4,0,0.7,0,1,0.1s0.6,0.3,0.8,0.5s0.5,0.5,0.5,0.8c0,0.1,0,0.2-0.1,0.2C10.1,6.8,10,6.8,9.9,6.8 c-0.3,0-0.6,0-0.8-0.1C9,6.6,8.8,6.4,8.6,6.3C8.1,6.1,7.2,7.4,7.1,7.8C7,8.1,7,8.8,7.5,8.9c0.3,0,1-0.6,1.2-0.8C8.9,8,9,7.9,9.2,7.8 c0.8-0.1,1.4,0.6,1.6,1.3C11,9.9,9.6,10.5,9,10.7c-0.2,0.1-0.3-0.1-0.5,0c-0.5,0.2-1.1,0.9-1.1,1.4s-0.1,1-0.2,1.5 c-0.1,0-0.2-0.1-0.2-0.1v-0.2c0-0.3-0.1-0.6-0.4-0.8c-0.1,0-0.1-0.1-0.2-0.1c-0.3-0.1-0.6-0.4-0.9-0.1c-0.2,0.2-0.4,0.5-0.4,0.8 c0,0.1,0,0.2,0.1,0.3c0.2,0.1,0.4,0,0.6,0c0.1,0,0.2,0.2,0.3,0.3c0.2,0.3,0.3,0.8,0.7,0.8h0.7h1.3c0.3,0.1,0.8,0.2,1,0.4 c0.1,0.2,0.1,0.4,0.2,0.6c0.4,0.5,1.1,0.5,1.7,0.7c0.2,0.1,0.3,0.2,0.3,0.4c0,0.3-0.1,0.7-0.2,1s-0.2,0.7-0.4,0.9s-0.4,0.3-0.6,0.4 c-0.4,0.2-0.6,0.6-0.8,0.9c0,0-0.1,0.2-0.2,0.3c-0.8-0.2-1.5-0.5-2.2-1v-0.2c-0.1-0.4-0.2-0.7-0.3-1c-0.2-0.5-0.5-1.1-0.6-1.6 c0-0.5,0.1-1-0.2-1.4c-0.3-0.5-1.1-0.5-1.6-0.8c-0.4-0.4-0.9-0.8-1.3-1.3V12c0-2.7,1.3-5.1,3.3-6.7C7.3,5.2,7.6,5.1,8,5.1z"/></svg>
-                <span>ตำแหน่งฉัน (GPS)</span>
+                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 inline-block group-hover:scale-110 transition-transform"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10v-1c-0.6,0.9-1.2,1.7-1.7,2.4c-0.4,2.2-1.6,4.1-3.3,5.4 c-0.1-0.3-0.2-0.7-0.3-1c-0.1-0.4-0.2-0.8-0.4-1.2c-0.1-0.4-0.2-0.8-0.4-1.1c-0.1-0.1-0.3-0.2-0.5-0.3c-0.7-0.2-1.6,0.1-2.1-0.6 c-0.2-0.3-0.2-0.6-0.1-1c0.2-0.3,0.3-0.6,0.5-0.9c0.2-0.4,0.5-0.9,0.6-1.4c-0.8-1.2-1.6-2.6-2-3.9h-0.1c-0.1,0-0.1,0-0.2-0.1 c-0.2-0.2-0.3-0.7-0.2-1c0-0.5,0.3-0.8,0.2-1.3c0-0.1-0.1-0.9-0.1-0.9c-0.3,0-0.8,0-0.7-0.5V3.5H12h0.5c0.2-0.6,0.6-1.1,0.9-1.5H12z M18,2c-2.2,0-4,1.8-4,4s4,7,4,7s4-4.8,4-7S20.2,2,18,2z M18,4.5c0.8,0,1.5,0.7,1.5,1.5S18.8,7.5,18,7.5S16.5,6.8,16.5,6 S17.2,4.5,18,4.5z M8,5.1c0.4,0,0.7,0,1,0.1s0.6,0.3,0.8,0.5s0.5,0.5,0.5,0.8c0,0.1,0,0.2-0.1,0.2C10.1,6.8,10,6.8,9.9,6.8 c-0.3,0-0.6,0-0.8-0.1C9,6.6,8.8,6.4,8.6,6.3C8.1,6.1,7.2,7.4,7.1,7.8C7,8.1,7,8.8,7.5,8.9c0.3,0,1-0.6,1.2-0.8C8.9,8,9,7.9,9.2,7.8 c-0.8-0.1,1.4,0.6,1.6,1.3C11,9.9,9.6,10.5,9,10.7c-0.2,0.1-0.3-0.1-0.5,0c-0.5,0.2-1.1,0.9-1.1,1.4s-0.1,1-0.2,1.5 c-0.1,0-0.2-0.1-0.2-0.1v-0.2c0-0.3-0.1-0.6-0.4-0.8c-0.1,0-0.1-0.1-0.2-0.1c-0.3-0.1-0.6-0.4-0.9-0.1c-0.2,0.2-0.4,0.5-0.4,0.8 c0,0.1,0,0.2,0.1,0.3c0.2,0.1,0.4,0,0.6,0c0.1,0,0.2,0.2,0.3,0.3c0.2,0.3,0.3,0.8,0.7,0.8h0.7h1.3c0.3,0.1,0.8,0.2,1,0.4 c0.1,0.2,0.1,0.4,0.2,0.6c0.4,0.5,1.1,0.5,1.7,0.7c0.2,0.1,0.3,0.2,0.3,0.4c0,0.3-0.1,0.7-0.2,1s-0.2,0.7-0.4,0.9s-0.4,0.3-0.6,0.4 c-0.4,0.2-0.6,0.6-0.8,0.9c0,0-0.1,0.2-0.2,0.3c-0.8-0.2-1.5-0.5-2.2-1v-0.2c-0.1-0.4-0.2-0.7-0.3-1c-0.2-0.5-0.5-1.1-0.6-1.6 c0-0.5,0.1-1-0.2-1.4c-0.3-0.5-1.1-0.5-1.6-0.8c-0.4-0.4-0.9-0.8-1.3-1.3V12c0-2.7,1.3-5.1,3.3-6.7C7.3,5.2,7.6,5.1,8,5.1z"/></svg>
+                <span data-i18n="ov_btn_gps_locate">ตำแหน่งฉัน (GPS)</span>
               </button>
             </div>
 
@@ -689,7 +748,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           <div>
             <label for="basemap-select" class="block text-[15px] font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
               <svg fill="#00a896" viewBox="0 0 32 32" class="w-4 h-4 shrink-0 inline-block" xmlns="http://www.w3.org/2000/svg" stroke="#00a896"><title>satellite</title><path d="M22.81 23.318l-0.126-0.188 1.107-0.704-2.953-4.646-1.214 0.772-0.521-0.779c0.817-0.727 1.372-1.742 1.504-2.887l4.052 5.901 6.244-1.885-11.090-16.151-6.244 1.885 3.628 5.283c-0.363-0.093-0.743-0.142-1.134-0.142-1.915 0-3.555 1.177-4.237 2.847l-4.095-5.963-6.244 1.885 11.090 16.151 6.244-1.885-2.667-3.884c0.888-0.017 1.714-0.288 2.409-0.742l0.488 0.73-1.026 0.652 2.953 4.646 1.133-0.72 0.12 0.18c-1.012 0.736-1.72 1.902-1.94 3.227l6.030-3.773c-1.3-0.448-2.513-0.32-3.511 0.19zM25.79 26.619c0 0.638-0.517 1.155-1.155 1.155s-1.155-0.517-1.155-1.155c0-0.638 0.517-1.155 1.155-1.155s1.155 0.517 1.155 1.155z"></path></svg>
-              <span>แผนที่ฐาน (Basemap)</span>
+              <span data-i18n="ov_lbl_basemap">แผนที่ฐาน (Basemap)</span>
             </label>
             <div class="relative">
               <select 
@@ -697,8 +756,8 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl px-3 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all cursor-pointer shadow-xs leading-relaxed"
                 onchange="GeoMap.setBaseMap(this.value)"
               >
-                <option value="satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
-                <option value="osm">🗺️ แผนที่ถนน (OpenStreetMap)</option>
+                <option value="satellite" data-i18n="ov_layer_satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
+                <option value="osm" data-i18n="ov_layer_osm">🗺️ แผนที่ถนน (OpenStreetMap)</option>
                 <option value="topo">⛰️ ภูมิประเทศ (Topographic)</option>
               </select>
             </div>
@@ -708,7 +767,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           <div class="space-y-2">
             <div class="text-[15px] font-bold text-gray-700 flex items-center gap-1.5">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 inline-block"><path d="M17.4 10L21 12L17.4 14M17.4 10L12 13L6.6 10M17.4 10L21 8L12 3L3 8L6.6 10M6.6 10L3 12L6.6 14M17.4 14L21 16L12 21L3 16L6.6 14M17.4 14L12 17L6.6 14" stroke="#00a896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-              <span>เปิด/ปิดชั้นข้อมูล</span>
+              <span data-i18n="ov_lbl_layers">เปิด/ปิดชั้นข้อมูล</span>
             </div>
 
             <!-- Toggle Row 1: Forest Reserves -->
@@ -725,7 +784,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
                   </svg>
                 </div>
                 <div>
-                  <span class="font-bold text-gray-800 text-[15px] leading-tight block">แนวเขตป่าสงวนแห่งชาติ</span>
+                  <span class="font-bold text-gray-800 text-[15px] leading-tight block" data-i18n="ov_layer_forest">แนวเขตป่าสงวนแห่งชาติ</span>
                   <span class="text-[13px] text-gray-500 font-medium block mt-0.5">(26 ผืนป่า จ.สุราษฎร์ฯ)</span>
                 </div>
               </div>
@@ -747,26 +806,26 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
               <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-mezenc-teal shrink-0">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M8 16L4.35009 13.3929C2.24773 11.8912 1 9.46667 1 6.88306V3L8 0L15 3V6.88306C15 9.46667 13.7523 11.8912 11.6499 13.3929L8 16ZM12.2071 5.70711L10.7929 4.29289L7 8.08579L5.20711 6.29289L3.79289 7.70711L7 10.9142L12.2071 5.70711Z" fill="#00a896"/>
               </svg>
-              <span>สถานะความสอดคล้อง EUDR</span>
+              <span data-i18n="ov_lbl_eudr_legend">สถานะความสอดคล้อง EUDR</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 shrink-0"></span>
-              <span class="font-medium text-gray-800 text-[15px] leading-tight">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>
+              <span class="font-medium text-gray-800 text-[15px] leading-tight" data-i18n="status_compliant">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="w-3.5 h-3.5 rounded-full bg-rose-600 shrink-0"></span>
-              <span class="font-medium text-gray-800 text-[15px] leading-tight">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>
+              <span class="font-medium text-gray-800 text-[15px] leading-tight" data-i18n="status_non_compliant">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="w-3.5 h-3.5 rounded-full bg-amber-500 shrink-0"></span>
-              <span class="font-medium text-gray-800 text-[15px] leading-tight">โซนเฝ้าระวัง (Buffer &lt; 500 ม.)</span>
+              <span class="font-medium text-gray-800 text-[15px] leading-tight" data-i18n="status_under_review">โซนเฝ้าระวัง (Buffer &lt; 500 ม.)</span>
             </div>
             <div class="flex items-center gap-2 pt-2 border-t border-gray-200/60">
               <svg viewBox="0 0 1024 1024" class="w-5 h-5 shrink-0" xmlns="http://www.w3.org/2000/svg">
                 <path d="M921.6 742.4c0 14.08-11.52 25.6-25.6 25.6l-256 64-256-76.8-230.4 64c-14.08 0-25.6-11.52-25.6-25.6V332.8c0-14.08 11.52-25.6 25.6-25.6l230.4-64 256 76.8 256-64c14.08 0 25.6 11.52 25.6 25.6v460.8z" fill="#66A8A5"/>
                 <path d="M640 832l-256-76.8V243.2l256 76.8z" fill="#438478"/>
               </svg>
-              <span class="font-bold text-red-700 text-[15px] leading-tight">แนวเขตป่าสงวน (Zone C เขตหวงห้าม)</span>
+              <span class="font-bold text-red-700 text-[15px] leading-tight" data-i18n="ov_legend_forest">แนวเขตป่าสงวน (Zone C เขตหวงห้าม)</span>
             </div>
           </div>
 
@@ -857,14 +916,14 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
               </svg>
             </div>
             <div>
-              <div class="font-bold text-xs leading-tight text-mezenc-mint">โครงการวิจัยระบบภูมิสารสนเทศ</div>
-              <div class="font-extrabold text-base sm:text-lg leading-tight">GeoRubber Watch • สุราษฎร์ธานี</div>
+              <div class="font-bold text-xs leading-tight text-mezenc-mint" data-i18n="foot_title_en">GeoRubber Watch: Intelligent Monitoring Platform</div>
+              <div class="font-extrabold text-base sm:text-lg leading-tight" data-i18n="nav_brand">GeoRubber Watch • สุราษฎร์ธานี</div>
             </div>
           </div>
-          <p class="text-xs text-white/75 leading-relaxed font-light">
+          <p class="text-xs text-white/75 leading-relaxed font-light" data-i18n="foot_title">
             ระบบบริการสารสนเทศภูมิศาสตร์เพื่อการตรวจสอบย้อนกลับและประเมินความสอดคล้องตามกฎหมายว่าด้วยสินค้าที่ปลอดจากการตัดไม้ทำลายป่าของสหภาพยุโรป (EUDR)
           </p>
-          <div class="text-[11px] text-white/60 pt-1">
+          <div class="text-[11px] text-white/60 pt-1" data-i18n="foot_dept">
             สาขาวิทยาศาสตร์และเทคโนโลยี คณะศิลปศาสตร์และวิทยาการจัดการ<br>
             มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี
           </div>
@@ -872,22 +931,22 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
 
         <!-- คอลัมน์ที่ 2: ข้อมูลผู้พัฒนาและอาจารย์ที่ปรึกษา -->
         <div class="md:col-span-5 space-y-1.5 text-xs text-white/85 leading-relaxed">
-          <div class="font-bold text-mezenc-mint uppercase">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
-          <div class="text-[11px] text-white/75">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
+          <div class="font-bold text-mezenc-mint uppercase" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
+          <div class="text-[11px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[11px] text-white/90 space-y-0.5">
-            <div>👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div>🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div>✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
+            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
           </div>
         </div>
 
         <!-- คอลัมน์ที่ 3: กล่องสถิติพื้นที่ (Surat Thani Territory Card) -->
         <div class="md:col-span-3 flex justify-start md:justify-end">
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
-            <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1">SURAT THANI FOREST COVERAGE</div>
+            <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-xs font-bold text-white">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
-            <div class="text-[10px] text-white/70 mt-1 font-light">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
+            <div class="text-xs font-bold text-white" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-[10px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
 
@@ -895,8 +954,8 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
 
       <!-- แถบล่างสุด (Copyright Bar) -->
       <div class="pt-6 flex flex-col sm:flex-row justify-between items-center text-[11px] text-white/60 gap-4">
-        <div>&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
-        <div class="text-mezenc-mint text-center sm:text-right">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
+        <div data-i18n="foot_copy">&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
+        <div class="text-mezenc-mint text-center sm:text-right" data-i18n="foot_eudr_cert">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
       </div>
 
     </div>

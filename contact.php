@@ -75,6 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
   </script>
 
+  <!-- Core App Styles & Toast Notifications -->
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/i18n.js"></script>
+
   <style>
     body {
       font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif;
@@ -134,25 +138,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
       <!-- DESKTOP NAVIGATION LINKS -->
       <nav class="hidden lg:flex items-center gap-5 xl:gap-7 text-sm xl:text-base font-medium tracking-wide">
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="index.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="index.php" data-i18n="nav_home">
           หน้าแรก
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="overview.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="overview.php" data-i18n="nav_gis">
           แผนที่ GIS
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="dashboard.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="dashboard.php" data-i18n="nav_dashboard">
           แดชบอร์ด
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="map.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="map.php" data-i18n="nav_plots">
           แปลงปลูก
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="yields.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="yields.php" data-i18n="nav_yields">
           ผลผลิต
         </a>
-        <a class="text-mezenc-mint font-bold border-b-2 border-mezenc-mint pb-0.5 transition-colors cursor-pointer drop-shadow-sm" href="contact.php">
+        <a class="text-mezenc-mint font-bold border-b-2 border-mezenc-mint pb-0.5 transition-colors cursor-pointer drop-shadow-sm" href="contact.php" data-i18n="nav_contact">
           ติดต่อเรา
         </a>
       </nav>
+
+      <!-- RIGHT ACTIONS (User / Language Toggle / Login / Mobile Menu) -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- [LANGUAGE TOGGLE SWITCH (TH / EN)] - Segmented Pill Slider Design -->
+        <div 
+          onclick="toggleLanguage()"
+          class="toggle-track-dark w-[82px] sm:w-[90px] h-[34px] sm:h-[36px] p-[3px] flex items-center relative cursor-pointer mr-0.5 sm:mr-1 shrink-0"
+          title="คลิกเพื่อสลับภาษา TH / EN (Switch Language)"
+          id="lang-toggle-btn"
+        >
+          <!-- Sliding White Thumb -->
+          <div 
+            id="nav-thumb" 
+            class="toggle-thumb-dark w-[36px] sm:w-[40px] h-[28px] sm:h-[30px] transition-all duration-300 left-[3px]"
+          ></div>
+          
+          <!-- TH Label -->
+          <div 
+            id="nav-label-th" 
+            class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none"
+          >
+            TH
+          </div>
+          
+          <!-- EN Label -->
+          <div 
+            id="nav-label-en" 
+            class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none"
+          >
+            EN
+          </div>
+        </div>
 
         <!-- USER PROFILE & LOGOUT BUTTON (Desktop/iPad) -->
         <div class="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full py-1.5 px-3.5 border border-white/20 text-xs shadow-md">
@@ -164,6 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             href="logout.php"
             class="text-white/80 hover:text-red-300 flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-red-500/30 transition-all cursor-pointer ml-1"
             title="ออกจากระบบ (Logout)"
+            data-i18n-title="nav_logout"
             onclick="return confirm('ต้องการออกจากระบบหรือไม่?');"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,6 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
           class="lg:hidden text-white w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-md transition-all active:scale-95 cursor-pointer" 
           onclick="toggleMobileDrawer()"
           aria-label="เปิดเมนูนำทาง"
+          data-i18n-title="nav_menu_label"
         >
           <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -189,13 +228,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <!-- HERO CONTENT (Centered typography) -->
     <div class="relative z-20 w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 my-auto py-6 sm:py-10 text-center">
       <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
-        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow">
+        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow" data-i18n="ct_hero_tag">
           COMMUNICATION &amp; SUPPORT CENTER
         </div>
-        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md">
+        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md" data-i18n="ct_hero_title">
           ศูนย์บริการข้อมูลและติดต่อสอบถาม
         </h1>
-        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-3xl mx-auto pt-1 drop-shadow">
+        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-3xl mx-auto pt-1 drop-shadow" data-i18n="ct_hero_sub">
           ศูนย์กลางการประสานงานและบริการข้อมูลภูมิสารสนเทศอัจฉริยะ GeoRubber Watch มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี เพื่อยกระดับสวนยางพาราสู่มาตรฐานความยั่งยืน EUDR
         </p>
       </div>
@@ -209,38 +248,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0 lg:hidden">
     <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-mezenc-deepTeal text-white p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/10">
       <div>
-        <div class="flex items-center justify-between pb-6 border-b border-white/15">
+        <div class="flex items-center justify-between pb-4 border-b border-white/15">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">🌲</div>
-            <span class="font-extrabold text-base">GeoRubber Watch</span>
+            <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
           </div>
           <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">✕</button>
         </div>
-        <nav class="flex flex-col gap-2 pt-6 text-sm font-medium">
+
+        <!-- Mobile Language Toggle Switch -->
+        <div class="py-3 flex items-center justify-between border-b border-white/10">
+          <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+          <div 
+            onclick="toggleLanguage()"
+            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+            id="lang-toggle-btn-mobile"
+          >
+            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+            <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
+            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+          </div>
+        </div>
+
+        <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
           <a href="index.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🏠</span> <span>หน้าแรก</span>
+            <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
           </a>
           <a href="overview.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🛰️</span> <span>แผนที่ GIS</span>
+            <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
           <a href="dashboard.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📊</span> <span>แดชบอร์ด</span>
+            <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
           <a href="map.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📍</span> <span>แปลงปลูก</span>
+            <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
           <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🧪</span> <span>ผลผลิต</span>
+            <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
           <a href="contact.php" class="px-4 py-3 rounded-xl bg-white/15 text-mezenc-mint font-bold transition-colors flex items-center gap-3">
-            <span>📞</span> <span>ติดต่อเรา</span>
+            <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
           </a>
           <a href="logout.php" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/40 transition-colors flex items-center gap-3 text-red-300 font-bold" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            <span>🚪</span> <span>ออกจากระบบ (Logout)</span>
+            <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </nav>
       </div>
-      <div class="pt-6 border-t border-white/15 text-center text-xs text-white/60">
+      <div class="pt-4 border-t border-white/15 text-center text-xs text-white/60">
         GeoRubber Watch • ม.อ. สุราษฎร์ธานี
       </div>
     </div>
@@ -271,10 +325,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
           <!-- Top Heading -->
           <div class="relative z-10 space-y-3">
-            <h3 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+            <h3 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight" data-i18n="ct_card_info_title">
               Contact Information
             </h3>
-            <p class="text-xs sm:text-sm text-teal-50/90 font-light leading-relaxed">
+            <p class="text-xs sm:text-sm text-teal-50/90 font-light leading-relaxed" data-i18n="ct_card_info_sub">
               สอบถามข้อมูลการใช้งานระบบ การวิเคราะห์พิกัดแปลง หรือความสอดคล้องตามมาตรฐาน EUDR ได้ตลอดเวลา
             </p>
           </div>
@@ -290,7 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 </svg>
               </div>
               <div class="text-xs sm:text-sm space-y-0.5 pt-0.5">
-                <div class="text-white/70 text-[11px] font-medium uppercase tracking-wider">โทรศัพท์ติดต่อ</div>
+                <div class="text-white/70 text-[11px] font-medium uppercase tracking-wider" data-i18n="ct_card_lbl_phone">โทรศัพท์ติดต่อ</div>
                 <div class="font-bold text-white tracking-wide">+66 77 278 888</div>
                 <div class="font-medium text-white/90 tracking-wide">+66 77 278 889</div>
               </div>
@@ -304,7 +358,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 </svg>
               </div>
               <div class="text-xs sm:text-sm space-y-0.5 pt-0.5">
-                <div class="text-white/70 text-[11px] font-medium uppercase tracking-wider">อีเมลสำหรับติดต่อ</div>
+                <div class="text-white/70 text-[11px] font-medium uppercase tracking-wider" data-i18n="ct_card_lbl_email">อีเมลสำหรับติดต่อ</div>
                 <div class="font-bold text-white break-all">6640011044@psu.ac.th</div>
                 <div class="font-medium text-white/90 break-all">6640011066@psu.ac.th</div>
               </div>
@@ -319,11 +373,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 </svg>
               </div>
               <div class="text-xs sm:text-sm space-y-0.5 pt-0.5">
-                <div class="text-white/70 text-[11px] font-medium uppercase tracking-wider">สถานที่ตั้งสถาบัน</div>
-                <div class="font-bold text-white leading-relaxed">
+                <div class="text-white/70 text-[11px] font-medium uppercase tracking-wider" data-i18n="ct_card_lbl_loc">สถานที่ตั้งสถาบัน</div>
+                <div class="font-bold text-white leading-relaxed" data-i18n="ct_card_loc_name">
                   มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี
                 </div>
-                <div class="text-xs text-white/80 font-light leading-relaxed">
+                <div class="text-xs text-white/80 font-light leading-relaxed" data-i18n="ct_card_loc_addr">
                   31 หมู่ 6 ต.มะขามเตี้ย อ.เมือง จ.สุราษฎร์ธานี 84000
                 </div>
               </div>
@@ -333,7 +387,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
           <!-- Bottom Status & Working Hours Badge -->
           <div class="relative z-10 pt-4 border-t border-white/15 flex justify-between items-center text-xs text-white/70">
-            <span>🕘 จันทร์ - ศุกร์: 08:30 - 16:30 น.</span>
+            <span data-i18n="ct_working_hours">🕘 จันทร์ - ศุกร์: 08:30 - 16:30 น.</span>
             <span class="text-mezenc-mint font-bold px-2 py-0.5 rounded-full bg-white/10">EUDR Helpdesk</span>
           </div>
 
@@ -350,8 +404,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
               <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-3">
                 <span class="text-2xl">✅</span>
                 <div>
-                  <strong class="font-bold text-base">ส่งข้อความเรียบร้อยแล้ว!</strong>
-                  <div class="text-xs text-emerald-700 mt-0.5">ขอบคุณสำหรับข้อความ ทีมงานจะติดต่อกลับไปยังอีเมล <?= htmlspecialchars($sender_email) ?> โดยเร็วที่สุดครับ</div>
+                  <strong class="font-bold text-base" data-i18n="ct_msg_sent_success">ส่งข้อความเรียบร้อยแล้ว!</strong>
+                  <div class="text-xs text-emerald-700 mt-0.5" data-i18n="ct_msg_sent_sub">ขอบคุณสำหรับข้อความ ทีมงานจะติดต่อกลับไปยังอีเมล <?= htmlspecialchars($sender_email) ?> โดยเร็วที่สุดครับ</div>
                 </div>
               </div>
             <?php elseif (!empty($error_msg)): ?>
@@ -372,12 +426,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 
                 <!-- Your Name -->
                 <div class="space-y-1">
-                  <label for="name" class="text-xs sm:text-sm font-semibold text-slate-500 block">Your Name (ชื่อ-นามสกุล)</label>
+                  <label for="name" class="text-xs sm:text-sm font-semibold text-slate-500 block" data-i18n="ct_lbl_name">Your Name (ชื่อ-นามสกุล)</label>
                   <input 
                     type="text" 
                     id="name" 
                     name="name" 
                     placeholder="เช่น สมชาย ใจดี" 
+                    data-i18n-placeholder="ct_ph_name"
                     required 
                     value="<?= htmlspecialchars($_POST['name'] ?? '') ?>"
                     class="clean-input w-full py-2 bg-transparent text-base sm:text-lg font-bold text-slate-800 border-b-2 border-slate-200 focus:outline-none placeholder:text-slate-300 placeholder:font-normal"
@@ -386,12 +441,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 <!-- Your Email -->
                 <div class="space-y-1">
-                  <label for="email" class="text-xs sm:text-sm font-semibold text-slate-500 block">Your Email (อีเมลติดต่อกลับ)</label>
+                  <label for="email" class="text-xs sm:text-sm font-semibold text-slate-500 block" data-i18n="ct_lbl_email">Your Email (อีเมลติดต่อกลับ)</label>
                   <input 
                     type="email" 
                     id="email" 
                     name="email" 
                     placeholder="name@example.com" 
+                    data-i18n-placeholder="ct_ph_email"
                     required 
                     value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                     class="clean-input w-full py-2 bg-transparent text-base sm:text-lg font-bold text-slate-800 border-b-2 border-slate-200 focus:outline-none placeholder:text-slate-300 placeholder:font-normal"
@@ -402,12 +458,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
               <!-- Row 2: Your Subject -->
               <div class="space-y-1">
-                <label for="subject" class="text-xs sm:text-sm font-semibold text-slate-500 block">Your Subject (หัวข้อเรื่อง)</label>
+                <label for="subject" class="text-xs sm:text-sm font-semibold text-slate-500 block" data-i18n="ct_lbl_subject">Your Subject (หัวข้อเรื่อง)</label>
                 <input 
                   type="text" 
                   id="subject" 
                   name="subject" 
                   placeholder="ระบุหัวข้อเรื่อง เช่น สอบถามการวาดแปลง, การตรวจสอบความสอดคล้อง EUDR..." 
+                  data-i18n-placeholder="ct_ph_subject"
                   value="<?= htmlspecialchars($_POST['subject'] ?? '') ?>"
                   class="clean-input w-full py-2 bg-transparent text-base sm:text-lg font-bold text-slate-800 border-b-2 border-slate-200 focus:outline-none placeholder:text-slate-300 placeholder:font-normal"
                 >
@@ -415,12 +472,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
               <!-- Row 3: Message -->
               <div class="space-y-1">
-                <label for="message" class="text-xs sm:text-sm font-bold text-mezenc-brightCyan block">Message (ข้อความของคุณ)</label>
+                <label for="message" class="text-xs sm:text-sm font-bold text-mezenc-brightCyan block" data-i18n="ct_lbl_message">Message (ข้อความของคุณ)</label>
                 <textarea 
                   id="message" 
                   name="message" 
                   rows="3" 
                   placeholder="Write here your message..." 
+                  data-i18n-placeholder="ct_ph_message"
                   required
                   class="clean-input w-full py-2 bg-transparent text-sm sm:text-base font-medium text-slate-800 border-b-2 border-mezenc-brightCyan focus:outline-none placeholder:text-slate-300 resize-none leading-relaxed"
                 ><?= htmlspecialchars($_POST['message'] ?? '') ?></textarea>
@@ -434,7 +492,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 type="submit" 
                 class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 sm:px-10 py-3 sm:py-3.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-sm tracking-wide shadow-md hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
               >
-                <span>Send Message (ส่งข้อความ)</span>
+                <span data-i18n="ct_btn_send">Send Message (ส่งข้อความ)</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                 </svg>
@@ -468,14 +526,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
               </svg>
             </div>
             <div>
-              <div class="font-bold text-xs leading-tight text-mezenc-mint">โครงการวิจัยระบบภูมิสารสนเทศ</div>
-              <div class="font-extrabold text-base sm:text-lg leading-tight">GeoRubber Watch • สุราษฎร์ธานี</div>
+              <div class="font-bold text-xs leading-tight text-mezenc-mint" data-i18n="foot_res_proj">โครงการวิจัยระบบภูมิสารสนเทศ</div>
+              <div class="font-extrabold text-base sm:text-lg leading-tight" data-i18n="foot_proj_name">GeoRubber Watch • สุราษฎร์ธานี</div>
             </div>
           </div>
-          <p class="text-xs text-white/75 leading-relaxed font-light">
+          <p class="text-xs text-white/75 leading-relaxed font-light" data-i18n="foot_title">
             ระบบบริการสารสนเทศภูมิศาสตร์เพื่อการตรวจสอบย้อนกลับและประเมินความสอดคล้องตามกฎหมายว่าด้วยสินค้าที่ปลอดจากการตัดไม้ทำลายป่าของสหภาพยุโรป (EUDR)
           </p>
-          <div class="text-[11px] text-white/60 pt-1">
+          <div class="text-[11px] text-white/60 pt-1" data-i18n="foot_dept">
             สาขาวิทยาศาสตร์และเทคโนโลยี คณะศิลปศาสตร์และวิทยาการจัดการ<br>
             มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี
           </div>
@@ -483,22 +541,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         <!-- คอลัมน์ที่ 2: ข้อมูลผู้พัฒนาและอาจารย์ที่ปรึกษา -->
         <div class="md:col-span-5 space-y-1.5 text-xs text-white/85 leading-relaxed">
-          <div class="font-bold text-mezenc-mint uppercase">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
-          <div class="text-[11px] text-white/75">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
+          <div class="font-bold text-mezenc-mint uppercase" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
+          <div class="text-[11px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[11px] text-white/90 space-y-0.5">
-            <div>👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div>🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div>✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
+            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div data-i18n="foot_email">✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
           </div>
         </div>
 
         <!-- คอลัมน์ที่ 3: กล่องสถิติพื้นที่ (Surat Thani Territory Card) -->
         <div class="md:col-span-3 flex justify-start md:justify-end">
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
-            <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1">SURAT THANI FOREST COVERAGE</div>
+            <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-xs font-bold text-white">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
-            <div class="text-[10px] text-white/70 mt-1 font-light">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
+            <div class="text-xs font-bold text-white" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-[10px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
 
@@ -506,8 +564,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
       <!-- แถบล่างสุด (Copyright Bar) -->
       <div class="pt-6 flex flex-col sm:flex-row justify-between items-center text-[11px] text-white/60 gap-4">
-        <div>&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
-        <div class="text-mezenc-mint text-center sm:text-right">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
+        <div data-i18n="foot_copy">&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
+        <div class="text-mezenc-mint text-center sm:text-right" data-i18n="foot_eudr_cert">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
       </div>
 
     </div>

@@ -17,6 +17,10 @@ $currentUser = getCurrentUser();
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
+  <!-- Core Eco-GIS Styles & Centralized i18n Engine -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="assets/js/i18n.js"></script>
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -415,20 +419,34 @@ $currentUser = getCurrentUser();
         
         <div>
           <!-- Drawer Header -->
-          <div class="flex items-center justify-between pb-6 border-b border-white/15">
+          <div class="flex items-center justify-between pb-4 border-b border-white/15">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
                 🌲
               </div>
-              <span class="font-extrabold text-base">GeoRubber Watch</span>
+              <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
             </div>
             <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
               ✕
             </button>
           </div>
 
+          <!-- Mobile Language Toggle Switch -->
+          <div class="py-3 flex items-center justify-between border-b border-white/10">
+            <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+            <div 
+              onclick="toggleLanguage()"
+              class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+              id="lang-toggle-btn-mobile"
+            >
+              <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+              <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
+              <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+            </div>
+          </div>
+
           <!-- Drawer Navigation Links -->
-          <nav class="flex flex-col gap-2 pt-6 text-sm font-medium">
+          <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
             <a href="index.php" class="px-4 py-3 rounded-xl bg-white/15 text-white font-bold transition-colors flex items-center gap-3">
               <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
             </a>
@@ -456,11 +474,11 @@ $currentUser = getCurrentUser();
             ผู้ใช้งาน: <strong class="text-white"><?= htmlspecialchars($currentUser['full_name'] ?? 'ผู้ใช้งาน') ?></strong> 
             <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full ml-1"><?= htmlspecialchars($currentUser['role'] ?? '') ?></span>
           </div>
-          <a href="overview.php" class="w-full py-3 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-mint text-white font-bold text-center block shadow transition-all text-sm" data-i18n="sec3_btn">
+          <a href="overview.php" class="w-full py-3 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-mint text-white font-bold text-center block shadow transition-all text-sm" data-i18n="idx_sec3_btn">
             เปิดแผนที่ระบบภูมิสารสนเทศ (Full GIS Map) ➔
           </a>
           <a href="logout.php" class="w-full py-2.5 rounded-xl bg-red-500/80 hover:bg-red-600 text-white font-bold text-center block text-xs transition-all" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            🚪 ออกจากระบบ (Logout)
+            🚪 <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </div>
 
@@ -1627,324 +1645,10 @@ $currentUser = getCurrentUser();
       document.body.style.overflow = '';
     }
 
-    // =========================================================================
-    // COMPREHENSIVE BILINGUAL (TH / EN) LANGUAGE ENGINE FOR INDEX.PHP
-    // =========================================================================
-    const i18n_index = {
-      th: {
-        page_title: "GeoRubber Watch - ระบบภูมิสารสนเทศอัจฉริยะติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี",
-        
-        // Navigation
-        nav_home: "หน้าแรก",
-        nav_gis: "แผนที่ GIS",
-        nav_dashboard: "แดชบอร์ด",
-        nav_plots: "แปลงปลูก",
-        nav_yields: "ผลผลิต",
-        nav_contact: "ติดต่อเรา",
-        nav_login_title: "เข้าสู่ระบบ",
-        nav_menu_label: "เปิดเมนูนำทาง",
-        lang_toggle_title: "คลิกเพื่อสลับภาษา TH / EN",
-
-        // Hero Section
-        hero_sub: "ยกระดับการจัดการสวนยางพาราด้วยเทคโนโลยี GIS และดาวเทียม เพื่อความยั่งยืนและการปฏิบัติตามมาตรฐาน EUDR อย่างครบวงจร",
-        search_placeholder: "ระบุเลขที่โฉนด, น.ส.3ก หรือรหัสแปลงปลูก...",
-        search_btn: "ตรวจสอบ",
-        search_empty_warn: "กรุณากรอกเลขที่โฉนด น.ส.3ก หรือรหัสแปลงปลูก",
-        search_loading: "กำลังตรวจสอบ...",
-
-        // Section 2: 5 Capability Cards
-        card1_title: "จัดการข้อมูลเกษตรกรและแปลงปลูก",
-        card1_desc: "จัดเก็บและบริหารจัดการข้อมูลเกษตรกรพร้อมแปลงปลูกยางพาราให้อยู่ในรูปแบบดิจิทัลบนระบบคลาวด์",
-        card2_title: "วาดขอบเขตแปลงปลูก",
-        card2_desc: "กำหนดและคำนวณขอบเขตแปลงปลูกจริงในรูปแบบ Polygon บนแผนที่ดิจิทัลแบบโต้ตอบ",
-        card3_title: "ตรวจสอบการทับซ้อนพื้นที่แปลงปลูก",
-        card3_desc: "วิเคราะห์ความถูกต้องเชิงพื้นที่เพื่อตรวจสอบการทับซ้อนของแปลงปลูกกับแนวเขตป่าสงวน",
-        card4_title: "บันทึกผลผลิตและสนับสนุนการตัดสินใจ",
-        card4_desc: "ระบบบันทึกผลผลิตน้ำยางสดพร้อมแดชบอร์ดวิเคราะห์ข้อมูลเพื่อการบริหารจัดการสวนยาง",
-        card5_title: "ตรวจสอบย้อนกลับตามมาตรฐาน EUDR",
-        card5_desc: "สร้างกลไกสนับสนุนการตรวจสอบย้อนกลับ (Traceability) ของผลผลิตประจำแปลงผ่านเทคโนโลยี QR Code เพื่อการส่งออก",
-        card_readmore: "อ่านเพิ่มเติม",
-
-        // Capability / Risk Modal
-        modal_badge_tag: "รายละเอียดระบบงาน",
-        modal_close_btn: "ปิด",
-
-        // Section 3: Territory & Real Map
-        sec3_tag: "การจำแนกแนวเขตป่าสงวนและประเมินพื้นที่เสี่ยงเชิงภูมิสารสนเทศ",
-        sec3_heading: "พื้นที่คุ้มครองและการใช้ประโยชน์ที่ดิน<br>จังหวัดสุราษฎร์ธานี",
-        sec3_sub: "ศูนย์กลางข้อมูลเชิงพื้นที่เพื่อสร้างความเข้าใจและเฝ้าระวังแนวเขตป่าสงวนแห่งชาติ 26 แห่งในจังหวัดสุราษฎร์ธานี",
-        sec3_p1: "ศูนย์กลางข้อมูลเชิงพื้นที่เพื่อสร้างความเข้าใจและเฝ้าระวังแนวเขตป่าสงวนแห่งชาติ 26 แห่งในจังหวัดสุราษฎร์ธานี โดยเชื่อมโยงฐานข้อมูลสารสนเทศจริงร่วมกับแบบจำลองพื้นที่โดยรอบมหาวิทยาลัย เพื่อยกระดับการบริหารจัดการทรัพยากรธรรมชาติอย่างยั่งยืน",
-        sec3_p2: "ระบบรองรับทั้งการศึกษาเรียนรู้มิติด้านการอนุรักษ์ และการตรวจสอบพิกัดแปลงปลูกพืชเศรษฐกิจเทียบกับแนวเขตคุ้มครอง ช่วยประเมินและจำแนกโซนความเสี่ยงเพื่อป้องกันปัญหาการทับซ้อนพื้นที่หวงห้ามได้อย่างถูกต้อง",
-        sec3_stat1_lbl: "พื้นที่คุ้มครองรวม",
-        sec3_stat1_val: "784,618 ไร่",
-        sec3_stat2_lbl: "ป่าสงวนแห่งชาติ",
-        sec3_stat2_val: "26 ผืนป่า",
-        sec3_stat3_lbl: "ระยะกันชน Buffer",
-        sec3_stat3_val: "500 เมตร",
-        sec3_btn: "เปิดแผนที่ระบบภูมิสารสนเทศ (Full GIS Map) ➔",
-        sec3_map_title: "แผนที่แนวเขตป่าสงวนแห่งชาติ จังหวัดสุราษฎร์ธานี",
-        sec3_map_badge: "🔴 เขตคุ้มครองเข้มงวด",
-        sec3_info_title: "ป่าสงวนแห่งชาติ จ.สุราษฎร์ธานี (แตะหรือเลื่อนเมาส์บนแผนที่เพื่อดูข้อมูล)",
-        sec3_info_desc: "ฐานข้อมูลแนวเขตป่าสงวนแห่งชาติ 26 แห่ง (Zone-c) • ปลอดการตัดไม้ทำลายป่า 100%",
-        sec3_info_sub: "ครอบคลุมพื้นที่คุ้มครองรวมกว่า 784,618 ไร่",
-
-        // Section 4: 4 Steps Workflow
-        sec4_tag: "ขั้นตอนการทำงานของระบบ",
-        sec4_heading: "4 ขั้นตอนสู่การรับรองมาตรฐาน EUDR",
-        sec4_sub: "คู่มือและขั้นตอนการใช้งานระบบภูมิสารสนเทศสำหรับเกษตรกรและผู้ประกอบการสวนยาง เพื่อการขึ้นทะเบียนและขอรับรองมาตรฐาน EUDR อย่างถูกต้องครบวงจร",
-        sec4_btn: "เริ่มต้นใช้งานทันที",
-        step1_title: "Step 1: วาดขอบเขตแปลงปลูก",
-        step1_desc: "ปักหมุดพิกัด WGS84 และวาดขอบเขตแปลงยางพาราด้วยเครื่องมือ GIS พร้อมคำนวณเนื้อที่ ไร่-งาน-วา อัตโนมัติ",
-        step2_title: "Step 2: ตรวจสอบการซ้อนทับพื้นที่แปลงปลูก",
-        step2_desc: "วิเคราะห์การทับซ้อนและวัดระยะห่าง Buffer Zone 500 เมตร เทียบกับแนวเขตป่าสงวนแห่งชาติจริงของสุราษฎร์ธานี (Zone-c)",
-        step3_title: "Step 3: บันทึกผลผลิต",
-        step3_desc: "บันทึกปริมาณน้ำยางสด ราคารับซื้อ และผลผลิตรายเดือน เชื่อมโยงกับรหัสแปลงปลูกเพื่อวิเคราะห์แนวโน้ม",
-        step4_title: "Step 4: ตรวจสอบย้อนกลับตามมาตรฐาน EUDR",
-        step4_desc: "สร้างเอกสารรับรองดิจิทัล พร้อม QR Code สำหรับผู้ซื้อและเจ้าหน้าที่สแกนตรวจสอบย้อนกลับ (Traceability) 100%",
-
-        // Section 5: EUDR Knowledge Base (3 Risk Cards)
-        sec5_tag: "EUDR KNOWLEDGE BASE",
-        sec5_heading: "3 ระดับสถานะความเสี่ยงเชิงพื้นที่",
-        sec5_sub: "คู่มือจำแนกแปลงปลูกยางพาราตามเกณฑ์ปลอดการตัดไม้ทำลายป่า (Zero Deforestation) และ พ.ร.บ. ป่าสงวนแห่งชาติ",
-        risk_c1_title: "พื้นที่อนุรักษ์ 26 ป่าสงวนแห่งชาติ",
-        risk_c1_desc: "แปลงที่ตั้งอยู่ในแนวเขตป่าสงวนแห่งชาติ 26 แห่ง ของสุราษฎร์ธานี (เขตป่าเพื่อการอนุรักษ์: Zone C) หรือพื้นที่ที่มีการแผ้วถางหลัง 31 ธ.ค. 2020 (EU Cut-off Date)",
-        risk_c1_btn: "สำรวจ 26 แนวเขตป่าสงวน ➔",
-        risk_c2_title: "แนวกันชนประชิดแนวป่าสงวน",
-        risk_c2_desc: "แปลงยางพาราที่มีเอกสารสิทธิ์ถูกต้อง แต่ตั้งอยู่ห่างจากแนวเขตป่าสงวนไม่เกิน 500 เมตร ต้องเฝ้าระวังและวิเคราะห์พิกัดไม่ให้ขยายขอบเขตล่วงล้ำแนวป่า",
-        risk_c2_btn: "ตรวจสอบระยะห่าง Buffer ➔",
-        risk_c3_title: "แปลงผ่านเกณฑ์มาตรฐานสากล",
-        risk_c3_desc: "แปลงยางพาราที่มีเอกสารสิทธิ์ถูกต้อง (โฉนด, น.ส.3ก, ส.ป.ก.4-01 ฯลฯ) อยู่นอกแนวป่าสงวน 100% และปลูกก่อนปี 2020 สามารถออกหนังสือรับรอง EUDR ได้ทันที",
-        risk_c3_btn: "ออกเอกสาร EUDR Passport ➔",
-
-        // Deed Modal Labels & Hints
-        deed_lbl_farmer: "👨‍🌾 เจ้าของแปลง / เกษตรกร:",
-        deed_lbl_doc: "📄 ประเภทเอกสารสิทธิ์:",
-        deed_lbl_loc: "🗺️ ที่ตั้งแปลง:",
-        deed_lbl_area: "📐 เนื้อที่คำนวณ:",
-        deed_lbl_clone: "🌳 พันธุ์ยางพารา / สถานะ:",
-        deed_lbl_dist: "🌲 ระยะห่างป่าสงวนที่ใกล้ที่สุด:",
-        deed_lbl_checklist: "การประเมินความสอดคล้องตามมาตรฐาน EUDR:",
-        deed_chk1: "พิกัด Polygon WGS84 บันทึกบน Supabase Cloud ครบถ้วน",
-        deed_chk2: "ปลอดการตัดไม้ทำลายป่าหลัง 31 ธ.ค. 2020",
-        deed_chk3: "เอกสารสิทธิ์ถูกต้อง สามารถออก EUDR Passport ได้ทันที",
-        deed_notfound_title: "ไม่พบข้อมูลในฐานข้อมูล",
-        deed_notfound_desc: "ระบบตรวจสอบกับฐานข้อมูล Supabase Cloud แล้ว ไม่พบรหัสแปลงปลูกหรือเลขที่เอกสารสิทธิ์นี้",
-        deed_hint_hdr: "💡 <strong>คำแนะนำในการค้นหา:</strong>",
-        deed_hint_1: "ตรวจสอบตัวสะกดหรือขีดคั่น เช่น <code class=\"bg-amber-100 px-1 rounded\">RB-ST-2026-006</code> หรือ <code class=\"bg-amber-100 px-1 rounded\">1234-5678</code>",
-        deed_hint_2: "ลองค้นหาด้วย <strong>ชื่อแปลง</strong> หรือ <strong>ชื่อเกษตรกร</strong>",
-        deed_hint_3: "หากยังไม่ได้ลงทะเบียน สามารถเข้าสู่ระบบเพื่อวาดแปลงปลูกใหม่ได้ทันที",
-        deed_btn_close: "ปิดหน้าต่าง",
-        deed_btn_map: "เปิดดูบนแผนที่ GIS ➔",
-
-        // Footer
-        foot_title: "แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา",
-        foot_title_en: "GeoRubber Watch: ระบบภูมิสารสนเทศติดตามพื้นที่ปลูกยางพารายั่งยืน",
-        foot_dept: "สาขาเทคโนโลยีสารสนเทศ คณะวิทยาศาสตร์และเทคโนโลยีอุตสาหกรรม<br>มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี<br><span class=\"text-white/75 text-[14px]\">31 หมู่ 6 ต.มะขามเตี้ย อ.เมือง จ.สุราษฎร์ธานี 84000</span>",
-        foot_dev_header: "ข้อมูลผู้พัฒนาและช่องทางติดต่อ",
-        foot_dev_sub: "ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง",
-        foot_authors: "👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์",
-        foot_advisor: "🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์",
-        foot_email: "✉️ <strong>อีเมล / Email:</strong>",
-        foot_card_hdr: "พื้นที่ป่าไม้ จ.สุราษฎร์ธานี",
-        foot_card_stat: "26 ผืนป่าสงวน (Zone C) • 784,618 ไร่",
-        foot_card_source: "ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้",
-        foot_copy: "© 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี",
-        foot_eudr_cert: "มาตรฐานความสอดคล้องตามกฎระเบียบ EUDR (EU) 2023/1115 ปลอดการตัดไม้ทำลายป่า 100%"
-      },
-      en: {
-        page_title: "GeoRubber Watch - Intelligent Geospatial Monitoring Platform for Rubber Plantations, Surat Thani",
-        
-        // Navigation
-        nav_home: "Home",
-        nav_gis: "GIS Map",
-        nav_dashboard: "Dashboard",
-        nav_plots: "Plots",
-        nav_yields: "Yields",
-        nav_contact: "Contact Us",
-        nav_login_title: "Login",
-        nav_menu_label: "Open Navigation Menu",
-        lang_toggle_title: "Click to toggle language TH / EN",
-
-        // Hero Section
-        hero_sub: "Elevating rubber plantation management with Web-GIS and satellite technology for sustainability and full EUDR compliance.",
-        search_placeholder: "Enter title deed no., Nor.Sor.3Kor, or plot code...",
-        search_btn: "Verify",
-        search_empty_warn: "Please enter a title deed no., Nor.Sor.3Kor, or plot code",
-        search_loading: "Verifying...",
-
-        // Section 2: 5 Capability Cards
-        card1_title: "Farmer & Plot Registry",
-        card1_desc: "Collects and manages farmer profiles and digital rubber plot records systematically on a secure cloud database.",
-        card2_title: "Polygon Boundary Mapping",
-        card2_desc: "Interactive satellite mapping to draw, measure, and calculate real polygon plantation boundaries accurately.",
-        card3_title: "Forest Overlap & Buffer Analysis",
-        card3_desc: "Spatial overlay analytics to instantly verify if rubber plots intersect with 26 National Forest Reserves or buffer zones.",
-        card4_title: "Latex Yields & DSS Analytics",
-        card4_desc: "Digital latex harvest logging and decision support analytics dashboards for optimal farm productivity and revenue tracking.",
-        card5_title: "EUDR Traceability & QR Passport",
-        card5_desc: "Issues unique QR-code digital passports verifying farm geolocation origin back to individual rubber tree coordinates.",
-        card_readmore: "READ MORE",
-
-        // Capability / Risk Modal
-        modal_badge_tag: "SYSTEM SPECIFICATIONS",
-        modal_close_btn: "Close",
-
-        // Section 3: Territory & Real Map
-        sec3_tag: "NATIONAL FOREST RESERVE DELIMITATION & SPATIAL RISK ASSESSMENT",
-        sec3_heading: "Protected Conservation Areas & Land Use<br>Surat Thani Province",
-        sec3_sub: "Central geospatial data hub for monitoring and risk auditing across 26 National Forest Reserves in Surat Thani.",
-        sec3_p1: "A centralized geospatial intelligence center designed to monitor and safeguard 26 National Forest Reserves in Surat Thani Province, integrating real GIS spatial data with university-surrounding models for sustainable environmental governance.",
-        sec3_p2: "The system supports both ecological conservation research and real-time verification of rubber plantation coordinates against protected reserve boundaries to prevent and eliminate illegal forest encroachments.",
-        sec3_stat1_lbl: "Total Protected Area",
-        sec3_stat1_val: "784,618 Rai",
-        sec3_stat2_lbl: "Forest Reserves",
-        sec3_stat2_val: "26 Reserves",
-        sec3_stat3_lbl: "Buffer Zone Radius",
-        sec3_stat3_val: "500 Meters",
-        sec3_btn: "Open Full Web-GIS Map ➔",
-        sec3_map_title: "National Forest Reserves Map, Surat Thani Province",
-        sec3_map_badge: "🔴 Strict Protection Zone",
-        sec3_info_title: "Surat Thani National Forest Reserves (Hover or tap on map for details)",
-        sec3_info_desc: "26 National Forest Reserves Database (Zone C) • 100% Zero Deforestation",
-        sec3_info_sub: "Covering over 784,618 Rai of protected conservation territory",
-
-        // Section 4: 4 Steps Workflow
-        sec4_tag: "SYSTEM PIPELINE & USER GUIDE",
-        sec4_heading: "4 Steps to EUDR Compliance Certification",
-        sec4_sub: "Step-by-step geospatial guide for rubber farmers and enterprises to register and obtain EUDR compliance certification seamlessly.",
-        sec4_btn: "Start Using System Now",
-        step1_title: "Step 1: Draw Plot Geolocation Boundary",
-        step1_desc: "Pinpoint WGS84 coordinates and draw rubber plantation polygon boundaries with GIS tools, calculating Rai-Ngan-Wah automatically.",
-        step2_title: "Step 2: Automated Forest Overlap Analysis",
-        step2_desc: "Analyze spatial intersections and calculate 500-meter buffer zone distances against Surat Thani's 26 National Forest Reserves (Zone C).",
-        step3_title: "Step 3: Log Latex Harvest Yields",
-        step3_desc: "Record daily fresh latex weights, purchase prices, and monthly harvest yields linked to plot codes for trend forecasting.",
-        step4_title: "Step 4: EUDR Traceability & QR Certification",
-        step4_desc: "Generate digital compliance certificates and QR codes for buyers and customs officials to verify 100% farm-to-factory traceability.",
-
-        // Section 5: EUDR Knowledge Base (3 Risk Cards)
-        sec5_tag: "EUDR KNOWLEDGE BASE",
-        sec5_heading: "3 Spatial Risk Classification Levels",
-        sec5_sub: "Guidelines for classifying rubber plantations under EUDR Zero Deforestation criteria and National Forest Reserve Act.",
-        risk_c1_title: "26 Strict National Forest Reserves",
-        risk_c1_desc: "Plantations situated within 26 Surat Thani National Forest Reserves (Zone C) or areas deforested after Dec 31, 2020 (EU Cut-off Date).",
-        risk_c1_btn: "Explore 26 Forest Reserves ➔",
-        risk_c2_title: "500m Forest Buffer Zone",
-        risk_c2_desc: "Titled rubber farms located within 500 meters of national forest reserve borders, requiring strict perimeter monitoring.",
-        risk_c2_btn: "Check Buffer Distance ➔",
-        risk_c3_title: "EUDR Compliant & Deforestation-Free",
-        risk_c3_desc: "Fully titled rubber farms situated outside forest reserves planted prior to Dec 31, 2020, eligible for immediate EUDR digital certification.",
-        risk_c3_btn: "Issue EUDR Passport ➔",
-
-        // Deed Modal Labels & Hints
-        deed_lbl_farmer: "👨‍🌾 Farm Owner / Farmer:",
-        deed_lbl_doc: "📄 Title Deed Type:",
-        deed_lbl_loc: "🗺️ Plot Location:",
-        deed_lbl_area: "📐 Calculated Area:",
-        deed_lbl_clone: "🌳 Rubber Clone / Status:",
-        deed_lbl_dist: "🌲 Nearest Reserve Distance:",
-        deed_lbl_checklist: "EUDR Due Diligence Compliance Checklist:",
-        deed_chk1: "Full WGS84 polygon coordinates stored on Supabase Cloud",
-        deed_chk2: "Zero deforestation verified after Dec 31, 2020",
-        deed_chk3: "Valid land title deed; eligible for instant EUDR Passport",
-        deed_notfound_title: "No Record Found in Database",
-        deed_notfound_desc: "No matching plot code or title deed number was found in Supabase Cloud database.",
-        deed_hint_hdr: "💡 <strong>Search Tips:</strong>",
-        deed_hint_1: "Check spelling or hyphens, e.g., <code class=\"bg-amber-100 px-1 rounded\">RB-ST-2026-006</code> or <code class=\"bg-amber-100 px-1 rounded\">1234-5678</code>",
-        deed_hint_2: "Try searching by <strong>Plot Name</strong> or <strong>Farmer Name</strong>",
-        deed_hint_3: "If not yet registered, you can log in to map and register a new plot immediately.",
-        deed_btn_close: "Close Window",
-        deed_btn_map: "View on GIS Map ➔",
-
-        // Footer
-        foot_title: "Intelligent Geospatial Platform for Rubber Monitoring & Deforestation Due Diligence",
-        foot_title_en: "GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations",
-        foot_dept: "Department of Information Technology, Faculty of Science and Industrial Technology<br>Prince of Songkla University, Surat Thani Campus<br><span class=\"text-white/75 text-[14px]\">31 Moo 6 Makham Tia, Mueang Surat Thani, 84000 Thailand</span>",
-        foot_dev_header: "Developer Info & Contact",
-        foot_dev_sub: "24/7 Online Geospatial Information Service",
-        foot_authors: "👩‍💻 <strong>Authors:</strong> Miss Matinee Roynarin & Miss Manatsanan Anantanarong",
-        foot_advisor: "🎓 <strong>Advisor:</strong> Assoc. Prof. Dr. Supattra Puttinaovarat",
-        foot_email: "✉️ <strong>Email:</strong>",
-        foot_card_hdr: "SURAT THANI FOREST COVERAGE",
-        foot_card_stat: "26 Forest Reserves (Zone C) • 784,618 Rai",
-        foot_card_source: "Royal Forest Department Conservation Database",
-        foot_copy: "© 2026 GeoRubber Watch • Prince of Songkla University, Surat Thani Campus",
-        foot_eudr_cert: "EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)"
-      }
-    };
-
-    let currentIndexLang = localStorage.getItem('georubber_lang') || 'th';
-
-    function setIndexLanguage(lang) {
-      currentIndexLang = lang;
-      localStorage.setItem('georubber_lang', lang);
-      document.documentElement.lang = lang;
-
-      // Update Document Title
-      if (i18n_index[lang] && i18n_index[lang].page_title) {
-        document.title = i18n_index[lang].page_title;
-      }
-
-      // Update all elements with data-i18n attribute (handles HTML text and innerHTML if tags present)
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (i18n_index[lang] && i18n_index[lang][key] !== undefined) {
-          if (i18n_index[lang][key].includes('<br>') || i18n_index[lang][key].includes('<strong>') || i18n_index[lang][key].includes('<span>') || i18n_index[lang][key].includes('<code>')) {
-            el.innerHTML = i18n_index[lang][key];
-          } else {
-            el.textContent = i18n_index[lang][key];
-          }
-        }
-      });
-
-      // Update Search Placeholder & Loading State Text
-      const searchInput = document.getElementById('hero-deed-search');
-      if (searchInput && i18n_index[lang]) {
-        searchInput.placeholder = i18n_index[lang].search_placeholder;
-      }
-
-      // Update Title & Aria-labels
-      const toggleBtn = document.getElementById('lang-toggle-btn');
-      if (toggleBtn && i18n_index[lang]) {
-        toggleBtn.title = i18n_index[lang].lang_toggle_title;
-      }
-
-      // Update Slider Visuals (Left position & text colors)
-      const navThumb = document.getElementById('nav-thumb');
-      const navTh = document.getElementById('nav-label-th');
-      const navEn = document.getElementById('nav-label-en');
-      if (navThumb && navTh && navEn) {
-        if (lang === 'th') {
-          navThumb.style.left = '3px';
-          navTh.className = "relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none";
-          navEn.className = "relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none";
-        } else {
-          navThumb.style.left = '43px';
-          navTh.className = "relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none";
-          navEn.className = "relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none";
-        }
-      }
-
-      // Update Dynamic Info Box under Leaflet Map (if not currently hovering over a polygon)
-      const districtTitle = document.getElementById('district-title');
-      const districtDesc = document.getElementById('district-desc');
-      const districtForest = document.getElementById('district-forest');
-      if (districtTitle && districtDesc && districtForest && i18n_index[lang]) {
-        districtTitle.textContent = i18n_index[lang].sec3_info_title;
-        districtDesc.textContent = i18n_index[lang].sec3_info_desc;
-        districtForest.textContent = i18n_index[lang].sec3_info_sub;
-      }
-    }
-
+    // Toggle language bridge for onclick handlers
     function toggleLanguage() {
-      const nextLang = currentIndexLang === 'th' ? 'en' : 'th';
-      setIndexLanguage(nextLang);
+      I18n.toggleLanguage();
     }
-
-    // Initialize Language on DOM Ready
-    document.addEventListener('DOMContentLoaded', () => {
-      setIndexLanguage(currentIndexLang);
-    });
   </script>
 
 </body>

@@ -32,6 +32,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   <!-- QRCode.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+  <!-- Core App Styles & Bilingual i18n Engine -->
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/i18n.js"></script>
+
   <!-- Platform Core JS Helper & Session Globals -->
   <script src="assets/js/app.js"></script>
   <script>
@@ -373,6 +377,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             drop-shadow-sm
           "
           href="index.php"
+          data-i18n="nav_home"
         >
           หน้าแรก
         </a>
@@ -386,6 +391,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             drop-shadow-sm
           "
           href="overview.php"
+          data-i18n="nav_gis"
         >
           แผนที่ GIS
         </a>
@@ -399,6 +405,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             drop-shadow-sm
           "
           href="dashboard.php"
+          data-i18n="nav_dashboard"
         >
           แดชบอร์ด
         </a>
@@ -415,6 +422,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             drop-shadow-sm
           "
           href="map.php"
+          data-i18n="nav_plots"
         >
           แปลงปลูก
         </a>
@@ -428,6 +436,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             drop-shadow-sm
           "
           href="yields.php"
+          data-i18n="nav_yields"
         >
           ผลผลิต
         </a>
@@ -441,13 +450,45 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             drop-shadow-sm
           "
           href="contact.php"
+          data-i18n="nav_contact"
         >
           ติดต่อเรา
         </a>
       </nav>
 
       <!-- RIGHT NAV ACTIONS & MOBILE MENU BUTTON -->
-      <div class="flex items-center gap-2.5 sm:gap-3.5">
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- [LANGUAGE TOGGLE SWITCH (TH / EN)] - Segmented Pill Slider Design -->
+        <div 
+          onclick="toggleLanguage()"
+          class="toggle-track-dark w-[82px] sm:w-[90px] h-[34px] sm:h-[36px] p-[3px] flex items-center relative cursor-pointer mr-0.5 sm:mr-1 shrink-0"
+          title="คลิกเพื่อสลับภาษา TH / EN (Switch Language)"
+          id="lang-toggle-btn"
+        >
+          <!-- Sliding White Thumb -->
+          <div 
+            id="nav-thumb" 
+            class="toggle-thumb-dark w-[36px] sm:w-[40px] h-[28px] sm:h-[30px] transition-all duration-300 left-[3px]"
+          ></div>
+          
+          <!-- TH Label -->
+          <div 
+            id="nav-label-th" 
+            class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none"
+          >
+            TH
+          </div>
+          
+          <!-- EN Label -->
+          <div 
+            id="nav-label-en" 
+            class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none"
+          >
+            EN
+          </div>
+        </div>
+
         <!-- USER PROFILE & LOGOUT BUTTON (Desktop/iPad) -->
         <div class="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full py-1.5 px-3.5 border border-white/20 text-xs shadow-md">
           <div class="text-right leading-tight">
@@ -458,6 +499,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             href="logout.php"
             class="text-white/80 hover:text-red-300 flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-red-500/30 transition-all cursor-pointer ml-1"
             title="ออกจากระบบ (Logout)"
+            data-i18n-title="nav_logout"
             onclick="return confirm('ต้องการออกจากระบบหรือไม่?');"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -488,6 +530,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             cursor-pointer
           "
           aria-label="เปิดเมนูนำทาง"
+          data-i18n-title="nav_menu_label"
         >
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -500,13 +543,13 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
     <!-- HERO CONTENT (Matching exact font sizes from overview.php) -->
     <div class="relative z-20 w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 my-auto py-6 sm:py-10 text-center">
       <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
-        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow">
+        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow" data-i18n="map_hero_tag">
           🌱 WEB-GIS RUBBER PLOT REGISTRY & EUDR VERIFICATION
         </div>
-        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md">
+        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md" data-i18n="map_hero_title">
           ระบบทะเบียนแปลงปลูกและพิกัดภูมิสารสนเทศ (GIS)
         </h1>
-        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow">
+        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow" data-i18n="map_hero_sub">
           วาดขอบเขตแปลงปลูก (Polygon), ตรวจสอบพิกัด GPS, วิเคราะห์การทับซ้อนแนวเขตป่าสงวน 26 แห่ง จ.สุราษฎร์ธานี แบบ Real-Time พร้อมออกหนังสือรับรอง EUDR Passport
         </p>
       </div>
@@ -521,44 +564,58 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
     <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-mezenc-deepTeal text-white p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/10">
       
       <div>
-        <div class="flex items-center justify-between pb-6 border-b border-white/15">
+        <div class="flex items-center justify-between pb-4 border-b border-white/15">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
               🌲
             </div>
-            <span class="font-extrabold text-base">GeoRubber Watch</span>
+            <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
           </div>
           <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
             ✕
           </button>
         </div>
 
-        <nav class="flex flex-col gap-2 pt-6 text-sm font-medium">
+        <!-- Mobile Language Toggle Switch -->
+        <div class="py-3 flex items-center justify-between border-b border-white/10">
+          <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+          <div 
+            onclick="toggleLanguage()"
+            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+            id="lang-toggle-btn-mobile"
+          >
+            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+            <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
+            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+          </div>
+        </div>
+
+        <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
           <a href="index.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🏠</span> <span>หน้าแรก</span>
+            <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
           </a>
           <a href="overview.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🛰️</span> <span>แผนที่ GIS</span>
+            <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
           <a href="dashboard.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📊</span> <span>แดชบอร์ด</span>
+            <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
           <a href="map.php" class="px-4 py-3 rounded-xl bg-white/15 text-white font-bold transition-colors flex items-center gap-3">
-            <span>📍</span> <span>แปลงปลูก</span>
+            <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
           <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🧪</span> <span>ผลผลิต</span>
+            <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
           <a href="contact.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📞</span> <span>ติดต่อเรา</span>
+            <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
           </a>
           <a href="logout.php" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/40 transition-colors flex items-center gap-3 text-red-300 font-bold" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            <span>🚪</span> <span>ออกจากระบบ (Logout)</span>
+            <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </nav>
       </div>
 
-      <div class="pt-6 border-t border-white/15 text-center text-xs text-white/60">
+      <div class="pt-4 border-t border-white/15 text-center text-xs text-white/60">
         GeoRubber Watch • ม.อ. สุราษฎร์ธานี
       </div>
 
@@ -581,11 +638,11 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           <!-- Title & Map Icon -->
           <h2 class="text-[16px] sm:text-lg font-extrabold text-mezenc-teal tracking-tight flex items-center gap-2">
             <img src="img/map_icon.png" alt="Map Icon" class="w-5 h-5 object-contain inline-block drop-shadow-xs" onerror="this.style.display='none'">
-            <span>แผนที่พิกัดแปลงปลูก &amp; แนวเขตป่าสงวน</span>
+            <span data-i18n="map_toolbar_title">แผนที่พิกัดแปลงปลูก &amp; แนวเขตป่าสงวน</span>
           </h2>
 
           <!-- Badges -->
-          <span class="inline-flex items-center px-3 py-0.5 rounded-full text-[14px] sm:text-[15px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]">
+          <span class="inline-flex items-center px-3 py-0.5 rounded-full text-[14px] sm:text-[15px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]" data-i18n="ov_psu_campus">
             ม.อ. สุราษฎร์ธานี
           </span>
         </div>
@@ -596,6 +653,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             type="button" 
             onclick="GeoMap.map.flyTo([9.0805, 99.3515], 14, { duration: 1.2 })" 
             class="px-4 py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-[14px] sm:text-[15px] border-2 border-[#bee6e1] shadow-xs hover:border-mezenc-brightCyan transition-all cursor-pointer"
+            data-i18n="map_btn_reset"
           >
             กลับจุดเริ่มต้น
           </button>
@@ -605,7 +663,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             onclick="activateMapDrawDirect()" 
             class="px-4 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[14px] sm:text-[15px] shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <span>✏️ วาดแปลงใหม่</span>
+            <span data-i18n="map_btn_draw_new">✏️ วาดแปลงใหม่</span>
           </button>
         </div>
 
@@ -630,8 +688,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             <div class="flex items-center gap-2">
               <span class="text-xl">🎛️</span>
               <div>
-                <h3 class="font-extrabold text-[16px] text-mezenc-teal leading-tight">แผงควบคุมแผนที่</h3>
-                <span class="text-[14px] text-gray-500 font-medium block mt-0.5">Layer Control &amp; Tools</span>
+                <h3 class="font-extrabold text-[16px] text-mezenc-teal leading-tight" data-i18n="map_layer_panel_title">แผงควบคุมแผนที่</h3>
+                <span class="text-[14px] text-gray-500 font-medium block mt-0.5" data-i18n="map_layer_panel_sub">Layer Control &amp; Tools</span>
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -653,7 +711,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           <div>
             <label for="basemap-select" class="block text-[15px] font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
               <svg fill="#00a896" viewBox="0 0 32 32" class="w-4 h-4 shrink-0 inline-block" xmlns="http://www.w3.org/2000/svg" stroke="#00a896"><path d="M22.81 23.318l-0.126-0.188 1.107-0.704-2.953-4.646-1.214 0.772-0.521-0.779c0.817-0.727 1.372-1.742 1.504-2.887l4.052 5.901 6.244-1.885-11.090-16.151-6.244 1.885 3.628 5.283c-0.363-0.093-0.743-0.142-1.134-0.142-1.915 0-3.555 1.177-4.237 2.847l-4.095-5.963-6.244 1.885 11.090 16.151 6.244-1.885-2.667-3.884c0.888-0.017 1.714-0.288 2.409-0.742l0.488 0.73-1.026 0.652 2.953 4.646 1.133-0.72 0.12 0.18c-1.012 0.736-1.72 1.902-1.94 3.227l6.030-3.773c-1.3-0.448-2.513-0.32-3.511 0.19zM25.79 26.619c0 0.638-0.517 1.155-1.155 1.155s-1.155-0.517-1.155-1.155c0-0.638 0.517-1.155 1.155-1.155s1.155 0.517 1.155 1.155z"></path></svg>
-              <span>แผนที่ฐาน (Basemap)</span>
+              <span data-i18n="map_lbl_basemap">แผนที่ฐาน (Basemap)</span>
             </label>
             <div class="relative">
               <select 
@@ -661,9 +719,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl px-3 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all cursor-pointer shadow-xs leading-relaxed"
                 onchange="GeoMap.setBaseMap(this.value)"
               >
-                <option value="satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
-                <option value="osm">🗺️ แผนที่ถนน (OpenStreetMap)</option>
-                <option value="topo">⛰️ ภูมิประเทศ (Topographic)</option>
+                <option value="satellite" data-i18n="map_opt_satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
+                <option value="osm" data-i18n="map_opt_osm">🗺️ แผนที่ถนน (OpenStreetMap)</option>
+                <option value="topo" data-i18n="map_opt_topo">⛰️ ภูมิประเทศ (Topographic)</option>
               </select>
             </div>
           </div>
@@ -671,7 +729,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           <!-- Overlays Section -->
           <div class="space-y-2">
             <div class="text-[15px] font-bold text-gray-700 flex items-center gap-1.5">
-              <span>📂</span> <span>เปิด/ปิดชั้นข้อมูล (Layers):</span>
+              <span>📂</span> <span data-i18n="map_lbl_layers">เปิด/ปิดชั้นข้อมูล (Layers):</span>
             </div>
 
             <!-- Toggle Row 1: Forest Reserves -->
@@ -682,8 +740,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <div class="flex items-center gap-2.5">
                 <span style="width: 22px; height: 22px; background: #fee2e2; border: 2px dashed #dc2626; border-radius: 6px;" class="shrink-0 inline-block shadow-xs"></span>
                 <div>
-                  <span class="font-bold text-gray-800 text-[15px] leading-tight block">แนวเขตป่าสงวนแห่งชาติ</span>
-                  <span class="text-[13px] text-gray-500 font-medium block mt-0.5">(26 ผืนป่า จ.สุราษฎร์ฯ)</span>
+                  <span class="font-bold text-gray-800 text-[15px] leading-tight block" data-i18n="map_layer_forest">แนวเขตป่าสงวนแห่งชาติ</span>
+                  <span class="text-[13px] text-gray-500 font-medium block mt-0.5" data-i18n="map_layer_forest_sub">(26 ผืนป่า จ.สุราษฎร์ฯ)</span>
                 </div>
               </div>
               <button 
@@ -705,8 +763,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <div class="flex items-center gap-2.5">
                 <span style="width: 22px; height: 22px; background: #22c55e; border-radius: 6px;" class="shrink-0 inline-block shadow-xs"></span>
                 <div>
-                  <span class="font-bold text-gray-800 text-[15px] leading-tight block">แปลงปลูกยางพารา</span>
-                  <span class="text-[13px] text-gray-500 font-medium block mt-0.5">(แปลงทะเบียน EUDR)</span>
+                  <span class="font-bold text-gray-800 text-[15px] leading-tight block" data-i18n="map_layer_plots">แปลงปลูกยางพารา</span>
+                  <span class="text-[13px] text-gray-500 font-medium block mt-0.5" data-i18n="map_layer_plots_sub">(แปลงทะเบียน EUDR)</span>
                 </div>
               </div>
               <button 
@@ -725,7 +783,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           <!-- Quick Drawing Tools & Actions -->
           <div class="space-y-2">
             <div class="text-[15px] font-bold text-gray-700 flex items-center gap-1.5">
-              <span>🛠️</span> <span>เครื่องมือจัดการแปลง:</span>
+              <span>🛠️</span> <span data-i18n="map_tools_title">เครื่องมือจัดการแปลง:</span>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <button 
@@ -733,14 +791,14 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 onclick="activateMapDrawDirect()" 
                 class="py-2.5 px-3 rounded-2xl bg-mezenc-teal hover:bg-mezenc-brightCyan text-white font-bold text-[14px] shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>✏️ วาดแปลงใหม่</span>
+                <span data-i18n="map_btn_draw_new">✏️ วาดแปลงใหม่</span>
               </button>
               <button 
                 type="button" 
                 onclick="locateUserDirect()" 
                 class="py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#d4f1ee] to-[#e8f7f5] hover:from-mezenc-brightCyan hover:to-mezenc-teal text-mezenc-teal hover:text-white font-bold text-[14px] border-2 border-[#bee6e1] shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>📍 GPS ของฉัน</span>
+                <span data-i18n="map_btn_gps_me">📍 GPS ของฉัน</span>
               </button>
             </div>
           </div>
@@ -751,26 +809,26 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-mezenc-teal shrink-0">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M8 16L4.35009 13.3929C2.24773 11.8912 1 9.46667 1 6.88306V3L8 0L15 3V6.88306C15 9.46667 13.7523 11.8912 11.6499 13.3929L8 16ZM12.2071 5.70711L10.7929 4.29289L7 8.08579L5.20711 6.29289L3.79289 7.70711L7 10.9142L12.2071 5.70711Z" fill="#00a896"/>
               </svg>
-              <span>สถานะความสอดคล้อง EUDR</span>
+              <span data-i18n="map_legend_title">สถานะความสอดคล้อง EUDR</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 shrink-0"></span>
-              <span class="font-medium text-gray-800 text-[15px] leading-tight">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>
+              <span class="font-medium text-gray-800 text-[15px] leading-tight" data-i18n="map_legend_compliant">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="w-3.5 h-3.5 rounded-full bg-rose-600 shrink-0"></span>
-              <span class="font-medium text-gray-800 text-[15px] leading-tight">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>
+              <span class="font-medium text-gray-800 text-[15px] leading-tight" data-i18n="map_legend_overlap">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="w-3.5 h-3.5 rounded-full bg-amber-500 shrink-0"></span>
-              <span class="font-medium text-gray-800 text-[15px] leading-tight">โซนเฝ้าระวัง (Buffer &lt; 500 ม.)</span>
+              <span class="font-medium text-gray-800 text-[15px] leading-tight" data-i18n="map_legend_buffer">โซนเฝ้าระวัง (Buffer &lt; 500 ม.)</span>
             </div>
             <div class="flex items-center gap-2 pt-2 border-t border-gray-200/60">
               <svg viewBox="0 0 1024 1024" class="w-5 h-5 shrink-0" xmlns="http://www.w3.org/2000/svg">
                 <path d="M921.6 742.4c0 14.08-11.52 25.6-25.6 25.6l-256 64-256-76.8-230.4 64c-14.08 0-25.6-11.52-25.6-25.6V332.8c0-14.08 11.52-25.6 25.6-25.6l230.4-64 256 76.8 256-64c14.08 0 25.6 11.52 25.6 25.6v460.8z" fill="#66A8A5"/>
                 <path d="M640 832l-256-76.8V243.2l256 76.8z" fill="#438478"/>
               </svg>
-              <span class="font-bold text-red-700 text-[15px] leading-tight">แนวเขตป่าสงวน (Zone C เขตหวงห้าม)</span>
+              <span class="font-bold text-red-700 text-[15px] leading-tight" data-i18n="map_legend_forest">แนวเขตป่าสงวน (Zone C เขตหวงห้าม)</span>
             </div>
           </div>
 
@@ -783,6 +841,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             id="btn-toggle-panel"
             onclick="toggleLayerPanel()" 
             title="เปิด/ปิด แผงควบคุมแผนที่ (Layer Control & Tools)" 
+            data-i18n-title="map_layer_panel_title"
             class="w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
           >
             <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -798,6 +857,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             type="button" 
             onclick="locateUserDirect()" 
             title="ระบุตำแหน่ง GPS ปัจจุบันของฉัน" 
+            data-i18n-title="map_btn_gps_me"
             class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
           >
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:scale-110">
@@ -816,6 +876,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             id="btn-floating-pin-mode"
             onclick="toggleMapPinMode()" 
             title="ปักหมุดบนแผนที่เพื่อตรวจสอบความเสี่ยงและระยะห่างเขตป่าสงวน (Buffer Zone Check)" 
+            data-i18n-title="ov_btn_pin_tool"
             class="w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-[0_10px_25px_-5px_rgba(14,77,78,0.25)] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan hover:bg-mezenc-teal text-mezenc-teal hover:text-white flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group"
           >
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform group-hover:scale-110">
@@ -853,14 +914,14 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           </div>
           <div>
             <div class="flex flex-wrap items-center gap-3">
-              <h3 class="text-xl sm:text-2xl font-extrabold text-mezenc-teal leading-tight">
+              <h3 class="text-xl sm:text-2xl font-extrabold text-mezenc-teal leading-tight" data-i18n="map_registry_title">
                 แปลงปลูกยางพารา
               </h3>
               <span id="total-plots-count-badge" class="inline-flex items-center px-3.5 py-1 rounded-full text-[16px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]">
                 กำลังโหลด...
               </span>
             </div>
-            <p class="text-[16px] text-gray-500 font-medium mt-1">
+            <p class="text-[16px] text-gray-500 font-medium mt-1" data-i18n="map_registry_sub">
               ทะเบียนแปลงปลูกยางพาราและระบบตรวจสอบย้อนกลับมาตรฐาน EUDR (Digital Passport Registry)
             </p>
           </div>
@@ -874,7 +935,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             class="px-5 py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2 cursor-pointer group"
           >
             <span class="group-hover:rotate-90 transition-transform font-bold text-lg">➕</span>
-            <span>เพิ่มแปลง</span>
+            <span data-i18n="map_btn_add_plot">เพิ่มแปลง</span>
           </button>
         </div>
       </div>
@@ -888,6 +949,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             type="text" 
             id="plot-search-input" 
             placeholder="🔍 ค้นหาชื่อแปลง, รหัส, เกษตรกร..." 
+            data-i18n-placeholder="map_search_ph"
             class="w-full bg-white text-gray-800 text-[16px] rounded-xl pl-11 pr-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-1 focus:ring-mezenc-brightCyan outline-none transition-all shadow-xs" 
             oninput="filterPlotsList()"
           >
@@ -903,10 +965,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             class="bg-white text-gray-800 font-bold text-[16px] rounded-xl px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan outline-none shadow-xs cursor-pointer leading-relaxed" 
             onchange="filterPlotsList()"
           >
-            <option value="">ทั้งหมด</option>
-            <option value="compliant">🟢 ผ่าน EUDR</option>
-            <option value="non_compliant">🔴 ทับซ้อนป่า</option>
-            <option value="under_review">🟠 โซนเฝ้าระวัง</option>
+            <option value="" data-i18n="map_filter_all">ทั้งหมด</option>
+            <option value="compliant" data-i18n="map_filter_compliant">🟢 ผ่าน EUDR</option>
+            <option value="non_compliant" data-i18n="map_filter_non_compliant">🔴 ทับซ้อนป่า</option>
+            <option value="under_review" data-i18n="map_filter_review">🟠 โซนเฝ้าระวัง</option>
           </select>
         </div>
 
@@ -920,17 +982,17 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <th class="py-3.5 pl-5 pr-2 w-12 text-center">
                 <span class="inline-block w-4 h-4 rounded-full border-2 border-gray-300"></span>
               </th>
-              <th class="py-3.5 px-4 font-bold text-gray-600">รหัส / เกษตรกร & แปลงปลูก</th>
-              <th class="py-3.5 px-4 font-bold text-gray-600">เนื้อที่ยาง</th>
-              <th class="py-3.5 px-4 font-bold text-gray-600">พันธุ์ยาง & ปีปลูก</th>
-              <th class="py-3.5 px-4 font-bold text-gray-600">จำนวนต้น</th>
-              <th class="py-3.5 px-4 font-bold text-gray-600">สถานะ EUDR</th>
-              <th class="py-3.5 pr-6 pl-4 text-center font-bold text-gray-600 w-36">การจัดการ</th>
+              <th class="py-3.5 px-4 font-bold text-gray-600" data-i18n="db_th_code">รหัส / เกษตรกร & แปลงปลูก</th>
+              <th class="py-3.5 px-4 font-bold text-gray-600" data-i18n="db_th_area">เนื้อที่ยาง</th>
+              <th class="py-3.5 px-4 font-bold text-gray-600" data-i18n="db_th_clone">พันธุ์ยาง & ปีปลูก</th>
+              <th class="py-3.5 px-4 font-bold text-gray-600" data-i18n="map_lbl_tree_count">จำนวนต้น</th>
+              <th class="py-3.5 px-4 font-bold text-gray-600" data-i18n="db_th_eudr">สถานะ EUDR</th>
+              <th class="py-3.5 pr-6 pl-4 text-center font-bold text-gray-600 w-36" data-i18n="db_th_actions">การจัดการ</th>
             </tr>
           </thead>
           <tbody id="plots-list-container" class="divide-y divide-gray-100 text-[14px]">
             <tr>
-              <td colspan="7" class="text-center text-gray-400 py-12 text-[15px]">กำลังโหลดข้อมูลแปลงปลูก...</td>
+              <td colspan="7" class="text-center text-gray-400 py-12 text-[15px]" data-i18n="lbl_loading">กำลังโหลดข้อมูลแปลงปลูก...</td>
             </tr>
           </tbody>
         </table>
@@ -957,11 +1019,11 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               </svg>
             </div>
             <div>
-              <div class="font-bold text-xs leading-tight text-mezenc-mint">โครงการวิจัยระบบภูมิสารสนเทศ</div>
-              <div class="font-extrabold text-base sm:text-lg leading-tight">GeoRubber Watch • สุราษฎร์ธานี</div>
+              <div class="font-bold text-xs leading-tight text-mezenc-mint" data-i18n="foot_title">โครงการวิจัยระบบภูมิสารสนเทศ</div>
+              <div class="font-extrabold text-base sm:text-lg leading-tight" data-i18n="foot_title_en">GeoRubber Watch • สุราษฎร์ธานี</div>
             </div>
           </div>
-          <p class="text-xs text-white/80 leading-relaxed font-light">
+          <p class="text-xs text-white/80 leading-relaxed font-light" data-i18n="foot_dept">
             สาขาเทคโนโลยีสารสนเทศ คณะวิทยาศาสตร์และเทคโนโลยีอุตสาหกรรม<br>
             มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี<br>
             <span class="text-white/65 text-[11px]">31 หมู่ 6 ต.มะขามเตี้ย อ.เมือง จ.สุราษฎร์ธานี 84000</span>
@@ -970,22 +1032,22 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
         <!-- คอลัมน์ที่ 2: ข้อมูลผู้จัดทำและช่องทางติดต่อ -->
         <div class="md:col-span-5 space-y-1.5 text-xs text-white/85 leading-relaxed">
-          <div class="font-bold text-mezenc-mint uppercase">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
-          <div class="text-[11px] text-white/75">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
+          <div class="font-bold text-mezenc-mint uppercase" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
+          <div class="text-[11px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[11px] text-white/90 space-y-0.5">
-            <div>👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div>🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div>✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
+            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div data-i18n="foot_email">✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
           </div>
         </div>
 
         <!-- คอลัมน์ที่ 3: กล่องสถิติพื้นที่ -->
         <div class="md:col-span-3 flex justify-start md:justify-end">
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
-            <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1">SURAT THANI FOREST COVERAGE</div>
+            <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-xs font-bold text-white">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
-            <div class="text-[10px] text-white/70 mt-1 font-light">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
+            <div class="text-xs font-bold text-white" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-[10px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
 
@@ -993,8 +1055,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
       <!-- ลิขสิทธิ์ -->
       <div class="pt-6 flex flex-col sm:flex-row justify-between items-center text-[11px] text-white/60 gap-4">
-        <div>&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
-        <div class="text-mezenc-mint text-center sm:text-right">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
+        <div data-i18n="foot_copy">&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
+        <div class="text-mezenc-mint text-center sm:text-right" data-i18n="foot_eudr_cert">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
       </div>
 
     </div>

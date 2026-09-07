@@ -97,6 +97,7 @@ try {
 
   <!-- Core App Styles & Toast Notifications -->
   <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/i18n.js"></script>
 
   <style>
     body {
@@ -200,28 +201,59 @@ try {
 
       <!-- DESKTOP / IPAD LANDSCAPE NAVIGATION LINKS -->
       <nav class="hidden lg:flex items-center gap-5 xl:gap-7 text-sm xl:text-base font-medium tracking-wide">
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="index.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="index.php" data-i18n="nav_home">
           หน้าแรก
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="overview.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="overview.php" data-i18n="nav_gis">
           แผนที่ GIS
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="dashboard.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="dashboard.php" data-i18n="nav_dashboard">
           แดชบอร์ด
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="map.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="map.php" data-i18n="nav_plots">
           แปลงปลูก
         </a>
-        <a class="text-mezenc-mint font-bold border-b-2 border-mezenc-mint pb-0.5 transition-colors cursor-pointer drop-shadow-sm" href="yields.php">
+        <a class="text-mezenc-mint font-bold border-b-2 border-mezenc-mint pb-0.5 transition-colors cursor-pointer drop-shadow-sm" href="yields.php" data-i18n="nav_yields">
           ผลผลิต
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="contact.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="contact.php" data-i18n="nav_contact">
           ติดต่อเรา
         </a>
       </nav>
 
-      <!-- RIGHT ACTIONS (User / Login / Mobile Menu) -->
-      <div class="flex items-center gap-2.5 sm:gap-3.5">
+      <!-- RIGHT ACTIONS (User / Language Toggle / Login / Mobile Menu) -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- [LANGUAGE TOGGLE SWITCH (TH / EN)] - Segmented Pill Slider Design -->
+        <div 
+          onclick="toggleLanguage()"
+          class="toggle-track-dark w-[82px] sm:w-[90px] h-[34px] sm:h-[36px] p-[3px] flex items-center relative cursor-pointer mr-0.5 sm:mr-1 shrink-0"
+          title="คลิกเพื่อสลับภาษา TH / EN (Switch Language)"
+          id="lang-toggle-btn"
+        >
+          <!-- Sliding White Thumb -->
+          <div 
+            id="nav-thumb" 
+            class="toggle-thumb-dark w-[36px] sm:w-[40px] h-[28px] sm:h-[30px] transition-all duration-300 left-[3px]"
+          ></div>
+          
+          <!-- TH Label -->
+          <div 
+            id="nav-label-th" 
+            class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none"
+          >
+            TH
+          </div>
+          
+          <!-- EN Label -->
+          <div 
+            id="nav-label-en" 
+            class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none"
+          >
+            EN
+          </div>
+        </div>
+
         <!-- USER PROFILE & LOGOUT BUTTON (Desktop/iPad) -->
         <div class="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full py-1.5 px-3.5 border border-white/20 text-xs shadow-md">
           <div class="text-right leading-tight">
@@ -232,6 +264,7 @@ try {
             href="logout.php"
             class="text-white/80 hover:text-red-300 flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-red-500/30 transition-all cursor-pointer ml-1"
             title="ออกจากระบบ (Logout)"
+            data-i18n-title="nav_logout"
             onclick="return confirm('ต้องการออกจากระบบหรือไม่?');"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -263,6 +296,7 @@ try {
             cursor-pointer
           "
           aria-label="เปิดเมนูนำทาง"
+          data-i18n-title="nav_menu_label"
         >
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -275,13 +309,13 @@ try {
     <!-- HERO CONTENT (Centered typography matching overview.php and map.php) -->
     <div class="relative z-20 w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 my-auto py-6 sm:py-10 text-center">
       <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
-        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow">
+        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow" data-i18n="yd_hero_tag">
           🌱 LATEX PRODUCTION & YIELD TRACKING SYSTEM
         </div>
-        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md">
+        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md" data-i18n="yd_hero_title">
           ระบบบันทึกผลผลิตน้ำยางสด
         </h1>
-        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow">
+        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow" data-i18n="yd_hero_sub">
           บันทึกปริมาณน้ำยางสด ราคารับซื้อ เชื่อมโยงข้อมูลแปลงปลูกและเกษตรกรสู่ระบบตรวจสอบย้อนกลับ (Traceability) ตามมาตรฐาน EUDR
         </p>
       </div>
@@ -296,44 +330,58 @@ try {
     <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-mezenc-deepTeal text-white p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/10">
       
       <div>
-        <div class="flex items-center justify-between pb-6 border-b border-white/15">
+        <div class="flex items-center justify-between pb-4 border-b border-white/15">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
               🌲
             </div>
-            <span class="font-extrabold text-base">GeoRubber Watch</span>
+            <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
           </div>
           <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
             ✕
           </button>
         </div>
 
-        <nav class="flex flex-col gap-2 pt-6 text-sm font-medium">
+        <!-- Mobile Language Toggle Switch -->
+        <div class="py-3 flex items-center justify-between border-b border-white/10">
+          <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+          <div 
+            onclick="toggleLanguage()"
+            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+            id="lang-toggle-btn-mobile"
+          >
+            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+            <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
+            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+          </div>
+        </div>
+
+        <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
           <a href="index.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🏠</span> <span>หน้าแรก</span>
+            <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
           </a>
           <a href="overview.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🛰️</span> <span>แผนที่ GIS</span>
+            <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
           <a href="dashboard.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📊</span> <span>แดชบอร์ด</span>
+            <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
           <a href="map.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📍</span> <span>แปลงปลูก</span>
+            <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
           <a href="yields.php" class="px-4 py-3 rounded-xl bg-white/15 text-white font-bold transition-colors flex items-center gap-3">
-            <span>🧪</span> <span>ผลผลิต</span>
+            <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
           <a href="contact.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📞</span> <span>ติดต่อเรา</span>
+            <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
           </a>
           <a href="logout.php" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/40 transition-colors flex items-center gap-3 text-red-300 font-bold" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            <span>🚪</span> <span>ออกจากระบบ (Logout)</span>
+            <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </nav>
       </div>
 
-      <div class="pt-6 border-t border-white/15 text-center text-xs text-white/60">
+      <div class="pt-4 border-t border-white/15 text-center text-xs text-white/60">
         GeoRubber Watch • ม.อ. สุราษฎร์ธานี
       </div>
 
@@ -352,7 +400,7 @@ try {
           🥛
         </div>
         <div>
-          <div class="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">น้ำยางสดรวม</div>
+          <div class="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider" data-i18n="yd_stat_month_weight">น้ำยางสดรวม</div>
           <div id="sum-fresh-latex" class="text-lg sm:text-2xl font-black text-mezenc-teal mt-0.5">0.0 กก.</div>
         </div>
       </div>
@@ -362,7 +410,7 @@ try {
           💰
         </div>
         <div>
-          <div class="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">รวมเงินรายได้</div>
+          <div class="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider" data-i18n="yd_stat_month_income">รวมเงินรายได้</div>
           <div id="sum-revenue" class="text-lg sm:text-2xl font-black text-mezenc-brightCyan mt-0.5">฿0.00</div>
         </div>
       </div>
@@ -372,7 +420,7 @@ try {
           📈
         </div>
         <div>
-          <div class="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">ราคารับซื้อเฉลี่ย</div>
+          <div class="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider" data-i18n="yd_stat_avg_price">ราคารับซื้อเฉลี่ย</div>
           <div id="sum-avg-price" class="text-lg sm:text-2xl font-black text-gray-800 mt-0.5">฿0.00 / กก.</div>
         </div>
       </div>
@@ -382,7 +430,7 @@ try {
           📋
         </div>
         <div>
-          <div class="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">จำนวนรอบบันทึก</div>
+          <div class="text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider" data-i18n="yd_stat_total_batches">จำนวนรอบบันทึก</div>
           <div id="sum-total-records" class="text-lg sm:text-2xl font-black text-mezenc-teal mt-0.5">0 ครั้ง</div>
         </div>
       </div>
@@ -396,7 +444,7 @@ try {
         
         <!-- Plot Dropdown Filter -->
         <div class="flex items-center gap-2">
-          <span class="text-xs sm:text-sm font-bold text-gray-700 whitespace-nowrap">🔎 แปลงปลูก:</span>
+          <span class="text-xs sm:text-sm font-bold text-gray-700 whitespace-nowrap" data-i18n="yd_lbl_select_plot">🔎 แปลงปลูก:</span>
           <select 
             id="filter-yield-plot" 
             class="bg-[#f8faf9] text-gray-800 font-semibold text-xs sm:text-sm rounded-xl px-3 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-48 sm:w-64 cursor-pointer" 
@@ -420,6 +468,7 @@ try {
               type="text" 
               id="search-name" 
               placeholder="ค้นหาชื่อเกษตรกร..." 
+              data-i18n-placeholder="ct_ph_name"
               class="bg-[#f8faf9] text-gray-800 text-xs rounded-xl pl-3 pr-7 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-36 sm:w-44"
               oninput="debounceLoadYields()"
             >
@@ -432,6 +481,7 @@ try {
               type="text" 
               id="search-plot-code" 
               placeholder="รหัส/ชื่อแปลง..." 
+              data-i18n-placeholder="db_search_ph"
               class="bg-[#f8faf9] text-gray-800 text-xs rounded-xl pl-3 pr-7 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-32 sm:w-40"
               oninput="debounceLoadYields()"
             >
@@ -444,6 +494,7 @@ try {
               type="text" 
               id="search-title-deed" 
               placeholder="เลขที่โฉนด..." 
+              data-i18n-placeholder="map_lbl_doc_no"
               class="bg-[#f8faf9] text-gray-800 text-xs rounded-xl pl-3 pr-7 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-28 sm:w-36"
               oninput="debounceLoadYields()"
             >
@@ -455,6 +506,7 @@ try {
             onclick="clearAdminFilters()" 
             class="px-2.5 py-1.5 text-xs text-gray-400 hover:text-rose-500 underline"
             title="ล้างการค้นหา"
+            data-i18n="db_clear_filter"
           >
             ล้างตัวกรอง
           </button>
@@ -467,7 +519,7 @@ try {
             href="api/export.php?type=yields_csv" 
             class="px-3.5 py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-xs sm:text-sm border-2 border-[#bee6e1] shadow-xs hover:border-mezenc-brightCyan transition-all flex items-center gap-1.5"
           >
-            <span>📥</span> <span>ส่งออก CSV</span>
+            <span>📥</span> <span data-i18n="btn_export">ส่งออก CSV</span>
           </a>
 
           <button 
@@ -475,7 +527,7 @@ try {
             onclick="openAddYieldModal()" 
             class="px-4 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <span>➕</span> <span>บันทึกผลผลิตใหม่</span>
+            <span>➕</span> <span data-i18n="yd_btn_save_yield">บันทึกผลผลิตใหม่</span>
           </button>
         </div>
 
@@ -490,9 +542,9 @@ try {
       <div class="p-4 sm:p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 bg-white">
         <div>
           <h3 class="text-base sm:text-lg font-extrabold text-mezenc-teal flex items-center gap-2">
-            <span>📋 ประวัติการเก็บเกี่ยวและการรับซื้อน้ำยางสด</span>
+            <span data-i18n="yd_table_title">📋 ประวัติการเก็บเกี่ยวและการรับซื้อน้ำยางสด</span>
           </h3>
-          <p class="text-xs text-gray-400 font-medium mt-0.5">
+          <p class="text-xs text-gray-400 font-medium mt-0.5" data-i18n="yd_table_sub">
             แสดงรายการผลผลิตรายแปลง น้ำหนักน้ำยางสด ราคาต่อกิโลกรัม และการคำนวณมูลค่ารายได้
           </p>
         </div>
@@ -503,20 +555,20 @@ try {
         <table class="w-full text-left border-collapse text-xs sm:text-sm">
           <thead>
             <tr class="bg-[#f8faf9] border-b border-gray-200/80 text-mezenc-teal font-extrabold text-xs uppercase tracking-wider">
-              <th class="py-4 px-4 whitespace-nowrap">วันที่เก็บเกี่ยว</th>
-              <th class="py-4 px-4 whitespace-nowrap">แปลงปลูก</th>
-              <th class="py-4 px-4 whitespace-nowrap">พันธุ์ยาง</th>
-              <th class="py-4 px-4 whitespace-nowrap">เกษตรกรเจ้าของแปลง</th>
-              <th class="py-4 px-4 whitespace-nowrap text-right">น้ำยางสด (กก.)</th>
-              <th class="py-4 px-4 whitespace-nowrap text-right">ราคา/กก. (บาท)</th>
-              <th class="py-4 px-4 whitespace-nowrap text-right">รวมเงินรายได้ (บาท)</th>
-              <th class="py-4 px-4 whitespace-nowrap">ผู้รับซื้อ / จุดรับซื้อ</th>
-              <th class="py-4 px-4 whitespace-nowrap text-center">จัดการ</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="yd_th_date">วันที่เก็บเกี่ยว</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="yd_th_plot">แปลงปลูก</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="db_th_clone">พันธุ์ยาง</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="db_th_farmer">เกษตรกรเจ้าของแปลง</th>
+              <th class="py-4 px-4 whitespace-nowrap text-right" data-i18n="yd_th_weight">น้ำยางสด (กก.)</th>
+              <th class="py-4 px-4 whitespace-nowrap text-right" data-i18n="yd_th_price">ราคา/กก. (บาท)</th>
+              <th class="py-4 px-4 whitespace-nowrap text-right" data-i18n="yd_th_total">รวมเงินรายได้ (บาท)</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="yd_lbl_collector">ผู้รับซื้อ / จุดรับซื้อ</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center" data-i18n="db_th_actions">จัดการ</th>
             </tr>
           </thead>
           <tbody id="yields-table-body" class="divide-y divide-gray-100 text-gray-700">
             <tr>
-              <td colspan="9" class="text-center py-12 text-gray-400 text-xs">
+              <td colspan="9" class="text-center py-12 text-gray-400 text-xs" data-i18n="lbl_loading">
                 กำลังโหลดข้อมูลผลผลิต...
               </td>
             </tr>
@@ -795,6 +847,7 @@ try {
             type="button" 
             onclick="closeAddYieldModal()" 
             class="w-full sm:flex-1 py-3 rounded-full border-2 border-gray-300 hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm transition-all cursor-pointer text-center"
+            data-i18n="btn_cancel"
           >
             ยกเลิก
           </button>
@@ -804,7 +857,7 @@ try {
             id="btn-save-yield"
             class="w-full sm:flex-1 py-3 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer text-center flex items-center justify-center gap-2"
           >
-            <span>💾</span> <span>บันทึกผลผลิตรอบใหม่</span>
+            <span>💾</span> <span data-i18n="yd_btn_save_yield">บันทึกผลผลิตรอบใหม่</span>
           </button>
         </div>
 
@@ -851,13 +904,13 @@ try {
 
         <div class="bg-[#f8faf9] p-4 sm:p-5 rounded-2xl border border-gray-200/80 space-y-2">
           <div class="font-bold text-mezenc-teal flex items-center gap-2">
-            <span>📍</span> <span>แปลงปลูก:</span> <span id="edit-disp-plot-info" class="text-gray-800 font-semibold">-</span>
+            <span>📍</span> <span data-i18n="yd_th_plot">แปลงปลูก:</span> <span id="edit-disp-plot-info" class="text-gray-800 font-semibold">-</span>
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <div>
-            <label class="block font-bold text-gray-700 mb-1.5">วันที่เก็บเกี่ยว *</label>
+            <label class="block font-bold text-gray-700 mb-1.5" data-i18n="yd_th_date">วันที่เก็บเกี่ยว *</label>
             <input type="date" id="edit-yield-date" class="w-full bg-white text-gray-800 text-xs sm:text-sm rounded-xl px-3 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs" required>
           </div>
           <div>
@@ -865,25 +918,25 @@ try {
             <input type="number" id="edit-yield-round" min="1" class="w-full bg-white text-gray-800 text-xs sm:text-sm rounded-xl px-3 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs">
           </div>
           <div>
-            <label class="block font-bold text-gray-700 mb-1.5">สถานที่ส่งมอบ / ผู้รับซื้อ</label>
+            <label class="block font-bold text-gray-700 mb-1.5" data-i18n="yd_lbl_collector">สถานที่ส่งมอบ / ผู้รับซื้อ</label>
             <input type="text" id="edit-yield-buyer" class="w-full bg-white text-gray-800 text-xs sm:text-sm rounded-xl px-3 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs">
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block font-bold text-gray-700 mb-1.5">ปริมาณน้ำยางสด (กก.) *</label>
+            <label class="block font-bold text-gray-700 mb-1.5" data-i18n="yd_th_weight">ปริมาณน้ำยางสด (กก.) *</label>
             <input type="number" step="0.01" id="edit-yield-fresh-kg" class="w-full bg-white text-gray-800 font-extrabold text-sm sm:text-base rounded-xl px-3.5 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs" oninput="calculateEditRevenue()" required>
           </div>
           <div>
-            <label class="block font-bold text-gray-700 mb-1.5">ราคารับซื้อต่อ กก. (บาท) *</label>
+            <label class="block font-bold text-gray-700 mb-1.5" data-i18n="yd_th_price">ราคารับซื้อต่อ กก. (บาท) *</label>
             <input type="number" step="0.25" id="edit-yield-price" class="w-full bg-white text-gray-800 font-extrabold text-sm sm:text-base rounded-xl px-3.5 py-2.5 border border-gray-300 focus:border-mezenc-brightCyan outline-none shadow-xs" oninput="calculateEditRevenue()" required>
           </div>
         </div>
 
         <!-- Revenue Highlight Box -->
         <div class="bg-gradient-to-r from-emerald-50 to-[#e6f7f6] p-4 rounded-2xl border-2 border-[#bee6e1] flex items-center justify-between">
-          <span class="text-xs font-bold uppercase text-mezenc-teal">💵 ยอดเงินรวมคำนวณอัตโนมัติ</span>
+          <span class="text-xs font-bold uppercase text-mezenc-teal" data-i18n="yd_th_total">💵 ยอดเงินรวมคำนวณอัตโนมัติ</span>
           <span id="edit-calc-revenue-display" class="text-2xl font-black text-mezenc-teal">฿0.00</span>
         </div>
 
@@ -894,10 +947,10 @@ try {
 
         <!-- Modal Actions -->
         <div class="pt-2 flex flex-col sm:flex-row items-center gap-3">
-          <button type="button" onclick="closeEditYieldModal()" class="w-full sm:flex-1 py-3 rounded-full border-2 border-gray-300 hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm transition-all cursor-pointer text-center">
+          <button type="button" onclick="closeEditYieldModal()" class="w-full sm:flex-1 py-3 rounded-full border-2 border-gray-300 hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm transition-all cursor-pointer text-center" data-i18n="btn_cancel">
             ยกเลิก
           </button>
-          <button type="submit" id="btn-save-edit-yield" class="w-full sm:flex-1 py-3 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all cursor-pointer text-center flex items-center justify-center gap-2">
+          <button type="submit" id="btn-save-edit-yield" class="w-full sm:flex-1 py-3 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all cursor-pointer text-center flex items-center justify-center gap-2" data-i18n="btn_save">
             <span>💾</span> <span>บันทึกการแก้ไข</span>
           </button>
         </div>
@@ -922,11 +975,11 @@ try {
               </svg>
             </div>
             <div class="space-y-0.5">
-              <div class="font-extrabold text-[15px] sm:text-[16px] leading-snug text-white">แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา</div>
-              <div class="font-semibold text-[13px] sm:text-[14px] leading-snug text-white/95">GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations</div>
+              <div class="font-extrabold text-[15px] sm:text-[16px] leading-snug text-white" data-i18n="foot_title">แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา</div>
+              <div class="font-semibold text-[13px] sm:text-[14px] leading-snug text-white/95" data-i18n="foot_title_en">GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations</div>
             </div>
           </div>
-          <p class="text-[14px] text-white/85 leading-relaxed font-light">
+          <p class="text-[14px] text-white/85 leading-relaxed font-light" data-i18n="foot_dept">
             สาขาเทคโนโลยีสารสนเทศ คณะวิทยาศาสตร์และเทคโนโลยีอุตสาหกรรม<br>
             มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี<br>
             <span class="text-white/75 text-[14px]">31 หมู่ 6 ต.มะขามเตี้ย อ.เมือง จ.สุราษฎร์ธานี 84000</span>
@@ -935,22 +988,22 @@ try {
 
         <!-- คอลัมน์ที่ 2: ข้อมูลผู้จัดทำและช่องทางติดต่อ -->
         <div class="md:col-span-4 space-y-1.5 text-[14px] text-white/85 leading-relaxed">
-          <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
-          <div class="text-[14px] text-white/75">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
+          <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
+          <div class="text-[14px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
-            <div>👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div>🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div>✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
+            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div data-i18n="foot_email">✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
           </div>
         </div>
 
         <!-- คอลัมน์ที่ 3: กล่องสถิติพื้นที่ (Surat Thani Territory Card) -->
         <div class="md:col-span-3 flex justify-start md:justify-end">
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
-            <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1">SURAT THANI FOREST COVERAGE</div>
+            <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-[14px] font-bold text-white leading-tight">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
-            <div class="text-[12px] text-white/70 mt-1 font-light">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
+            <div class="text-[14px] font-bold text-white leading-tight" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-[12px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
 
@@ -958,8 +1011,8 @@ try {
 
       <!-- แถบล่างสุด (Copyright Bar) -->
       <div class="pt-6 flex flex-col sm:flex-row justify-between items-center text-[14px] text-white/75 gap-4">
-        <div>&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
-        <div class="text-mezenc-mint text-center sm:text-right">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
+        <div data-i18n="foot_copy">&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
+        <div class="text-mezenc-mint text-center sm:text-right" data-i18n="foot_eudr_cert">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
       </div>
 
     </div>

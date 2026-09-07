@@ -296,6 +296,7 @@ if (!$isUserAdmin) {
 
   <!-- Core App Styles & Toast Notifications -->
   <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/i18n.js"></script>
 
   <style>
     body {
@@ -373,28 +374,59 @@ if (!$isUserAdmin) {
 
       <!-- DESKTOP / IPAD LANDSCAPE NAVIGATION LINKS -->
       <nav class="hidden lg:flex items-center gap-5 xl:gap-7 text-sm xl:text-base font-medium tracking-wide">
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="index.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="index.php" data-i18n="nav_home">
           หน้าแรก
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="overview.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="overview.php" data-i18n="nav_gis">
           แผนที่ GIS
         </a>
-        <a class="text-mezenc-mint font-bold border-b-2 border-mezenc-mint pb-0.5 transition-colors cursor-pointer drop-shadow-sm" href="dashboard.php">
+        <a class="text-mezenc-mint font-bold border-b-2 border-mezenc-mint pb-0.5 transition-colors cursor-pointer drop-shadow-sm" href="dashboard.php" data-i18n="nav_dashboard">
           แดชบอร์ด
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="map.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="map.php" data-i18n="nav_plots">
           แปลงปลูก
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="yields.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="yields.php" data-i18n="nav_yields">
           ผลผลิต
         </a>
-        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="contact.php">
+        <a class="text-white hover:text-mezenc-mint transition-colors cursor-pointer drop-shadow-sm" href="contact.php" data-i18n="nav_contact">
           ติดต่อเรา
         </a>
       </nav>
 
-      <!-- RIGHT ACTIONS (User / Login / Mobile Menu) -->
-      <div class="flex items-center gap-2.5 sm:gap-3.5">
+      <!-- RIGHT ACTIONS (User / Language Toggle / Mobile Menu) -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- [LANGUAGE TOGGLE SWITCH (TH / EN)] - Segmented Pill Slider Design -->
+        <div 
+          onclick="toggleLanguage()"
+          class="toggle-track-dark w-[82px] sm:w-[90px] h-[34px] sm:h-[36px] p-[3px] flex items-center relative cursor-pointer mr-0.5 sm:mr-1 shrink-0"
+          title="คลิกเพื่อสลับภาษา TH / EN (Switch Language)"
+          id="lang-toggle-btn"
+        >
+          <!-- Sliding White Thumb -->
+          <div 
+            id="nav-thumb" 
+            class="toggle-thumb-dark w-[36px] sm:w-[40px] h-[28px] sm:h-[30px] transition-all duration-300 left-[3px]"
+          ></div>
+          
+          <!-- TH Label -->
+          <div 
+            id="nav-label-th" 
+            class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none"
+          >
+            TH
+          </div>
+          
+          <!-- EN Label -->
+          <div 
+            id="nav-label-en" 
+            class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none"
+          >
+            EN
+          </div>
+        </div>
+
         <!-- USER PROFILE & LOGOUT BUTTON (Desktop/iPad) -->
         <div class="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full py-1.5 px-3.5 border border-white/20 text-xs shadow-md">
           <div class="text-right leading-tight">
@@ -405,6 +437,7 @@ if (!$isUserAdmin) {
             href="logout.php"
             class="text-white/80 hover:text-red-300 flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-red-500/30 transition-all cursor-pointer ml-1"
             title="ออกจากระบบ (Logout)"
+            data-i18n-title="nav_logout"
             onclick="return confirm('ต้องการออกจากระบบหรือไม่?');"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,6 +469,7 @@ if (!$isUserAdmin) {
             cursor-pointer
           "
           aria-label="เปิดเมนูนำทาง"
+          data-i18n-title="nav_menu_label"
         >
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -448,13 +482,13 @@ if (!$isUserAdmin) {
     <!-- HERO CONTENT -->
     <div class="relative z-20 w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 my-auto py-6 sm:py-10 text-center">
       <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
-        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow">
+        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow" data-i18n="db_hero_tag">
           DECISION SUPPORT SYSTEM (DSS) • SURAT THANI
         </div>
-        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md">
+        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md" data-i18n="<?= !$isUserAdmin ? 'db_hero_title_farmer' : 'db_hero_title' ?>">
           <?= !$isUserAdmin ? 'แดชบอร์ดสรุปข้อมูลแปลงปลูกและผลผลิตของคุณ' : 'แดชบอร์ดวิเคราะห์พื้นที่ปลูกและสถานะความสอดคล้อง' ?>
         </h1>
-        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow">
+        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow" data-i18n="<?= !$isUserAdmin ? 'db_hero_sub_farmer' : 'db_hero_sub' ?>">
           <?= !$isUserAdmin ? 'ติดตามภาพรวมแปลงปลูก สถิติผลผลิตน้ำยางสด รายได้สะสม และตรวจสอบความสอดคล้องตามมาตรฐาน EUDR ของคุณ' : 'ติดตามภาพรวมพื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี และจำแนกสถานะแปลงผ่านเกณฑ์ เฝ้าระวัง และทับซ้อนเขตป่าสงวนแห่งชาติ' ?>
         </p>
       </div>
@@ -469,44 +503,58 @@ if (!$isUserAdmin) {
     <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-mezenc-deepTeal text-white p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/10">
       
       <div>
-        <div class="flex items-center justify-between pb-6 border-b border-white/15">
+        <div class="flex items-center justify-between pb-4 border-b border-white/15">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
               🌲
             </div>
-            <span class="font-extrabold text-base">GeoRubber Watch</span>
+            <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
           </div>
           <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
             ✕
           </button>
         </div>
 
-        <nav class="flex flex-col gap-2 pt-6 text-sm font-medium">
+        <!-- Mobile Language Toggle Switch -->
+        <div class="py-3 flex items-center justify-between border-b border-white/10">
+          <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+          <div 
+            onclick="toggleLanguage()"
+            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+            id="lang-toggle-btn-mobile"
+          >
+            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+            <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
+            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+          </div>
+        </div>
+
+        <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
           <a href="index.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🏠</span> <span>หน้าแรก</span>
+            <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
           </a>
           <a href="overview.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🛰️</span> <span>แผนที่ GIS</span>
+            <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
           <a href="dashboard.php" class="px-4 py-3 rounded-xl bg-white/15 text-white font-bold transition-colors flex items-center gap-3">
-            <span>📊</span> <span>แดชบอร์ด</span>
+            <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
           <a href="map.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📍</span> <span>แปลงปลูก</span>
+            <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
           <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🧪</span> <span>ผลผลิต</span>
+            <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
           <a href="contact.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📞</span> <span>ติดต่อเรา</span>
+            <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
           </a>
           <a href="logout.php" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/40 transition-colors flex items-center gap-3 text-red-300 font-bold" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            <span>🚪</span> <span>ออกจากระบบ (Logout)</span>
+            <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </nav>
       </div>
 
-      <div class="pt-6 border-t border-white/15 text-center text-xs text-white/60">
+      <div class="pt-4 border-t border-white/15 text-center text-xs text-white/60">
         GeoRubber Watch • ม.อ. สุราษฎร์ธานี
       </div>
 
@@ -527,11 +575,11 @@ if (!$isUserAdmin) {
       <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] flex flex-col justify-between group hover:border-mezenc-brightCyan transition-all">
         <div class="flex justify-between items-start">
           <div>
-            <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-400 block">
+            <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-400 block" data-i18n="db_card_my_plots">
               แปลงปลูกของฉันทั้งหมด
             </span>
             <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-mezenc-teal mt-1">
-              <?= formatNumber($farmerPlots['total_plots'] ?? 0) ?> <span class="text-sm font-normal text-gray-500">แปลง</span>
+              <?= formatNumber($farmerPlots['total_plots'] ?? 0) ?> <span class="text-sm font-normal text-gray-500" data-i18n="unit_plots">แปลง</span>
             </div>
           </div>
           <div class="w-12 h-12 rounded-2xl bg-mezenc-lightCyan text-mezenc-teal flex items-center justify-center text-2xl shrink-0 border border-[#bee6e1] shadow-xs">
@@ -539,9 +587,9 @@ if (!$isUserAdmin) {
           </div>
         </div>
         <div class="pt-4 border-t border-gray-100 mt-4 flex items-center justify-between text-xs">
-          <span class="text-gray-500 font-medium">เนื้อที่รวม: <b><?= formatNumber($farmerPlots['total_rai'] ?? 0, 1) ?> ไร่</b> (<?= formatNumber($farmerPlots['total_ha'] ?? 0, 2) ?> ha)</span>
+          <span class="text-gray-500 font-medium"><span data-i18n="lbl_total_area_colon">เนื้อที่รวม:</span> <b><?= formatNumber($farmerPlots['total_rai'] ?? 0, 1) ?> <span data-i18n="unit_rai">ไร่</span></b> (<?= formatNumber($farmerPlots['total_ha'] ?? 0, 2) ?> ha)</span>
           <span class="bg-mezenc-lightCyan text-mezenc-teal px-2 py-0.5 rounded-full font-bold text-[10px]">
-            <?= formatNumber($farmerPlots['total_trees'] ?? 0) ?> ต้น
+            <?= formatNumber($farmerPlots['total_trees'] ?? 0) ?> <span data-i18n="unit_trees">ต้น</span>
           </span>
         </div>
       </div>
@@ -552,12 +600,12 @@ if (!$isUserAdmin) {
           <div>
             <div class="flex items-center gap-1.5 mb-1">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-emerald-800">
+              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-emerald-800" data-i18n="db_card_monthly_yield">
                 ผลผลิตน้ำยางสดสะสม
               </span>
             </div>
             <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-600 mt-1">
-              <?= formatNumber($farmerYields['total_fresh_kg'] ?? 0, 1) ?> <span class="text-sm font-normal text-gray-500">กก.</span>
+              <?= formatNumber($farmerYields['total_fresh_kg'] ?? 0, 1) ?> <span class="text-sm font-normal text-gray-500" data-i18n="unit_kg">กก.</span>
             </div>
           </div>
           <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl shrink-0 border border-emerald-300 shadow-xs">
@@ -565,9 +613,9 @@ if (!$isUserAdmin) {
           </div>
         </div>
         <div class="pt-4 border-t border-emerald-100 mt-4 flex items-center justify-between text-xs">
-          <span class="text-emerald-700 font-semibold">DRC เฉลี่ย: <?= formatNumber($farmerYields['avg_drc'] ?? 0, 1) ?>%</span>
+          <span class="text-emerald-700 font-semibold">DRC <?= formatNumber($farmerYields['avg_drc'] ?? 0, 1) ?>%</span>
           <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
-            ยางแห้ง <?= formatNumber($farmerYields['total_dry_kg'] ?? 0, 1) ?> กก.
+            <?= formatNumber($farmerYields['total_dry_kg'] ?? 0, 1) ?> <span data-i18n="unit_kg">กก.</span>
           </span>
         </div>
       </div>
@@ -578,7 +626,7 @@ if (!$isUserAdmin) {
           <div>
             <div class="flex items-center gap-1.5 mb-1">
               <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-amber-800">
+              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-amber-800" data-i18n="db_card_est_income">
                 รายได้สะสมรวม
               </span>
             </div>
@@ -591,9 +639,9 @@ if (!$isUserAdmin) {
           </div>
         </div>
         <div class="pt-4 border-t border-amber-100 mt-4 flex items-center justify-between text-xs">
-          <span class="text-amber-700 font-semibold">เฉลี่ย <?= formatNumber($farmerYields['avg_price'] ?? 0, 2) ?> ฿/กก.</span>
+          <span class="text-amber-700 font-semibold"><span data-i18n="lbl_average">เฉลี่ย</span> <?= formatNumber($farmerYields['avg_price'] ?? 0, 2) ?> ฿/กก.</span>
           <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
-            บันทึกแล้ว <?= formatNumber($farmerYields['total_records'] ?? 0) ?> รอบ
+            <?= formatNumber($farmerYields['total_records'] ?? 0) ?> <span data-i18n="unit_plots">รอบ</span>
           </span>
         </div>
       </div>
@@ -604,12 +652,12 @@ if (!$isUserAdmin) {
           <div>
             <div class="flex items-center gap-1.5 mb-1">
               <span class="w-2.5 h-2.5 rounded-full bg-mezenc-brightCyan inline-block"></span>
-              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-mezenc-teal">
+              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-mezenc-teal" data-i18n="db_card_eudr_status">
                 สถานะความสอดคล้อง EUDR
               </span>
             </div>
             <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-mezenc-teal mt-1">
-              <?= $farmerComplianceRate ?>% <span class="text-sm font-normal text-gray-500">ปลอดภัย</span>
+              <?= $farmerComplianceRate ?>% <span class="text-sm font-normal text-gray-500" data-i18n="status_safe">ปลอดภัย</span>
             </div>
           </div>
           <div class="w-12 h-12 rounded-2xl bg-mezenc-lightCyan text-mezenc-teal flex items-center justify-center text-2xl shrink-0 border border-mezenc-mint shadow-xs">
@@ -617,9 +665,9 @@ if (!$isUserAdmin) {
           </div>
         </div>
         <div class="pt-4 border-t border-teal-100 mt-4 flex items-center justify-between text-xs">
-          <span class="text-emerald-700 font-bold">🟢 ผ่าน <?= (int)($farmerPlots['compliant_plots'] ?? 0) ?></span>
-          <span class="text-amber-700 font-bold">🟡 เฝ้าระวัง <?= (int)($farmerPlots['review_plots'] ?? 0) ?></span>
-          <span class="text-rose-700 font-bold">🔴 เสี่ยง <?= (int)($farmerPlots['non_compliant_plots'] ?? 0) ?></span>
+          <span class="text-emerald-700 font-bold">🟢 <?= (int)($farmerPlots['compliant_plots'] ?? 0) ?></span>
+          <span class="text-amber-700 font-bold">🟡 <?= (int)($farmerPlots['review_plots'] ?? 0) ?></span>
+          <span class="text-rose-700 font-bold">🔴 <?= (int)($farmerPlots['non_compliant_plots'] ?? 0) ?></span>
         </div>
       </div>
     </div>
@@ -631,14 +679,14 @@ if (!$isUserAdmin) {
       <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] p-5 sm:p-6">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
           <div>
-            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2">
+            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2" data-i18n="db_farmer_chart_yield">
               <span>📈 แนวโน้มผลผลิตน้ำยางสด (Latex Yield Trend)</span>
             </h3>
-            <p class="text-xs text-gray-400 font-medium mt-0.5">
+            <p class="text-xs text-gray-400 font-medium mt-0.5" data-i18n="db_farmer_chart_yield_sub">
               ปริมาณน้ำยางสด (กก.) และเปอร์เซ็นต์เนื้อยางแห้ง DRC (%) ตามรอบการกรีด
             </p>
           </div>
-          <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
+          <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200" data-i18n="db_badge_30_rounds">
             30 รอบล่าสุด
           </span>
         </div>
@@ -651,14 +699,14 @@ if (!$isUserAdmin) {
       <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] p-5 sm:p-6">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
           <div>
-            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2">
+            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2" data-i18n="db_farmer_chart_revenue">
               <span>💵 แนวโน้มราคารับซื้อและรายได้รวม (Price & Revenue Trend)</span>
             </h3>
-            <p class="text-xs text-gray-400 font-medium mt-0.5">
+            <p class="text-xs text-gray-400 font-medium mt-0.5" data-i18n="db_farmer_chart_revenue_sub">
               ราคารับซื้อน้ำยางสด (บาท/กก.) และรายได้รวมต่อรอบการเก็บเกี่ยว (บาท)
             </p>
           </div>
-          <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-200">
+          <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-200" data-i18n="db_badge_revenue_stats">
             สถิติรายรับ
           </span>
         </div>
@@ -673,10 +721,10 @@ if (!$isUserAdmin) {
     <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] overflow-hidden">
       <div class="p-5 sm:p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 bg-white">
         <div>
-          <h3 class="text-base sm:text-lg font-extrabold text-mezenc-teal flex items-center gap-2">
+          <h3 class="text-base sm:text-lg font-extrabold text-mezenc-teal flex items-center gap-2" data-i18n="db_farmer_table_title">
             <span>📋 รายการแปลงปลูกของฉัน (My Rubber Plantations)</span>
           </h3>
-          <p class="text-xs text-gray-400 font-medium mt-0.5">
+          <p class="text-xs text-gray-400 font-medium mt-0.5" data-i18n="db_farmer_table_sub">
             สรุปข้อมูลแปลงปลูก พันธุ์ยาง เนื้อที่ และผลการประเมินความสอดคล้องตามมาตรฐาน EUDR
           </p>
         </div>
@@ -685,13 +733,13 @@ if (!$isUserAdmin) {
             href="yields.php"
             class="px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs border border-emerald-200 transition-all flex items-center gap-1.5 shadow-xs"
           >
-            <span>🧪</span> <span>บันทึกผลผลิต</span>
+            <span>🧪</span> <span data-i18n="db_btn_log_yield">บันทึกผลผลิต</span>
           </a>
           <a
             href="map.php"
             class="px-4 py-2 rounded-full bg-mezenc-teal hover:bg-mezenc-brightCyan text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs"
           >
-            <span>➕</span> <span>เพิ่มแปลงปลูก</span>
+            <span>➕</span> <span data-i18n="db_btn_add_plot">เพิ่มแปลงปลูก</span>
           </a>
         </div>
       </div>
@@ -700,13 +748,13 @@ if (!$isUserAdmin) {
         <table class="w-full text-left border-collapse text-xs sm:text-sm">
           <thead>
             <tr class="bg-[#f8faf9] border-b border-gray-200/80 text-mezenc-teal font-extrabold uppercase tracking-wider text-xs">
-              <th class="py-4 px-4 whitespace-nowrap">รหัส / ชื่อแปลงปลูก</th>
-              <th class="py-4 px-4 whitespace-nowrap">เอกสารสิทธิ์ / ที่ตั้ง</th>
-              <th class="py-4 px-4 whitespace-nowrap">พันธุ์ยาง</th>
-              <th class="py-4 px-4 whitespace-nowrap text-right">เนื้อที่ (ไร่)</th>
-              <th class="py-4 px-4 whitespace-nowrap text-center">สถานะการกรีด</th>
-              <th class="py-4 px-4 whitespace-nowrap text-center">สถานะ EUDR</th>
-              <th class="py-4 px-4 whitespace-nowrap text-center">แผนที่ GIS</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="db_th_code">รหัส / ชื่อแปลงปลูก</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="db_th_doc_loc">เอกสารสิทธิ์ / ที่ตั้ง</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="db_th_clone">พันธุ์ยาง</th>
+              <th class="py-4 px-4 whitespace-nowrap text-right" data-i18n="db_th_area">เนื้อที่ (ไร่)</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center" data-i18n="db_th_tapping">สถานะการกรีด</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center" data-i18n="db_th_eudr">สถานะ EUDR</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center" data-i18n="db_th_map">แผนที่ GIS</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 text-gray-700">
@@ -763,15 +811,15 @@ if (!$isUserAdmin) {
                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#f8faf9] hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-xs border border-gray-200 hover:border-mezenc-brightCyan transition-all shadow-xs"
                       title="ดูพิกัดแปลงปลูกบนแผนที่ GIS"
                     >
-                      <span>📍</span> <span>ดูแปลง</span>
+                      <span>📍</span> <span data-i18n="lbl_view_plot">ดูแปลง</span>
                     </a>
                   </td>
                 </tr>
               <?php endforeach; ?>
             <?php else: ?>
               <tr>
-                <td colspan="7" class="text-center py-12 text-gray-400 text-xs sm:text-sm">
-                  ยังไม่มีข้อมูลแปลงปลูกของคุณในระบบ <a href="map.php" class="text-mezenc-teal font-bold underline ml-1">เพิ่มแปลงปลูกใหม่เลย</a>
+                <td colspan="7" class="text-center py-12 text-gray-400 text-xs sm:text-sm" data-i18n="db_no_plots_farmer">
+                  ยังไม่มีข้อมูลแปลงปลูกของคุณในระบบ
                 </td>
               </tr>
             <?php endif; ?>
@@ -791,11 +839,11 @@ if (!$isUserAdmin) {
       <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] flex flex-col justify-between group hover:border-mezenc-brightCyan transition-all">
         <div class="flex justify-between items-start">
           <div>
-            <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-400 block">
+            <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-400 block" data-i18n="db_card_total_area_all">
               พื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี รวมทั้งหมด
             </span>
             <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-mezenc-teal mt-1">
-              <?= formatNumber($totalArea, 1) ?> <span class="text-sm font-normal text-gray-500">ไร่</span>
+              <?= formatNumber($totalArea, 1) ?> <span class="text-sm font-normal text-gray-500" data-i18n="unit_rai">ไร่</span>
             </div>
           </div>
           <div class="w-12 h-12 rounded-2xl bg-mezenc-lightCyan text-mezenc-teal flex items-center justify-center text-2xl shrink-0 border border-[#bee6e1] shadow-xs">
@@ -805,7 +853,7 @@ if (!$isUserAdmin) {
         
         <div class="pt-4 border-t border-gray-100 mt-4 flex items-center justify-between text-xs">
           <span class="text-gray-500 font-medium">จำนวนเกษตรกร: <b><?= formatNumber($totalFarmers) ?></b> ราย</span>
-          <span class="font-extrabold text-mezenc-teal text-sm"><?= formatNumber($totalPlots) ?> แปลง</span>
+          <span class="font-extrabold text-mezenc-teal text-sm"><?= formatNumber($totalPlots) ?> <span data-i18n="unit_plots">แปลง</span></span>
         </div>
       </div>
 
@@ -815,12 +863,12 @@ if (!$isUserAdmin) {
           <div>
             <div class="flex items-center gap-1.5 mb-1">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-emerald-800">
+              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-emerald-800" data-i18n="db_card_compliant">
                 แปลงที่ผ่านเกณฑ์ (ปลอดภัย)
               </span>
             </div>
             <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-600 mt-1">
-              <?= formatNumber($greenArea, 1) ?> <span class="text-sm font-normal text-gray-500">ไร่</span>
+              <?= formatNumber($greenArea, 1) ?> <span class="text-sm font-normal text-gray-500" data-i18n="unit_rai">ไร่</span>
             </div>
           </div>
           <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl shrink-0 border border-emerald-300 shadow-xs">
@@ -830,7 +878,7 @@ if (!$isUserAdmin) {
 
         <div class="pt-4 border-t border-emerald-100 mt-4 flex items-center justify-between text-xs">
           <span class="text-emerald-700 font-semibold"><?= formatNumber($greenCount) ?> แปลง (<?= $greenPct ?>%)</span>
-          <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
+          <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]" data-i18n="db_card_compliant_sub">
             ปลอดการตัดไม้ทำลายป่า
           </span>
         </div>
@@ -842,12 +890,12 @@ if (!$isUserAdmin) {
           <div>
             <div class="flex items-center gap-1.5 mb-1">
               <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-amber-800">
+              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-amber-800" data-i18n="db_card_review">
                 แปลงที่ควรเฝ้าระวัง
               </span>
             </div>
             <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-600 mt-1">
-              <?= formatNumber($yellowArea, 1) ?> <span class="text-sm font-normal text-gray-500">ไร่</span>
+              <?= formatNumber($yellowArea, 1) ?> <span class="text-sm font-normal text-gray-500" data-i18n="unit_rai">ไร่</span>
             </div>
           </div>
           <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl shrink-0 border border-amber-300 shadow-xs">
@@ -857,7 +905,7 @@ if (!$isUserAdmin) {
 
         <div class="pt-4 border-t border-amber-100 mt-4 flex items-center justify-between text-xs">
           <span class="text-amber-700 font-semibold"><?= formatNumber($yellowCount) ?> แปลง (<?= $yellowPct ?>%)</span>
-          <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
+          <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-[10px]" data-i18n="db_card_review_sub">
             แนวกันชน Buffer 500m
           </span>
         </div>
@@ -869,12 +917,12 @@ if (!$isUserAdmin) {
           <div>
             <div class="flex items-center gap-1.5 mb-1">
               <span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>
-              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-rose-800">
+              <span class="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-rose-800" data-i18n="db_card_non_compliant">
                 แปลงที่ซ้อนทับเขตป่าสงวน
               </span>
             </div>
             <div class="text-2xl sm:text-3xl lg:text-4xl font-black text-rose-600 mt-1">
-              <?= formatNumber($redArea, 1) ?> <span class="text-sm font-normal text-gray-500">ไร่</span>
+              <?= formatNumber($redArea, 1) ?> <span class="text-sm font-normal text-gray-500" data-i18n="unit_rai">ไร่</span>
             </div>
           </div>
           <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center text-2xl shrink-0 border border-rose-300 shadow-xs">
@@ -884,7 +932,7 @@ if (!$isUserAdmin) {
 
         <div class="pt-4 border-t border-rose-100 mt-4 flex items-center justify-between text-xs">
           <span class="text-rose-700 font-semibold"><?= formatNumber($redCount) ?> แปลง (<?= $redPct ?>%)</span>
-          <span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full font-bold text-[10px]">
+          <span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full font-bold text-[10px]" data-i18n="db_card_non_compliant_sub">
             ทับซ้อน Zone C
           </span>
         </div>
@@ -897,10 +945,10 @@ if (!$isUserAdmin) {
       
       <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4 mb-6">
         <div>
-          <h3 class="text-base sm:text-lg font-extrabold text-mezenc-teal flex items-center gap-2">
+          <h3 class="text-base sm:text-lg font-extrabold text-mezenc-teal flex items-center gap-2" data-i18n="db_status_ratio_title">
             <span>📊 สัดส่วนการจำแนกสถานะพื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี</span>
           </h3>
-          <p class="text-xs text-gray-400 font-medium mt-0.5">
+          <p class="text-xs text-gray-400 font-medium mt-0.5" data-i18n="db_status_ratio_sub">
             เปรียบเทียบสัดส่วนเนื้อที่และแปลงปลูกตามเกณฑ์การตรวจสอบกับแนวเขตป่าสงวนแห่งชาติ 26 แห่ง
           </p>
         </div>
@@ -911,25 +959,25 @@ if (!$isUserAdmin) {
             href="dashboard.php" 
             class="px-3.5 py-1.5 rounded-full font-bold transition-all <?= $statusFilter === '' ? 'bg-mezenc-teal text-white shadow-xs' : 'bg-[#f8faf9] text-gray-600 hover:bg-gray-100 border border-gray-200' ?>"
           >
-            ทั้งหมด (<?= formatNumber($totalPlots) ?>)
+            <span data-i18n="db_filter_all">ทั้งหมด</span> (<?= formatNumber($totalPlots) ?>)
           </a>
           <a 
             href="dashboard.php?status=compliant" 
             class="px-3.5 py-1.5 rounded-full font-bold transition-all <?= $statusFilter === 'compliant' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' ?>"
           >
-            🟢 ผ่านเกณฑ์ (<?= formatNumber($greenCount) ?>)
+            <span data-i18n="db_filter_compliant">🟢 ผ่านเกณฑ์</span> (<?= formatNumber($greenCount) ?>)
           </a>
           <a 
             href="dashboard.php?status=under_review" 
             class="px-3.5 py-1.5 rounded-full font-bold transition-all <?= $statusFilter === 'under_review' ? 'bg-amber-500 text-white shadow-xs' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200' ?>"
           >
-            🟡 เฝ้าระวัง (<?= formatNumber($yellowCount) ?>)
+            <span data-i18n="db_filter_review">🟡 เฝ้าระวัง</span> (<?= formatNumber($yellowCount) ?>)
           </a>
           <a 
             href="dashboard.php?status=non_compliant" 
             class="px-3.5 py-1.5 rounded-full font-bold transition-all <?= $statusFilter === 'non_compliant' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200' ?>"
           >
-            🔴 ซ้อนทับป่า (<?= formatNumber($redCount) ?>)
+            <span data-i18n="db_filter_non_compliant">🔴 ซ้อนทับป่า</span> (<?= formatNumber($redCount) ?>)
           </a>
         </div>
       </div>
@@ -942,9 +990,9 @@ if (!$isUserAdmin) {
           <div class="w-48 h-48 sm:w-56 sm:h-56 relative flex items-center justify-center">
             <canvas id="statusChartCanvas"></canvas>
             <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-              <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">พื้นที่รวม</span>
+              <span class="text-xs font-bold text-gray-400 uppercase tracking-wider" data-i18n="lbl_total_area_colon">พื้นที่รวม</span>
               <span class="text-xl sm:text-2xl font-black text-mezenc-teal"><?= formatNumber($totalArea, 0) ?></span>
-              <span class="text-[11px] text-gray-500 font-medium">ไร่</span>
+              <span class="text-[11px] text-gray-500 font-medium" data-i18n="unit_rai">ไร่</span>
             </div>
           </div>
         </div>
@@ -957,20 +1005,20 @@ if (!$isUserAdmin) {
             <div class="flex justify-between items-center">
               <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span>
-                <strong class="text-emerald-900 font-extrabold text-sm sm:text-base">
+                <strong class="text-emerald-900 font-extrabold text-sm sm:text-base" data-i18n="db_progress_green_title">
                   🟢 แปลงที่ผ่านเกณฑ์ (ปลอดภัย 100%)
                 </strong>
               </div>
               <span class="font-extrabold text-emerald-700 text-sm sm:text-base">
-                <?= formatNumber($greenArea, 1) ?> ไร่ (<?= $greenPct ?>%)
+                <?= formatNumber($greenArea, 1) ?> <span data-i18n="unit_rai">ไร่</span> (<?= $greenPct ?>%)
               </span>
             </div>
             <div class="w-full h-3 bg-emerald-100 rounded-full overflow-hidden">
               <div class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: <?= $greenPct ?>%;"></div>
             </div>
             <div class="flex justify-between items-center text-xs text-emerald-800/80">
-              <span>จำนวน: <b><?= formatNumber($greenCount) ?> แปลง</b></span>
-              <span>สถานะ: อยู่นอกแนวเขตป่าสงวนแห่งชาติและแนวกันชนทุกผืน</span>
+              <span>จำนวน: <b><?= formatNumber($greenCount) ?> <span data-i18n="unit_plots">แปลง</span></b></span>
+              <span data-i18n="db_progress_green_desc">สถานะ: อยู่นอกแนวเขตป่าสงวนแห่งชาติและแนวกันชนทุกผืน</span>
             </div>
           </div>
 
@@ -979,20 +1027,20 @@ if (!$isUserAdmin) {
             <div class="flex justify-between items-center">
               <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-amber-500 shrink-0"></span>
-                <strong class="text-amber-900 font-extrabold text-sm sm:text-base">
+                <strong class="text-amber-900 font-extrabold text-sm sm:text-base" data-i18n="db_progress_yellow_title">
                   🟡 แปลงที่ควรเฝ้าระวัง (Buffer Zone 500m)
                 </strong>
               </div>
               <span class="font-extrabold text-amber-700 text-sm sm:text-base">
-                <?= formatNumber($yellowArea, 1) ?> ไร่ (<?= $yellowPct ?>%)
+                <?= formatNumber($yellowArea, 1) ?> <span data-i18n="unit_rai">ไร่</span> (<?= $yellowPct ?>%)
               </span>
             </div>
             <div class="w-full h-3 bg-amber-100 rounded-full overflow-hidden">
               <div class="h-full bg-amber-500 rounded-full transition-all duration-500" style="width: <?= $yellowPct ?>%;"></div>
             </div>
             <div class="flex justify-between items-center text-xs text-amber-800/80">
-              <span>จำนวน: <b><?= formatNumber($yellowCount) ?> แปลง</b></span>
-              <span>สถานะ: ห่างจากแนวเขตป่าสงวนน้อยกว่า 500 เมตร ต้องติดตามพิกัดขอบเขต</span>
+              <span>จำนวน: <b><?= formatNumber($yellowCount) ?> <span data-i18n="unit_plots">แปลง</span></b></span>
+              <span data-i18n="db_progress_yellow_desc">สถานะ: ห่างจากแนวเขตป่าสงวนน้อยกว่า 500 เมตร ต้องติดตามพิกัดขอบเขต</span>
             </div>
           </div>
 
@@ -1001,20 +1049,20 @@ if (!$isUserAdmin) {
             <div class="flex justify-between items-center">
               <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-rose-500 shrink-0"></span>
-                <strong class="text-rose-900 font-extrabold text-sm sm:text-base">
+                <strong class="text-rose-900 font-extrabold text-sm sm:text-base" data-i18n="db_progress_red_title">
                   🔴 แปลงที่ซ้อนทับพื้นที่เขตป่าสงวน
                 </strong>
               </div>
               <span class="font-extrabold text-rose-700 text-sm sm:text-base">
-                <?= formatNumber($redArea, 1) ?> ไร่ (<?= $redPct ?>%)
+                <?= formatNumber($redArea, 1) ?> <span data-i18n="unit_rai">ไร่</span> (<?= $redPct ?>%)
               </span>
             </div>
             <div class="w-full h-3 bg-rose-100 rounded-full overflow-hidden">
               <div class="h-full bg-rose-500 rounded-full transition-all duration-500" style="width: <?= $redPct ?>%;"></div>
             </div>
             <div class="flex justify-between items-center text-xs text-rose-800/80">
-              <span>จำนวน: <b><?= formatNumber($redCount) ?> แปลง</b></span>
-              <span>สถานะ: มีพิกัด Polygon ซ้อนทับแนวเขตป่าสงวนแห่งชาติสุราษฎร์ธานี (Zone C)</span>
+              <span>จำนวน: <b><?= formatNumber($redCount) ?> <span data-i18n="unit_plots">แปลง</span></b></span>
+              <span data-i18n="db_progress_red_desc">สถานะ: มีพิกัด Polygon ซ้อนทับแนวเขตป่าสงวนแห่งชาติสุราษฎร์ธานี (Zone C)</span>
             </div>
           </div>
 
@@ -1031,14 +1079,14 @@ if (!$isUserAdmin) {
       <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] p-5 sm:p-6">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
           <div>
-            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2">
+            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2" data-i18n="db_chart_clone_title">
               <span>🧬 สัดส่วนสายพันธุ์ยางพารา (Clone Distribution)</span>
             </h3>
-            <p class="text-xs text-gray-400 font-medium mt-0.5">
+            <p class="text-xs text-gray-400 font-medium mt-0.5" data-i18n="db_chart_clone_sub">
               การกระจายตัวของพันธุ์ยางพาราในพื้นที่ จ.สุราษฎร์ธานี
             </p>
           </div>
-          <span class="px-2.5 py-1 rounded-full bg-mezenc-lightCyan text-mezenc-teal text-[11px] font-bold border border-mezenc-mint">
+          <span class="px-2.5 py-1 rounded-full bg-mezenc-lightCyan text-mezenc-teal text-[11px] font-bold border border-mezenc-mint" data-i18n="db_badge_provincial">
             ภาพรวมจังหวัด
           </span>
         </div>
@@ -1051,14 +1099,14 @@ if (!$isUserAdmin) {
       <div class="bg-white rounded-3xl shadow-[0_20px_45px_-10px_rgba(14,77,78,0.18)] border-2 border-[#bee6e1] p-5 sm:p-6">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
           <div>
-            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2">
+            <h3 class="text-sm sm:text-base font-extrabold text-mezenc-teal flex items-center gap-2" data-i18n="db_chart_monthly_title">
               <span>📅 แนวโน้มผลผลิตและรายได้รายเดือน (Monthly Provincial Trends)</span>
             </h3>
-            <p class="text-xs text-gray-400 font-medium mt-0.5">
+            <p class="text-xs text-gray-400 font-medium mt-0.5" data-i18n="db_chart_monthly_sub">
               ปริมาณน้ำยางสด (กก.) และมูลค่ารวมรายเดือนทั้งจังหวัด
             </p>
           </div>
-          <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
+          <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200" data-i18n="db_badge_monthly">
             รายเดือน
           </span>
         </div>
@@ -1075,10 +1123,10 @@ if (!$isUserAdmin) {
       <!-- Table Header Bar -->
       <div class="p-5 sm:p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 bg-white">
         <div>
-          <h3 class="text-base sm:text-lg font-extrabold text-mezenc-teal flex items-center gap-2">
+          <h3 class="text-base sm:text-lg font-extrabold text-mezenc-teal flex items-center gap-2" data-i18n="db_table_title">
             <span>📋 ทะเบียนแปลงปลูกยางพารา จ.สุราษฎร์ธานี</span>
           </h3>
-          <p class="text-xs text-gray-400 font-medium mt-0.5">
+          <p class="text-xs text-gray-400 font-medium mt-0.5" data-i18n="db_table_sub">
             แสดงรายละเอียดแปลงปลูก เกษตรกรผู้ถือครอง เนื้อที่ และผลการประเมินความสอดคล้องตามมาตรฐาน
           </p>
         </div>
@@ -1094,6 +1142,7 @@ if (!$isUserAdmin) {
               name="q" 
               value="<?= e($searchQuery) ?>" 
               placeholder="ค้นหาชื่อแปลง, โฉนด, อำเภอ..." 
+              data-i18n-placeholder="db_search_ph"
               class="w-full bg-[#f8faf9] text-gray-800 text-xs rounded-full pl-3.5 pr-8 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs"
             >
             <button type="submit" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-mezenc-teal text-xs">
@@ -1101,7 +1150,7 @@ if (!$isUserAdmin) {
             </button>
           </div>
           <?php if ($searchQuery !== '' || $statusFilter !== ''): ?>
-            <a href="dashboard.php" class="text-xs text-gray-400 hover:text-rose-500 underline whitespace-nowrap">
+            <a href="dashboard.php" class="text-xs text-gray-400 hover:text-rose-500 underline whitespace-nowrap" data-i18n="db_clear_filter">
               ล้างตัวกรอง
             </a>
           <?php endif; ?>
@@ -1113,14 +1162,14 @@ if (!$isUserAdmin) {
         <table class="w-full text-left border-collapse text-xs sm:text-sm">
           <thead>
             <tr class="bg-[#f8faf9] border-b border-gray-200/80 text-mezenc-teal font-extrabold uppercase tracking-wider text-xs">
-              <th class="py-4 px-4 whitespace-nowrap">รหัส / ชื่อแปลงปลูก</th>
-              <th class="py-4 px-4 whitespace-nowrap">เกษตรกรเจ้าของแปลง</th>
-              <th class="py-4 px-4 whitespace-nowrap">เอกสารสิทธิ์ / ที่ตั้ง</th>
-              <th class="py-4 px-4 whitespace-nowrap">พันธุ์ยาง</th>
-              <th class="py-4 px-4 whitespace-nowrap text-right">เนื้อที่ (ไร่)</th>
-              <th class="py-4 px-4 whitespace-nowrap text-center">สถานะความสอดคล้อง</th>
-              <th class="py-4 px-4 whitespace-nowrap text-right">อัปเดตล่าสุด</th>
-              <th class="py-4 px-4 whitespace-nowrap text-center">การจัดการ</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="db_th_code">รหัส / ชื่อแปลงปลูก</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="db_th_farmer">เกษตรกรเจ้าของแปลง</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="db_th_doc_loc">เอกสารสิทธิ์ / ที่ตั้ง</th>
+              <th class="py-4 px-4 whitespace-nowrap" data-i18n="db_th_clone">พันธุ์ยาง</th>
+              <th class="py-4 px-4 whitespace-nowrap text-right" data-i18n="db_th_area">เนื้อที่ (ไร่)</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center" data-i18n="db_th_eudr">สถานะความสอดคล้อง</th>
+              <th class="py-4 px-4 whitespace-nowrap text-right" data-i18n="db_th_updated">อัปเดตล่าสุด</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center" data-i18n="db_th_actions">การจัดการ</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 text-gray-700">
@@ -1195,7 +1244,7 @@ if (!$isUserAdmin) {
                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#f8faf9] hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-xs border border-gray-200 hover:border-mezenc-brightCyan transition-all shadow-xs"
                       title="ดูพิกัดแปลงปลูกบนแผนที่ GIS"
                     >
-                      <span>📍</span> <span>ดูแปลง</span>
+                      <span>📍</span> <span data-i18n="lbl_view_plot">ดูแปลง</span>
                     </a>
                   </td>
 
@@ -1203,7 +1252,7 @@ if (!$isUserAdmin) {
               <?php endforeach; ?>
             <?php else: ?>
               <tr>
-                <td colspan="8" class="text-center py-12 text-gray-400 text-xs sm:text-sm">
+                <td colspan="8" class="text-center py-12 text-gray-400 text-xs sm:text-sm" data-i18n="db_no_plots_admin">
                   ไม่พบข้อมูลแปลงปลูกตามเงื่อนไขที่เลือก
                 </td>
               </tr>
@@ -1234,11 +1283,11 @@ if (!$isUserAdmin) {
               </svg>
             </div>
             <div class="space-y-0.5">
-              <div class="font-extrabold text-[15px] sm:text-[16px] leading-snug text-white">แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา</div>
-              <div class="font-semibold text-[13px] sm:text-[14px] leading-snug text-white/95">GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations</div>
+              <div class="font-extrabold text-[15px] sm:text-[16px] leading-snug text-white" data-i18n="foot_title">แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา</div>
+              <div class="font-semibold text-[13px] sm:text-[14px] leading-snug text-white/95" data-i18n="foot_title_en">GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations</div>
             </div>
           </div>
-          <p class="text-[14px] text-white/85 leading-relaxed font-light">
+          <p class="text-[14px] text-white/85 leading-relaxed font-light" data-i18n="foot_dept">
             สาขาเทคโนโลยีสารสนเทศ คณะวิทยาศาสตร์และเทคโนโลยีอุตสาหกรรม<br>
             มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี<br>
             <span class="text-white/75 text-[14px]">31 หมู่ 6 ต.มะขามเตี้ย อ.เมือง จ.สุราษฎร์ธานี 84000</span>
@@ -1247,22 +1296,22 @@ if (!$isUserAdmin) {
 
         <!-- คอลัมน์ที่ 2: ข้อมูลผู้จัดทำและช่องทางติดต่อ -->
         <div class="md:col-span-4 space-y-1.5 text-[14px] text-white/85 leading-relaxed">
-          <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
-          <div class="text-[14px] text-white/75">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
+          <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
+          <div class="text-[14px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
-            <div>👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div>🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div>✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
+            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div data-i18n="foot_email">✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
           </div>
         </div>
 
         <!-- คอลัมน์ที่ 3: กล่องสถิติพื้นที่ (Surat Thani Territory Card) -->
         <div class="md:col-span-3 flex justify-start md:justify-end">
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
-            <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1">SURAT THANI FOREST COVERAGE</div>
+            <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-[14px] font-bold text-white leading-tight">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
-            <div class="text-[12px] text-white/70 mt-1 font-light">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
+            <div class="text-[14px] font-bold text-white leading-tight" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-[12px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
 
@@ -1270,8 +1319,8 @@ if (!$isUserAdmin) {
 
       <!-- แถบล่างสุด (Copyright Bar) -->
       <div class="pt-6 flex flex-col sm:flex-row justify-between items-center text-[14px] text-white/75 gap-4">
-        <div>&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
-        <div class="text-mezenc-mint text-center sm:text-right">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
+        <div data-i18n="foot_copy">&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
+        <div class="text-mezenc-mint text-center sm:text-right" data-i18n="foot_eudr_cert">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
       </div>
 
     </div>
