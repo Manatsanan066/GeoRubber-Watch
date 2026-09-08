@@ -972,6 +972,8 @@ const GeoMap = {
   }
 };
 
+window.GeoMap = GeoMap;
+
 document.addEventListener('DOMContentLoaded', () => {
   GeoMap.init();
 });
