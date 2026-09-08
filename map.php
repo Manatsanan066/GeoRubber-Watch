@@ -806,13 +806,36 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               >
                 <span data-i18n="map_btn_draw_new">✏️ วาดแปลงใหม่</span>
               </button>
+              <!-- GPS Locate Button -->
               <button 
                 type="button" 
+                id="btn-panel-locate-me"
                 onclick="locateUserDirect()" 
-                class="py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#d4f1ee] to-[#e8f7f5] hover:from-mezenc-brightCyan hover:to-mezenc-teal text-mezenc-teal hover:text-white font-bold text-[14px] border-2 border-[#bee6e1] shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                class="py-2.5 px-3 rounded-2xl bg-gradient-to-r from-[#d4f1ee] to-[#e8f7f5] hover:from-mezenc-brightCyan hover:to-mezenc-teal text-mezenc-teal hover:text-white font-bold text-[14px] border-2 border-[#bee6e1] shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer group"
+                title="ระบุตำแหน่ง GPS ปัจจุบัน"
               >
-                <span data-i18n="map_btn_gps_me">📍 GPS ของฉัน</span>
+                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 inline-block group-hover:scale-110 transition-transform"><path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10v-1c-0.6,0.9-1.2,1.7-1.7,2.4c-0.4,2.2-1.6,4.1-3.3,5.4 c-0.1-0.3-0.2-0.7-0.3-1c-0.1-0.4-0.2-0.8-0.4-1.2c-0.1-0.4-0.2-0.8-0.4-1.1c-0.1-0.1-0.3-0.2-0.5-0.3c-0.7-0.2-1.6,0.1-2.1-0.6 c-0.2-0.3-0.2-0.6-0.1-1c0.2-0.3,0.3-0.6,0.5-0.9c0.2-0.4,0.5-0.9,0.6-1.4c-0.8-1.2-1.6-2.6-2-3.9h-0.1c-0.1,0-0.1,0-0.2-0.1 c-0.2-0.2-0.3-0.7-0.2-1c0-0.5,0.3-0.8,0.2-1.3c0-0.1-0.1-0.9-0.1-0.9c-0.3,0-0.8,0-0.7-0.5V3.5H12h0.5c0.2-0.6,0.6-1.1,0.9-1.5H12z M18,2c-2.2,0-4,1.8-4,4s4,7,4,7s4-4.8,4-7S20.2,2,18,2z M18,4.5c0.8,0,1.5,0.7,1.5,1.5S18.8,7.5,18,7.5S16.5,6.8,16.5,6 S17.2,4.5,18,4.5z M8,5.1c0.4,0,0.7,0,1,0.1s0.6,0.3,0.8,0.5s0.5,0.5,0.5,0.8c0,0.1,0,0.2-0.1,0.2C10.1,6.8,10,6.8,9.9,6.8 c-0.3,0-0.6,0-0.8-0.1C9,6.6,8.8,6.4,8.6,6.3C8.1,6.1,7.2,7.4,7.1,7.8C7,8.1,7,8.8,7.5,8.9c0.3,0,1-0.6,1.2-0.8C8.9,8,9,7.9,9.2,7.8 c-0.8-0.1,1.4,0.6,1.6,1.3C11,9.9,9.6,10.5,9,10.7c-0.2,0.1-0.3-0.1-0.5,0c-0.5,0.2-1.1,0.9-1.1,1.4s-0.1,1-0.2,1.5 c-0.1,0-0.2-0.1-0.2-0.1v-0.2c0-0.3-0.1-0.6-0.4-0.8c-0.1,0-0.1-0.1-0.2-0.1c-0.3-0.1-0.6-0.4-0.9-0.1c-0.2,0.2-0.4,0.5-0.4,0.8 c0,0.1,0,0.2,0.1,0.3c0.2,0.1,0.4,0,0.6,0c0.1,0,0.2,0.2,0.3,0.3c0.2,0.3,0.3,0.8,0.7,0.8h0.7h1.3c0.3,0.1,0.8,0.2,1,0.4 c0.1,0.2,0.1,0.4,0.2,0.6c0.4,0.5,1.1,0.5,1.7,0.7c0.2,0.1,0.3,0.2,0.3,0.4c0,0.3-0.1,0.7-0.2,1s-0.2,0.7-0.4,0.9s-0.4,0.3-0.6,0.4 c-0.4,0.2-0.6,0.6-0.8,0.9c0,0-0.1,0.2-0.2,0.3c-0.8-0.2-1.5-0.5-2.2-1v-0.2c-0.1-0.4-0.2-0.7-0.3-1c-0.2-0.5-0.5-1.1-0.6-1.6 c0-0.5,0.1-1-0.2-1.4c-0.3-0.5-1.1-0.5-1.6-0.8c-0.4-0.4-0.9-0.8-1.3-1.3V12c0-2.7,1.3-5.1,3.3-6.7C7.3,5.2,7.6,5.1,8,5.1z"/></svg>
+                <span data-i18n="ov_btn_gps_locate">ตำแหน่งฉัน (GPS)</span>
               </button>
+            </div>
+            <!-- Pin Result Card -->
+            <div id="pin-status-card" class="hidden p-3.5 rounded-2xl border text-[14px] shadow-xs transition-all bg-[#f8faf9] border-gray-200 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-mezenc-teal text-[14px] flex items-center gap-1.5">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 inline-block"><path d="M5.7 15C4.03377 15.6353 3 16.5205 3 17.4997C3 19.4329 7.02944 21 12 21C16.9706 21 21 19.4329 21 17.4997C21 16.5205 19.9662 15.6353 18.3 15M12 9H12.01M18 9C18 13.0637 13.5 15 12 18C10.5 15 6 13.0637 6 9C6 5.68629 8.68629 3 12 3C15.3137 3 18 5.68629 18 9ZM13 9C13 9.55228 12.5523 10 12 10C11.4477 10 11 9.55228 11 9C11 8.44772 11.4477 8 12 8C12.5523 8 13 8.44772 13 9Z" stroke="#00a896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  <span>ผลการปักหมุดตรวจสอบ</span>
+                </span>
+                <button type="button" onclick="window.clearPin ? window.clearPin() : clearUserGpsPin()" class="text-gray-400 hover:text-rose-500 text-xs font-bold px-1.5 py-0.5 rounded-md hover:bg-rose-50 cursor-pointer" title="ลบหมุด">ลบหมุด ✕</button>
+              </div>
+              <div id="pin-status-text" class="leading-relaxed text-[13px] space-y-1">
+                <!-- Dynamic Content -->
+              </div>
+            </div>
+            <!-- GPS Status Result Box -->
+            <div id="gps-status-card" class="hidden p-3 rounded-2xl border text-[14px] shadow-xs transition-all bg-[#f8faf9] border-gray-200">
+              <div id="gps-status-text" class="leading-relaxed text-[14px]">
+                กำลังค้นหาพิกัด GPS...
+              </div>
             </div>
           </div>
 
@@ -1717,7 +1740,16 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         GeoMap.map.removeLayer(userAccuracyCircle);
         userAccuracyCircle = null;
       }
+      const pinCard = document.getElementById('pin-status-card');
+      if (pinCard) pinCard.classList.add('hidden');
+      const gpsCard = document.getElementById('gps-status-card');
+      if (gpsCard) gpsCard.classList.add('hidden');
     }
+    window.clearUserGpsPin = clearUserGpsPin;
+    window.clearPin = clearUserGpsPin;
+    window.GeoOverview = window.GeoOverview || {};
+    window.GeoOverview.locateUser = locateUserDirect;
+    window.GeoOverview.clearPin = clearUserGpsPin;
 
     // Direct GPS Locate & Pin trigger
     function locateUserDirect() {
