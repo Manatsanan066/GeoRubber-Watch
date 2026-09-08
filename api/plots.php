@@ -14,6 +14,11 @@ $currentUser = getCurrentUser();
 $isUserAdmin = isAdmin();
 $currentFarmerId = $currentUser['farmer_id'] ?? null;
 
+// Clean up unwanted auto-prefixes for custom farmer names if any
+try {
+    $pdo->exec("UPDATE farmers SET prefix = '' WHERE prefix = 'นาย' AND (first_name LIKE '%แปลงปลูก%' OR first_name LIKE '%MNSN%')");
+} catch (Throwable $eIgnore) {}
+
 // Helper: Calculate polygon area in Sqm from Lat/Lng coordinates
 function calculatePolygonAreaSqm($coords) {
     $area = 0.0;
@@ -315,6 +320,16 @@ if ($method === 'POST') {
                 exit;
             }
 
+            // Fetch current plot record
+            $chkPlot = $pdo->prepare("SELECT id, farmer_id FROM rubber_plots WHERE id = ?");
+            $chkPlot->execute([$id]);
+            $currentPlot = $chkPlot->fetch(PDO::FETCH_ASSOC);
+            if (!$currentPlot) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลแปลงปลูกที่ต้องการแก้ไข']);
+                exit;
+            }
+
             $plot_name = trim($data['plot_name'] ?? '');
             $farmer_name = trim($data['farmer_name'] ?? '');
             $title_deed_type = $data['title_deed_type'] ?? 'โฉนดที่ดิน (น.ส. 4 จ)';
@@ -324,17 +339,129 @@ if ($method === 'POST') {
             $tree_count = (int)($data['tree_count'] ?? 300);
             $tapping_status = $data['tapping_status'] ?? 'tapping';
             $notes = trim($data['notes'] ?? '');
+            $eudr_status = $data['eudr_status'] ?? null;
+            $geojson = $data['geojson_geometry'] ?? null;
 
-            $farmerId = null;
+            $farmerId = (int)($currentPlot['farmer_id'] ?? 0);
+
             if (!empty($farmer_name)) {
-                $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-                $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
-                $fStmt = $pdo->prepare("SELECT id FROM farmers WHERE (prefix || first_name || ' ' || last_name) {$likeOp} ? OR first_name {$likeOp} ? OR farmer_code {$likeOp} ? LIMIT 1");
-                $fStmt->execute(["%$farmer_name%", "%$farmer_name%", "%$farmer_name%"]);
-                $farmerId = $fStmt->fetchColumn();
+                // Parse prefix and clean name accurately
+                $prefix = '';
+                $cleanName = $farmer_name;
+                if (mb_strpos($farmer_name, 'นางสาว') === 0) {
+                    $prefix = 'นางสาว';
+                    $cleanName = trim(mb_substr($farmer_name, mb_strlen('นางสาว')));
+                } elseif (mb_strpos($farmer_name, 'นาง') === 0) {
+                    $prefix = 'นาง';
+                    $cleanName = trim(mb_substr($farmer_name, mb_strlen('นาง')));
+                } elseif (mb_strpos($farmer_name, 'นาย') === 0) {
+                    $prefix = 'นาย';
+                    $cleanName = trim(mb_substr($farmer_name, mb_strlen('นาย')));
+                }
+
+                $parts = preg_split('/\s+/', $cleanName, 2);
+                $firstName = !empty($parts[0]) ? $parts[0] : $cleanName;
+                $lastName = !empty($parts[1]) ? $parts[1] : '';
+
+                if ($farmerId > 0) {
+                    // Update existing farmer record linked to this plot
+                    $updF = $pdo->prepare("UPDATE farmers SET prefix = ?, first_name = ?, last_name = ? WHERE id = ?");
+                    $updF->execute([$prefix, $firstName, $lastName, $farmerId]);
+                } else {
+                    // Insert new farmer record
+                    $fCount = $pdo->query("SELECT COUNT(*) FROM farmers")->fetchColumn();
+                    $nextCode = 'FM-PSU-' . str_pad($fCount + 1, 3, '0', STR_PAD_LEFT);
+                    if ($driver === 'pgsql') {
+                        $insF = $pdo->prepare("INSERT INTO farmers (farmer_code, prefix, first_name, last_name, province) VALUES (?, ?, ?, ?, 'สุราษฎร์ธานี') RETURNING id");
+                        $insF->execute([$nextCode, $prefix, $firstName, $lastName]);
+                        $farmerId = (int)$insF->fetchColumn();
+                    } else {
+                        $insF = $pdo->prepare("INSERT INTO farmers (farmer_code, prefix, first_name, last_name, province) VALUES (?, ?, ?, ?, 'สุราษฎร์ธานี')");
+                        $insF->execute([$nextCode, $prefix, $firstName, $lastName]);
+                        $farmerId = (int)$pdo->lastInsertId();
+                    }
+                }
             }
 
-            if ($farmerId) {
+            // If geojson geometry is provided, perform spatial analysis & update spatial fields
+            if (!empty($geojson)) {
+                require_once __DIR__ . '/spatial_check.php';
+                $geomObj = is_string($geojson) ? json_decode($geojson, true) : $geojson;
+                $coords = $geomObj['coordinates'][0] ?? null;
+                if ($coords && count($coords) >= 3) {
+                    $spatial = evaluatePlotEudrSpatial($pdo, $coords, $planting_year);
+                    $thaiArea = $spatial['area_thai'];
+                    $centroidLat = $spatial['centroid']['lat'];
+                    $centroidLng = $spatial['centroid']['lng'];
+                    $areaRai = (int)$thaiArea['rai'];
+                    $areaNgan = (int)$thaiArea['ngan'];
+                    $areaSqwah = (float)$thaiArea['sqwah'];
+                    $areaSqm = (float)$thaiArea['sqm'];
+                    $areaHectare = (float)$thaiArea['hectare'];
+                    $treesPerRai = $areaRai > 0 ? round($tree_count / $areaRai) : 76;
+                    $calcEudrStatus = $eudr_status ?: $spatial['eudr_status'];
+                    $overlapPct = (float)($spatial['overlap_percentage'] ?? 0);
+                    $deforestationFree = $spatial['deforestation_free'] ? 1 : 0;
+                    $cutoffCompliant = $spatial['cutoff_compliant'] ? 1 : 0;
+
+                    $stmt = $pdo->prepare("
+                        UPDATE rubber_plots SET
+                            plot_name = ?,
+                            farmer_id = ?,
+                            title_deed_type = ?,
+                            title_deed_no = ?,
+                            geojson_geometry = ?,
+                            centroid_lat = ?,
+                            centroid_lng = ?,
+                            area_rai = ?,
+                            area_ngan = ?,
+                            area_sqwah = ?,
+                            area_sqm = ?,
+                            area_hectare = ?,
+                            rubber_clone = ?,
+                            planting_year = ?,
+                            tree_count = ?,
+                            trees_per_rai = ?,
+                            tapping_status = ?,
+                            eudr_status = ?,
+                            eudr_overlap_pct = ?,
+                            eudr_deforestation_free = ?,
+                            eudr_cutoff_compliant = ?,
+                            notes = ?,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ");
+                    $stmt->execute([
+                        $plot_name, $farmerId, $title_deed_type, $title_deed_no,
+                        is_string($geojson) ? $geojson : json_encode($geojson, JSON_UNESCAPED_UNICODE),
+                        $centroidLat, $centroidLng,
+                        $areaRai, $areaNgan, $areaSqwah, $areaSqm, $areaHectare,
+                        $rubber_clone, $planting_year, $tree_count, $treesPerRai,
+                        $tapping_status, $calcEudrStatus, $overlapPct, $deforestationFree, $cutoffCompliant,
+                        $notes, $id
+                    ]);
+                } else {
+                    $stmt = $pdo->prepare("
+                        UPDATE rubber_plots SET
+                            plot_name = ?,
+                            farmer_id = ?,
+                            title_deed_type = ?,
+                            title_deed_no = ?,
+                            rubber_clone = ?,
+                            planting_year = ?,
+                            tree_count = ?,
+                            tapping_status = ?,
+                            notes = ?,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ");
+                    $stmt->execute([
+                        $plot_name, $farmerId, $title_deed_type, $title_deed_no,
+                        $rubber_clone, $planting_year, $tree_count,
+                        $tapping_status, $notes, $id
+                    ]);
+                }
+            } else {
                 $stmt = $pdo->prepare("
                     UPDATE rubber_plots SET
                         plot_name = ?,
@@ -351,25 +478,6 @@ if ($method === 'POST') {
                 ");
                 $stmt->execute([
                     $plot_name, $farmerId, $title_deed_type, $title_deed_no,
-                    $rubber_clone, $planting_year, $tree_count,
-                    $tapping_status, $notes, $id
-                ]);
-            } else {
-                $stmt = $pdo->prepare("
-                    UPDATE rubber_plots SET
-                        plot_name = ?,
-                        title_deed_type = ?,
-                        title_deed_no = ?,
-                        rubber_clone = ?,
-                        planting_year = ?,
-                        tree_count = ?,
-                        tapping_status = ?,
-                        notes = ?,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                ");
-                $stmt->execute([
-                    $plot_name, $title_deed_type, $title_deed_no,
                     $rubber_clone, $planting_year, $tree_count,
                     $tapping_status, $notes, $id
                 ]);
@@ -579,11 +687,19 @@ if ($method === 'PUT') {
         exit;
     }
 
+    // Fetch current plot record
+    $chkPlot = $pdo->prepare("SELECT id, farmer_id FROM rubber_plots WHERE id = ?");
+    $chkPlot->execute([$id]);
+    $currentPlot = $chkPlot->fetch(PDO::FETCH_ASSOC);
+    if (!$currentPlot) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลแปลงปลูกที่ต้องการแก้ไข']);
+        exit;
+    }
+
     // RBAC: Check ownership for Farmers
     if (!$isUserAdmin) {
-        $chkStmt = $pdo->prepare("SELECT id FROM rubber_plots WHERE id = ? AND farmer_id = ?");
-        $chkStmt->execute([$id, $currentFarmerId]);
-        if (!$chkStmt->fetch()) {
+        if ($currentFarmerId && (int)$currentPlot['farmer_id'] !== (int)$currentFarmerId) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'ไม่อนุญาต: ท่านสามารถแก้ไขได้เฉพาะแปลงปลูกของตนเองเท่านั้น'], JSON_UNESCAPED_UNICODE);
             exit;
@@ -591,6 +707,7 @@ if ($method === 'PUT') {
     }
 
     $plot_name = trim($data['plot_name'] ?? '');
+    $farmer_name = trim($data['farmer_name'] ?? '');
     $title_deed_type = $data['title_deed_type'] ?? 'โฉนดที่ดิน (น.ส. 4 จ)';
     $title_deed_no = trim($data['title_deed_no'] ?? '');
     $rubber_clone = $data['rubber_clone'] ?? 'RRIM 600';
@@ -599,9 +716,36 @@ if ($method === 'PUT') {
     $tapping_status = $data['tapping_status'] ?? 'tapping';
     $notes = trim($data['notes'] ?? '');
 
+    $farmerId = (int)($currentPlot['farmer_id'] ?? 0);
+
+    if (!empty($farmer_name)) {
+        $prefix = '';
+        $cleanName = $farmer_name;
+        if (mb_strpos($farmer_name, 'นางสาว') === 0) {
+            $prefix = 'นางสาว';
+            $cleanName = trim(mb_substr($farmer_name, mb_strlen('นางสาว')));
+        } elseif (mb_strpos($farmer_name, 'นาง') === 0) {
+            $prefix = 'นาง';
+            $cleanName = trim(mb_substr($farmer_name, mb_strlen('นาง')));
+        } elseif (mb_strpos($farmer_name, 'นาย') === 0) {
+            $prefix = 'นาย';
+            $cleanName = trim(mb_substr($farmer_name, mb_strlen('นาย')));
+        }
+
+        $parts = preg_split('/\s+/', $cleanName, 2);
+        $firstName = !empty($parts[0]) ? $parts[0] : $cleanName;
+        $lastName = !empty($parts[1]) ? $parts[1] : '';
+
+        if ($farmerId > 0) {
+            $updF = $pdo->prepare("UPDATE farmers SET prefix = ?, first_name = ?, last_name = ? WHERE id = ?");
+            $updF->execute([$prefix, $firstName, $lastName, $farmerId]);
+        }
+    }
+
     $stmt = $pdo->prepare("
         UPDATE rubber_plots SET
             plot_name = ?,
+            farmer_id = ?,
             title_deed_type = ?,
             title_deed_no = ?,
             rubber_clone = ?,
@@ -613,7 +757,7 @@ if ($method === 'PUT') {
         WHERE id = ?
     ");
     $stmt->execute([
-        $plot_name, $title_deed_type, $title_deed_no,
+        $plot_name, $farmerId, $title_deed_type, $title_deed_no,
         $rubber_clone, $planting_year, $tree_count,
         $tapping_status, $notes, $id
     ]);

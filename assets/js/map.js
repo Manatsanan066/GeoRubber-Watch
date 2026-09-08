@@ -413,6 +413,22 @@ const GeoMap = {
       // Render sidebar plots list
       this.renderSidebarPlotsList(this.plotsData);
 
+      // Auto-focus on plot if plot_id is present in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlPlotId = parseInt(urlParams.get('plot_id') || urlParams.get('id') || 0);
+      if (urlPlotId > 0) {
+        const targetPlot = this.plotsData.find(f => Number(f.properties?.id || f.id) === urlPlotId);
+        if (targetPlot && targetPlot.properties) {
+          const lat = parseFloat(targetPlot.properties.centroid_lat || targetPlot.properties.centroid?.lat);
+          const lng = parseFloat(targetPlot.properties.centroid_lng || targetPlot.properties.centroid?.lng);
+          if (lat && lng) {
+            setTimeout(() => {
+              this.zoomToPlot(lat, lng, urlPlotId);
+            }, 300);
+          }
+        }
+      }
+
     } catch (e) {
       console.error('Error loading rubber plots:', e);
     }
