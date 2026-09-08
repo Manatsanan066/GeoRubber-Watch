@@ -680,7 +680,7 @@ const GeoMap = {
         document.getElementById('form-plot-id').value = p.id;
       }
       
-      const farmerName = p.farmer_name || (p.prefix ? `${p.prefix}${p.first_name} ${p.last_name}` : (p.first_name ? `${p.first_name} ${p.last_name}` : ''));
+      const farmerName = p.farmer_name || (p.first_name ? `${p.first_name} ${p.last_name || ''}`.trim() : '');
       if (document.getElementById('form-farmer-name')) {
         document.getElementById('form-farmer-name').value = farmerName;
       }

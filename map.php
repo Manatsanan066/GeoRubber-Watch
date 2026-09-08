@@ -1171,17 +1171,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <button 
                 type="button" 
                 onclick="activateMapDrawFromModal()" 
-                class="w-full sm:w-auto px-5 py-2.5 rounded-full bg-white hover:bg-mezenc-teal hover:text-white text-mezenc-teal font-bold text-[16px] border-2 border-mezenc-teal transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                class="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white hover:bg-mezenc-teal hover:text-white text-mezenc-teal font-bold text-[16px] border-2 border-mezenc-teal transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>เปิดแผนที่เพื่อวาดแปลงใหม่</span>
-              </button>
-
-              <button 
-                type="button" 
-                onclick="confirmModalCoordsAndNext()" 
-                class="w-full sm:w-auto px-6 py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>บันทึก</span>
               </button>
             </div>
           </div>
@@ -1229,23 +1221,14 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                   <input 
                     type="text" 
                     id="form-farmer-name" 
-                    list="farmer-suggestions" 
-                    value="<?= htmlspecialchars($user_name) ?>" 
+                    value="" 
                     class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" 
-                    placeholder="พิมพ์ชื่อ-นามสกุล เกษตรกรเจ้าของแปลง"
+                    placeholder="กรอกชื่อ-นามสกุล เกษตรกรเจ้าของแปลง"
                   >
-                  <datalist id="farmer-suggestions">
-                    <?php foreach ($farmers as $f): ?>
-                      <option value="<?= htmlspecialchars($f['prefix'] . $f['first_name'] . ' ' . $f['last_name']) ?>">
-                    <?php endforeach; ?>
-                    <option value="นางสาวมนัสนันท์ อนันตณรงค์">
-                    <option value="นางสาวมาทินี โรยนรินทร์">
-                    <option value="นายสมชาย ยางเจริญสุข">
-                  </datalist>
                 </div>
                 <div>
                   <label class="block font-bold text-mezenc-teal mb-1.5 pl-2 text-[16px]">ชื่อแปลงปลูก <span class="text-red-500">*</span></label>
-                  <input type="text" id="form-plot-name" value="แปลงยางพาราเขาท่าเพชร 1" class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" placeholder="เช่น แปลงยางพาราเขาท่าเพชร 1">
+                  <input type="text" id="form-plot-name" value="" class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" placeholder="เช่น แปลงยางพาราเขาท่าเพชร 1">
                 </div>
               </div>
 
@@ -1263,7 +1246,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 </div>
                 <div>
                   <label class="block font-bold text-mezenc-teal mb-1.5 pl-2 text-[16px]">เลขที่เอกสารสิทธิ์</label>
-                  <input type="text" id="form-deed-no" value="8401-4458" class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" placeholder="เช่น 8401-4458">
+                  <input type="text" id="form-deed-no" value="" class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" placeholder="เช่น 8401-4458">
                 </div>
               </div>
 
@@ -1311,35 +1294,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <!-- Row 6 -->
               <div>
                 <label class="block font-bold text-mezenc-teal mb-1.5 pl-2 text-[16px]">หมายเหตุเพิ่มเติม</label>
-                <textarea id="form-notes" rows="2" class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-3xl px-4 py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" placeholder="ระบุรายละเอียดเพิ่มเติม เช่น สภาพแปลง ประวัติการใช้ที่ดิน หรือข้อมูลเอกสารแนบ">แปลงยางพาราได้รับการดูแลรักษาอย่างถูกต้อง สอดคล้องตามเกณฑ์พื้นที่เพาะปลูก</textarea>
-              </div>
-            </div>
-
-            <!-- Direct Action Buttons at Bottom of Step 2 -->
-            <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <button 
-                type="button" 
-                onclick="activateMapDrawFromModal()" 
-                class="w-full sm:w-auto px-5 py-2.5 rounded-full border-2 border-gray-300 hover:bg-gray-100 text-gray-600 font-bold text-[16px] transition-all cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>‹ วาดแปลงใหม่อีกครั้ง</span>
-              </button>
-
-              <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto justify-end">
-                <button 
-                  type="button" 
-                  onclick="submitPlotFromModal('compliant')" 
-                  class="w-full sm:w-auto px-6 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[16px] shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>💾 บันทึกแปลงปลูกลงฐานข้อมูลทันที</span>
-                </button>
-                <button 
-                  type="button" 
-                  onclick="goToModalStep(3)" 
-                  class="w-full sm:w-auto px-5 py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow transition-all flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  <span>ถัดไป: ตรวจสอบ EUDR ›</span>
-                </button>
+                <textarea id="form-notes" rows="2" class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-3xl px-4 py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" placeholder="ระบุรายละเอียดเพิ่มเติม เช่น สภาพแปลง ประวัติการใช้ที่ดิน หรือข้อมูลเอกสารแนบ"></textarea>
               </div>
             </div>
 
@@ -2161,6 +2116,18 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       if (document.getElementById('form-plot-id')) {
         document.getElementById('form-plot-id').value = '';
       }
+      if (document.getElementById('form-farmer-name')) {
+        document.getElementById('form-farmer-name').value = '';
+      }
+      if (document.getElementById('form-plot-name')) {
+        document.getElementById('form-plot-name').value = '';
+      }
+      if (document.getElementById('form-deed-no')) {
+        document.getElementById('form-deed-no').value = '';
+      }
+      if (document.getElementById('form-notes')) {
+        document.getElementById('form-notes').value = '';
+      }
       goToModalStep(1);
       App.openModal('addPlotModal');
     }
@@ -2360,10 +2327,13 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           btnSave.onclick = function() { submitPlotFromModal(); };
         }
         if (btnNext) btnNext.classList.remove("hidden");
-        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป";
+        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ข้อมูลแปลง";
       } else if (step === 2) {
         // ขั้นตอนที่ 2: ปุ่มย้อนกลับ, ปุ่มบันทึกข้อมูล, และ ปุ่มหน้าถัดไป
-        if (btnPrev) btnPrev.classList.remove("hidden");
+        if (btnPrev) {
+          btnPrev.classList.remove("hidden");
+          btnPrev.innerHTML = "‹ วาดแปลงใหม่อีกครั้ง";
+        }
         if (btnSave) {
           btnSave.classList.remove("hidden");
           if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกข้อมูล";
@@ -2372,8 +2342,11 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         if (btnNext) btnNext.classList.remove("hidden");
         if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ตรวจสอบ EUDR";
       } else if (step === 3) {
-        // ขั้นตอนที่ 3: ปุ่มย้อนกลับ, ปุ่มบันทึกข้อมูล, และ ปุ่มหน้าถัดไป (แสดงเฉพาะกรณีปลอดภัย/เฝ้าระวัง)
-        if (btnPrev) btnPrev.classList.remove("hidden");
+        // ขั้นตอนที่ 3: ปุ่มย้อนกลับ, ปุ่มบันทึกข้อมูล, และ ปุ่มหน้าถัดไป
+        if (btnPrev) {
+          btnPrev.classList.remove("hidden");
+          btnPrev.innerHTML = "‹ ย้อนกลับ";
+        }
         if (btnSave) {
           btnSave.classList.remove("hidden");
           if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกข้อมูล";
@@ -2381,11 +2354,14 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         }
         renderStep3SpatialResult();
       } else if (step === 4) {
-        // ขั้นตอนที่ 4: ปุ่มย้อนกลับ และ ปุ่มบันทึก (ไม่มีปุ่มหน้าถัดไป)
-        if (btnPrev) btnPrev.classList.remove("hidden");
+        // ขั้นตอนที่ 4: ปุ่มย้อนกลับ และ ปุ่มบันทึกแปลงปลูก
+        if (btnPrev) {
+          btnPrev.classList.remove("hidden");
+          btnPrev.innerHTML = "‹ ย้อนกลับ";
+        }
         if (btnSave) {
           btnSave.classList.remove("hidden");
-          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกแปลงปลูก";
+          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกแปลงปลูกและเสร็จสิ้น";
           btnSave.onclick = function() { submitPlotFromModal(modalPresetMode || 'compliant'); };
         }
         if (btnNext) btnNext.classList.add("hidden");
@@ -2415,10 +2391,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
     }
 
     function updateModalSummaryCard() {
-      const farmerName = document.getElementById("form-farmer-name")?.value || "นางสาวมนัสนันท์ อนันตณรงค์";
-      const plotName = document.getElementById("form-plot-name").value || "แปลงยางพารา";
+      const farmerName = document.getElementById("form-farmer-name")?.value || "-";
+      const plotName = document.getElementById("form-plot-name")?.value || "แปลงยางพารา";
       const deedType = document.getElementById("form-deed-type").value;
-      const deedNo = document.getElementById("form-deed-no").value || "8401-4458";
+      const deedNo = document.getElementById("form-deed-no").value || "-";
       const coords = document.getElementById("form-centroid-display").value || "9.138240, 99.321850";
 
       document.getElementById("modal-sum-farmer").innerText = farmerName;
@@ -2477,10 +2453,21 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         }
       }
 
-      const farmerNameVal = document.getElementById('form-farmer-name')?.value?.trim() || 'นางสาวมนัสนันท์ อนันตณรงค์';
+      const farmerNameVal = document.getElementById('form-farmer-name')?.value?.trim() || '';
       const plotNameVal = document.getElementById('form-plot-name')?.value?.trim() || 'แปลงยางพาราใหม่';
       const editingPlotId = parseInt(document.getElementById('form-plot-id')?.value) || 0;
       const isEdit = editingPlotId > 0;
+
+      if (!farmerNameVal) {
+        if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
+          App.showToast('กรุณากรอกชื่อเกษตรกรเจ้าของแปลงก่อนบันทึกข้อมูล', 'warning');
+        } else {
+          alert('กรุณากรอกชื่อเกษตรกรเจ้าของแปลงก่อนบันทึกข้อมูล');
+        }
+        goToModalStep(2);
+        document.getElementById('form-farmer-name')?.focus();
+        return;
+      }
 
       const payload = {
         farmer_name: farmerNameVal,

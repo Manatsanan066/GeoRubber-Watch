@@ -248,7 +248,7 @@ if ($method === 'GET') {
                     'id' => (int)$p['id'],
                     'plot_code' => $p['plot_code'],
                     'plot_name' => $p['plot_name'],
-                    'farmer_name' => !empty($p['first_name']) ? "{$p['prefix']}{$p['first_name']} {$p['last_name']}" : 'นางสาวมนัสนันท์ อนันตณรงค์',
+                    'farmer_name' => !empty($p['first_name']) ? trim(($p['prefix'] ?? '') . $p['first_name'] . (!empty($p['last_name']) ? ' ' . $p['last_name'] : '')) : 'เกษตรกรเจ้าของแปลง',
                     'farmer_code' => $p['farmer_code'] ?? 'FM-PSU-001',
                     'area_rai' => (int)$p['area_rai'],
                     'area_ngan' => (int)$p['area_ngan'],
@@ -420,7 +420,7 @@ if ($method === 'POST') {
                     $farmer_id = $existingId;
                 } else {
                     // Parse Prefix and Name safely
-                    $prefix = 'นาย';
+                    $prefix = '';
                     $cleanName = $farmer_name;
                     if (mb_strpos($farmer_name, 'นางสาว') === 0) {
                         $prefix = 'นางสาว';
@@ -435,7 +435,7 @@ if ($method === 'POST') {
 
                     $parts = preg_split('/\s+/', $cleanName, 2);
                     $firstName = !empty($parts[0]) ? $parts[0] : $cleanName;
-                    $lastName = !empty($parts[1]) ? $parts[1] : 'อนันตณรงค์';
+                    $lastName = !empty($parts[1]) ? $parts[1] : '';
 
                     $fCount = $pdo->query("SELECT COUNT(*) FROM farmers")->fetchColumn();
                     $nextCode = 'FM-PSU-' . str_pad($fCount + 1, 3, '0', STR_PAD_LEFT);
