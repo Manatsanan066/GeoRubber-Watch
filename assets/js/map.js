@@ -371,21 +371,27 @@ const GeoMap = {
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-                <button type="button" onclick="GeoMap.showPlotQR(${p.id})" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: pointer;">
+                <button type="button" onclick="GeoMap.showPlotQR(${p.id})" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: pointer; border-radius: 6px;">
                   📱 QR Code
                 </button>
-                <a href="trace.php?token=${tokenParam}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center;">
+                <a href="trace.php?token=${tokenParam}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">
                   🛡️ Passport
                 </a>
               </div>
+              ${(window.IS_ADMIN === true || p.can_delete === true) ? `
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                <button onclick="GeoMap.openEditPlotModal(${p.id})" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff;">
+                <button type="button" onclick="GeoMap.openEditPlotModal(${p.id})" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px;">
                   ✏️ แก้ไข
                 </button>
-                <button onclick="GeoMap.deletePlot(${p.id}, '${p.plot_name}')" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #e11d48; border-color: #fecdd3; background-color: #fff1f2;">
+                <button type="button" onclick="GeoMap.deletePlot(${p.id}, '${safeName}')" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #e11d48; border-color: #fecdd3; background-color: #fff1f2; cursor: pointer; border-radius: 6px;">
                   🗑️ ลบแปลง
                 </button>
-              </div>
+              </div>` : `
+              <div style="display: grid; grid-template-columns: 1fr; gap: 6px;">
+                <button type="button" onclick="GeoMap.openEditPlotModal(${p.id})" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 6px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px; font-weight: 600; text-align: center;">
+                  ✏️ แก้ไขข้อมูลแปลง
+                </button>
+              </div>`}
             </div>
           `;
 
@@ -633,150 +639,132 @@ const GeoMap = {
     }
   },
 
-  // Open Edit Modal for Plot
+  // Open Edit Modal for Plot - Directly Jumps to Step 2 (ขั้นตอนที่ 2)
   async openEditPlotModal(plotId) {
     try {
-      const res = await fetch(`api/plots.php?id=${plotId}`);
-      const data = await res.json();
-      if (!data.success || !data.plot) {
+      if (window.App && typeof window.App.showToast === 'function') {
+        App.showToast('กำลังโหลดข้อมูลแปลงปลูก...', 'info');
+      }
+      
+      const targetId = Number(plotId);
+      let p = null;
+
+      // Check local cache first
+      if (this.plotsData && Array.isArray(this.plotsData)) {
+        for (const item of this.plotsData) {
+          const props = item.properties || item;
+          if (Number(props.id) === targetId || Number(item.id) === targetId) {
+            p = { ...props };
+            if (item.geometry) p.geojson_geometry = item.geometry;
+            break;
+          }
+        }
+      }
+
+      // Fetch fresh from API if details not fully cached
+      if (!p || !p.title_deed_no) {
+        const res = await fetch(`api/plots.php?id=${targetId}`);
+        const data = await res.json();
+        if (data.success && data.plot) {
+          p = data.plot;
+        }
+      }
+
+      if (!p) {
         alert('ไม่พบข้อมูลแปลงปลูก');
         return;
       }
-      const p = data.plot;
 
-      // Populate edit fields
-      let editModal = document.getElementById('editPlotModal');
-      if (!editModal) {
-        this.injectEditPlotModal();
+      // Populate form fields in Add/Edit Plot Modal
+      if (document.getElementById('form-plot-id')) {
+        document.getElementById('form-plot-id').value = p.id;
+      }
+      
+      const farmerName = p.farmer_name || (p.prefix ? `${p.prefix}${p.first_name} ${p.last_name}` : (p.first_name ? `${p.first_name} ${p.last_name}` : ''));
+      if (document.getElementById('form-farmer-name')) {
+        document.getElementById('form-farmer-name').value = farmerName;
+      }
+      if (document.getElementById('form-plot-name')) {
+        document.getElementById('form-plot-name').value = p.plot_name || '';
+      }
+      if (document.getElementById('form-deed-type')) {
+        document.getElementById('form-deed-type').value = p.title_deed_type || 'โฉนดที่ดิน (น.ส. 4 จ)';
+      }
+      if (document.getElementById('form-deed-no')) {
+        document.getElementById('form-deed-no').value = p.title_deed_no || '';
+      }
+      if (document.getElementById('form-rubber-clone')) {
+        document.getElementById('form-rubber-clone').value = p.rubber_clone || 'RRIM 600';
+      }
+      if (document.getElementById('form-planting-year')) {
+        document.getElementById('form-planting-year').value = p.planting_year || 2018;
+      }
+      if (document.getElementById('form-tree-count')) {
+        document.getElementById('form-tree-count').value = p.tree_count || 300;
+      }
+      if (document.getElementById('form-tapping-status')) {
+        document.getElementById('form-tapping-status').value = p.tapping_status || 'tapping';
+      }
+      if (document.getElementById('form-notes')) {
+        document.getElementById('form-notes').value = p.notes || '';
       }
 
-      document.getElementById('edit-plot-id').value = p.id;
-      document.getElementById('edit-plot-name').value = p.plot_name;
-      document.getElementById('edit-deed-type').value = p.title_deed_type || 'โฉนดที่ดิน (น.ส. 4 จ)';
-      document.getElementById('edit-deed-no').value = p.title_deed_no || '';
-      document.getElementById('edit-rubber-clone').value = p.rubber_clone || 'RRIM 600';
-      document.getElementById('edit-planting-year').value = p.planting_year || 2018;
-      document.getElementById('edit-tree-count').value = p.tree_count || 300;
-      document.getElementById('edit-tapping-status').value = p.tapping_status || 'tapping';
-      document.getElementById('edit-notes').value = p.notes || '';
+      // Populate coordinates & centroid
+      const lat = p.centroid_lat || (p.centroid ? p.centroid.lat : 9.138240);
+      const lng = p.centroid_lng || (p.centroid ? p.centroid.lng : 99.321850);
+      if (document.getElementById('form-centroid-lat')) document.getElementById('form-centroid-lat').value = lat;
+      if (document.getElementById('form-centroid-lng')) document.getElementById('form-centroid-lng').value = lng;
+      if (document.getElementById('form-centroid-display')) document.getElementById('form-centroid-display').value = `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
 
+      // Populate geometry
+      if (p.geojson_geometry && document.getElementById('form-geojson-geometry')) {
+        document.getElementById('form-geojson-geometry').value = typeof p.geojson_geometry === 'object' ? JSON.stringify(p.geojson_geometry) : p.geojson_geometry;
+      }
+
+      // Populate calculated area display in Step 2
+      const areaText = p.formatted_area || `${p.area_rai || 0} ไร่ ${p.area_ngan || 0} งาน ${p.area_sqwah || 0} ตร.ว.`;
+      if (document.getElementById('step2-area-text')) document.getElementById('step2-area-text').textContent = areaText;
+      if (document.getElementById('step2-area-ha')) document.getElementById('step2-area-ha').textContent = p.area_hectare || ((p.area_sqm || 0) / 10000).toFixed(4);
+      if (document.getElementById('step2-area-sqm')) document.getElementById('step2-area-sqm').textContent = (p.area_sqm || 0).toLocaleString();
+
+      // Populate status badge in Step 2
+      const eudrBadge = document.getElementById('step2-eudr-badge');
+      if (eudrBadge) {
+        if (p.eudr_status === 'non_compliant') {
+          eudrBadge.className = 'bg-rose-100 text-rose-800 font-bold text-[14px] px-3 py-1 rounded-full border border-rose-300';
+          eudrBadge.innerHTML = '🔴 ไม่ผ่านเกณฑ์ (ทับซ้อนป่า)';
+        } else if (p.eudr_status === 'under_review') {
+          eudrBadge.className = 'bg-amber-100 text-amber-800 font-bold text-[14px] px-3 py-1 rounded-full border border-amber-300';
+          eudrBadge.innerHTML = '🟠 โซนเฝ้าระวัง Buffer';
+        } else {
+          eudrBadge.className = 'bg-emerald-100 text-emerald-800 font-bold text-[14px] px-3 py-1 rounded-full border border-emerald-300';
+          eudrBadge.innerHTML = '🟢 ปลอดการตัดไม้ 100%';
+        }
+      }
+
+      // Close open map popup
+      if (this.map) {
+        this.map.closePopup();
+      }
+
+      // Open Add/Edit Plot Modal
       if (window.App && typeof window.App.openModal === 'function') {
-        App.openModal('editPlotModal');
+        App.openModal('addPlotModal');
       } else {
-        document.getElementById('editPlotModal')?.classList.remove('hidden');
+        document.getElementById('addPlotModal')?.classList.remove('hidden');
+      }
+
+      // Directly Jump to Step 2
+      if (typeof goToModalStep === 'function') {
+        goToModalStep(2);
+      }
+
+      if (window.App && typeof window.App.showToast === 'function') {
+        App.showToast(`✏️ เปิดหน้าแก้ไขแปลง "${p.plot_name}" (ขั้นตอนที่ 2)`, 'info');
       }
     } catch (e) {
       console.error('Error opening edit plot modal:', e);
-    }
-  },
-
-  // Inject Edit Plot Modal into DOM if missing
-  injectEditPlotModal() {
-    if (document.getElementById('editPlotModal')) return;
-    const modalHtml = `
-      <div id="editPlotModal" class="modal-overlay hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-gray-100 space-y-4 max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-            <h3 class="font-extrabold text-lg text-mezenc-teal">✏️ แก้ไขข้อมูลแปลงปลูก</h3>
-            <button onclick="App.closeModal('editPlotModal')" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center">✕</button>
-          </div>
-          <form onsubmit="GeoMap.handleSaveEditPlot(event)" class="space-y-4 text-xs sm:text-sm">
-            <input type="hidden" id="edit-plot-id">
-            <div>
-              <label class="block font-bold text-gray-700 mb-1">ชื่อแปลงปลูก *</label>
-              <input type="text" id="edit-plot-name" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-mezenc-teal" required>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block font-bold text-gray-700 mb-1">ประเภทเอกสารสิทธิ์</label>
-                <select id="edit-deed-type" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-mezenc-teal">
-                  <option value="โฉนดที่ดิน (น.ส. 4 จ)">โฉนดที่ดิน (น.ส. 4 จ)</option>
-                  <option value="น.ส. 3 ก">น.ส. 3 ก</option>
-                  <option value="ส.ป.ก. 4-01">ส.ป.ก. 4-01</option>
-                  <option value="ภ.บ.ท. 5">ภ.บ.ท. 5</option>
-                </select>
-              </div>
-              <div>
-                <label class="block font-bold text-gray-700 mb-1">เลขที่เอกสารสิทธิ์</label>
-                <input type="text" id="edit-deed-no" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-mezenc-teal">
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block font-bold text-gray-700 mb-1">พันธุ์ยางพารา</label>
-                <input type="text" id="edit-rubber-clone" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-mezenc-teal">
-              </div>
-              <div>
-                <label class="block font-bold text-gray-700 mb-1">ปีที่เริ่มปลูก (พ.ศ./ค.ศ.)</label>
-                <input type="number" id="edit-planting-year" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-mezenc-teal">
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block font-bold text-gray-700 mb-1">จำนวนต้นยาง (ต้น)</label>
-                <input type="number" id="edit-tree-count" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-mezenc-teal">
-              </div>
-              <div>
-                <label class="block font-bold text-gray-700 mb-1">สถานะการเปิดกรีด</label>
-                <select id="edit-tapping-status" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-mezenc-teal">
-                  <option value="tapping">เปิดกรีดแล้ว (Tapping)</option>
-                  <option value="not_tapping">ยังไม่เปิดกรีด (Immature)</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label class="block font-bold text-gray-700 mb-1">หมายเหตุเพิ่มเติม</label>
-              <textarea id="edit-notes" rows="2" class="w-full px-3.5 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-mezenc-teal"></textarea>
-            </div>
-            <div class="flex justify-end gap-3 pt-3 border-t border-gray-100">
-              <button type="button" onclick="App.closeModal('editPlotModal')" class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50">
-                ยกเลิก
-              </button>
-              <button type="submit" class="px-6 py-2.5 rounded-xl bg-mezenc-teal hover:bg-mezenc-deepTeal text-white font-bold shadow">
-                บันทึกการแก้ไข
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-  },
-
-  // Save Plot Edits
-  async handleSaveEditPlot(e) {
-    e.preventDefault();
-    const plotId = parseInt(document.getElementById('edit-plot-id').value);
-    const payload = {
-      id: plotId,
-      action: 'update',
-      plot_name: document.getElementById('edit-plot-name').value,
-      title_deed_type: document.getElementById('edit-deed-type').value,
-      title_deed_no: document.getElementById('edit-deed-no').value,
-      rubber_clone: document.getElementById('edit-rubber-clone').value,
-      planting_year: parseInt(document.getElementById('edit-planting-year').value),
-      tree_count: parseInt(document.getElementById('edit-tree-count').value),
-      tapping_status: document.getElementById('edit-tapping-status').value,
-      notes: document.getElementById('edit-notes').value
-    };
-
-    try {
-      App.showToast('กำลังบันทึกการแก้ไข...', 'info');
-      const res = await fetch('api/plots.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.success || res.ok) {
-        App.showToast('🎉 บันทึกการแก้ไขข้อมูลแปลงปลูกเรียบร้อยแล้ว!', 'success');
-        App.closeModal('editPlotModal');
-        this.loadRubberPlots();
-      } else {
-        alert(data.message || 'ไม่สามารถบันทึกได้');
-      }
-    } catch (err) {
-      alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      alert('เกิดข้อผิดพลาดในการเปิดหน้าแก้ไขข้อมูลแปลง');
     }
   },
 

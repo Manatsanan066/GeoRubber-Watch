@@ -1305,6 +1305,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 <input type="hidden" id="form-centroid-lat" value="9.138240">
                 <input type="hidden" id="form-centroid-lng" value="99.321850">
                 <input type="hidden" id="form-geojson-geometry">
+                <input type="hidden" id="form-plot-id" value="">
               </div>
 
               <!-- Row 6 -->
@@ -2157,6 +2158,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
     let modalPresetMode = "compliant";
 
     function openAddPlotWizard() {
+      if (document.getElementById('form-plot-id')) {
+        document.getElementById('form-plot-id').value = '';
+      }
       goToModalStep(1);
       App.openModal('addPlotModal');
     }
@@ -2475,6 +2479,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
       const farmerNameVal = document.getElementById('form-farmer-name')?.value?.trim() || 'นางสาวมนัสนันท์ อนันตณรงค์';
       const plotNameVal = document.getElementById('form-plot-name')?.value?.trim() || 'แปลงยางพาราใหม่';
+      const editingPlotId = parseInt(document.getElementById('form-plot-id')?.value) || 0;
+      const isEdit = editingPlotId > 0;
 
       const payload = {
         farmer_name: farmerNameVal,
@@ -2490,8 +2496,13 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         geojson_geometry: geom
       };
 
+      if (isEdit) {
+        payload.id = editingPlotId;
+        payload.action = 'update';
+      }
+
       try {
-        App.showToast('กำลังบันทึกข้อมูลแปลงปลูกลงฐานข้อมูล...', 'info');
+        App.showToast(isEdit ? 'กำลังบันทึกการแก้ไขข้อมูลแปลงปลูก...' : 'กำลังบันทึกข้อมูลแปลงปลูกลงฐานข้อมูล...', 'info');
         const res = await fetch('api/plots.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2508,7 +2519,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         }
 
         if (data && (data.success || res.ok)) {
-          App.showToast(`🎉 บันทึกแปลงปลูก "${payload.plot_name}" สำเร็จ!`, 'success');
+          App.showToast(isEdit ? `🎉 บันทึกการแก้ไขแปลงปลูก "${payload.plot_name}" สำเร็จ!` : `🎉 บันทึกแปลงปลูก "${payload.plot_name}" สำเร็จ!`, 'success');
+          if (document.getElementById('form-plot-id')) {
+            document.getElementById('form-plot-id').value = '';
+          }
           App.closeModal('addPlotModal');
           
           if (GeoMap && GeoMap.drawnItems) {

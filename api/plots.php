@@ -302,8 +302,8 @@ if ($method === 'POST') {
         $action = $data['action'] ?? ($_GET['action'] ?? '');
 
         // Handle Update via POST if specified
-        if ($action === 'update' || isset($data['id'])) {
-            $id = (int)($data['id'] ?? 0);
+        if ($action === 'update' || (!empty($data['id']) && (int)$data['id'] > 0)) {
+            $id = (int)$data['id'];
             if ($id <= 0) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Missing Plot ID']);
@@ -311,6 +311,7 @@ if ($method === 'POST') {
             }
 
             $plot_name = trim($data['plot_name'] ?? '');
+            $farmer_name = trim($data['farmer_name'] ?? '');
             $title_deed_type = $data['title_deed_type'] ?? 'โฉนดที่ดิน (น.ส. 4 จ)';
             $title_deed_no = trim($data['title_deed_no'] ?? '');
             $rubber_clone = $data['rubber_clone'] ?? 'RRIM 600';
@@ -319,24 +320,55 @@ if ($method === 'POST') {
             $tapping_status = $data['tapping_status'] ?? 'tapping';
             $notes = trim($data['notes'] ?? '');
 
-            $stmt = $pdo->prepare("
-                UPDATE rubber_plots SET
-                    plot_name = ?,
-                    title_deed_type = ?,
-                    title_deed_no = ?,
-                    rubber_clone = ?,
-                    planting_year = ?,
-                    tree_count = ?,
-                    tapping_status = ?,
-                    notes = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            ");
-            $stmt->execute([
-                $plot_name, $title_deed_type, $title_deed_no,
-                $rubber_clone, $planting_year, $tree_count,
-                $tapping_status, $notes, $id
-            ]);
+            $farmerId = null;
+            if (!empty($farmer_name)) {
+                $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+                $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
+                $fStmt = $pdo->prepare("SELECT id FROM farmers WHERE (prefix || first_name || ' ' || last_name) {$likeOp} ? OR first_name {$likeOp} ? OR farmer_code {$likeOp} ? LIMIT 1");
+                $fStmt->execute(["%$farmer_name%", "%$farmer_name%", "%$farmer_name%"]);
+                $farmerId = $fStmt->fetchColumn();
+            }
+
+            if ($farmerId) {
+                $stmt = $pdo->prepare("
+                    UPDATE rubber_plots SET
+                        plot_name = ?,
+                        farmer_id = ?,
+                        title_deed_type = ?,
+                        title_deed_no = ?,
+                        rubber_clone = ?,
+                        planting_year = ?,
+                        tree_count = ?,
+                        tapping_status = ?,
+                        notes = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ");
+                $stmt->execute([
+                    $plot_name, $farmerId, $title_deed_type, $title_deed_no,
+                    $rubber_clone, $planting_year, $tree_count,
+                    $tapping_status, $notes, $id
+                ]);
+            } else {
+                $stmt = $pdo->prepare("
+                    UPDATE rubber_plots SET
+                        plot_name = ?,
+                        title_deed_type = ?,
+                        title_deed_no = ?,
+                        rubber_clone = ?,
+                        planting_year = ?,
+                        tree_count = ?,
+                        tapping_status = ?,
+                        notes = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ");
+                $stmt->execute([
+                    $plot_name, $title_deed_type, $title_deed_no,
+                    $rubber_clone, $planting_year, $tree_count,
+                    $tapping_status, $notes, $id
+                ]);
+            }
 
             echo json_encode([
                 'success' => true,
