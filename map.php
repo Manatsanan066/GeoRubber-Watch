@@ -1289,6 +1289,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 <input type="hidden" id="form-centroid-lng" value="99.321850">
                 <input type="hidden" id="form-geojson-geometry">
                 <input type="hidden" id="form-plot-id" value="">
+                <input type="hidden" id="form-plot-code" value="">
+                <input type="hidden" id="form-traceability-token" value="">
               </div>
 
               <!-- Row 6 -->
@@ -1505,7 +1507,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               </div>
               <div class="text-right">
                 <span class="text-[16px] text-gray-400">เลขที่ใบรับรอง: </span>
-                <span class="font-mono font-bold text-[16px] text-mezenc-teal">EUDR-TH-84-2026-0889</span>
+                <span class="font-mono font-bold text-[16px] text-mezenc-teal" id="modal-sum-cert-no">EUDR-TH-ST-84000-020-8EFD4C</span>
               </div>
             </div>
 
@@ -1513,22 +1515,12 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             <div class="bg-white p-5 sm:p-6 rounded-2xl border border-[#bee6e1] shadow-xs space-y-5 text-[16px]">
               <div class="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
                 <!-- QR Box -->
-                <div class="sm:col-span-5 flex flex-col items-center justify-center p-4 bg-[#f8faf9] rounded-2xl border border-[#bee6e1] shadow-inner space-y-2">
-                  <div class="w-32 h-32 bg-white p-2 border-2 border-mezenc-brightCyan rounded-2xl flex items-center justify-center relative shadow-sm">
-                    <svg class="w-full h-full text-mezenc-teal" viewBox="0 0 100 100" fill="currentColor">
-                      <path d="M10,10 h30 v30 h-30 z M15,15 v20 h20 v-20 z M20,20 h10 v10 h-10 z"/>
-                      <path d="M60,10 h30 v30 h-30 z M65,15 v20 h20 v-20 z M70,20 h10 v10 h-10 z"/>
-                      <path d="M10,60 h30 v30 h-30 z M15,65 v20 h20 v-20 z M20,70 h10 v10 h-10 z"/>
-                      <path d="M45,15 h5 v5 h-5 z M50,20 h5 v5 h-5 z M45,25 h10 v5 h-10 z M50,35 h5 v10 h-5 z"/>
-                      <path d="M65,45 h10 v5 h-10 z M80,45 h10 v10 h-10 z M60,55 h5 v10 h-5 z M75,55 h10 v5 h-10 z M70,65 h15 v5 h-15 z M85,75 h5 v15 h-5 z M65,80 h15 v5 h-15 z"/>
-                      <path d="M45,60 h5 v10 h-5 z M50,75 h5 v5 h-5 z M45,85 h10 v5 h-10 z M55,65 h5 v5 h-5 z M55,75 h5 v5 h-5 z"/>
-                    </svg>
-                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-[16px] shadow">🌲</span>
-                    </div>
+                <div class="sm:col-span-5 flex flex-col items-center justify-center p-4 bg-[#f8faf9] rounded-2xl border border-[#bee6e1] shadow-inner space-y-2.5">
+                  <div class="p-2 bg-white rounded-2xl border-2 border-mezenc-brightCyan flex items-center justify-center relative shadow-sm min-w-[170px] min-h-[170px]">
+                    <div id="modal-sum-qrcode-canvas" class="flex items-center justify-center"></div>
                   </div>
                   <span class="text-[16px] font-bold text-mezenc-teal">สแกนเพื่อตรวจสอบย้อนกลับ</span>
-                  <span class="text-[16px] text-gray-500 font-mono">Traceability ID: RB-2026-009</span>
+                  <span class="text-[13px] text-gray-500 font-mono text-center break-all" id="modal-sum-trace-id">EUDR-TH-ST-84000-020-8EFD4C</span>
                 </div>
 
                 <!-- Info Grid -->
@@ -2394,14 +2386,37 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
     function updateModalSummaryCard() {
       const farmerName = document.getElementById("form-farmer-name")?.value || "-";
       const plotName = document.getElementById("form-plot-name")?.value || "แปลงยางพารา";
-      const deedType = document.getElementById("form-deed-type").value;
-      const deedNo = document.getElementById("form-deed-no").value || "-";
-      const coords = document.getElementById("form-centroid-display").value || "9.138240, 99.321850";
+      const deedType = document.getElementById("form-deed-type")?.value || "โฉนดที่ดิน (น.ส. 4 จ)";
+      const deedNo = document.getElementById("form-deed-no")?.value || "-";
+      const coords = document.getElementById("form-centroid-display")?.value || "9.138240, 99.321850";
+      const plotId = parseInt(document.getElementById("form-plot-id")?.value) || 0;
+
+      let token = document.getElementById("form-traceability-token")?.value?.trim();
+      let plotCode = document.getElementById("form-plot-code")?.value?.trim();
+
+      if (!token) {
+        if (plotId > 0) {
+          token = `EUDR-TH-ST-84000-${String(plotId).padStart(3, '0')}`;
+        } else {
+          const randHex = Math.floor(Math.random() * 0xFFFFFF).toString(16).toUpperCase().padStart(6, '0');
+          token = `EUDR-TH-ST-84000-NEW-${randHex}`;
+        }
+      }
+      if (!plotCode) {
+        plotCode = plotId > 0 ? `RB-ST-2026-${String(plotId).padStart(3, '0')}` : 'RB-ST-2026-NEW';
+      }
 
       document.getElementById("modal-sum-farmer").innerText = farmerName;
       document.getElementById("modal-sum-plot").innerText = plotName;
       document.getElementById("modal-sum-deed").innerText = `${deedType} เลขที่ ${deedNo}`;
       document.getElementById("modal-sum-coords").innerText = coords;
+
+      if (document.getElementById("modal-sum-cert-no")) {
+        document.getElementById("modal-sum-cert-no").innerText = token;
+      }
+      if (document.getElementById("modal-sum-trace-id")) {
+        document.getElementById("modal-sum-trace-id").innerText = token;
+      }
 
       // Update EUDR Summary Badge in Step 4 dynamically
       const eudrBadgeElem = document.getElementById("modal-sum-eudr-badge");
@@ -2417,6 +2432,51 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         } else {
           eudrBadgeElem.className = "font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[16px]";
           eudrBadgeElem.innerHTML = "🟢 ผ่านเกณฑ์ 100% (Compliant)";
+        }
+      }
+
+      // Render Real Dynamic QR Code Matching qrModal 100%
+      const qrContainer = document.getElementById("modal-sum-qrcode-canvas");
+      if (qrContainer) {
+        qrContainer.innerHTML = '';
+
+        const pathname = window.location.pathname;
+        let basePath = pathname.replace(/\/[^/]*$/, '');
+        if (!basePath.startsWith('/')) basePath = '/' + basePath;
+        if (basePath === '/') basePath = '';
+
+        const cleanBase = 'https://earthling-retype-aroma.ngrok-free.dev';
+        let fullUrl;
+        if (cleanBase.endsWith(basePath) && basePath !== '') {
+          fullUrl = `${cleanBase}/trace.php?token=${encodeURIComponent(token)}`;
+        } else {
+          fullUrl = `${cleanBase}${basePath}/trace.php?token=${encodeURIComponent(token)}`;
+        }
+
+        try {
+          if (typeof QRCode !== 'undefined') {
+            new QRCode(qrContainer, {
+              text: fullUrl,
+              width: 150,
+              height: 150,
+              colorDark: "#064e3b",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          } else {
+            const img = document.createElement('img');
+            img.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullUrl)}`;
+            img.alt = 'QR Code';
+            img.className = 'w-[150px] h-[150px] rounded-lg';
+            qrContainer.appendChild(img);
+          }
+        } catch (e) {
+          console.warn('Step 4 QR code render error:', e);
+          const img = document.createElement('img');
+          img.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullUrl)}`;
+          img.alt = 'QR Code';
+          img.className = 'w-[150px] h-[150px] rounded-lg';
+          qrContainer.appendChild(img);
         }
       }
     }

@@ -679,6 +679,13 @@ const GeoMap = {
       // 3. Populate form fields in Add/Edit Plot Modal (#addPlotModal)
       const plotIdField = document.getElementById('form-plot-id');
       if (plotIdField) plotIdField.value = p.id;
+
+      if (document.getElementById('form-plot-code')) {
+        document.getElementById('form-plot-code').value = p.plot_code || '';
+      }
+      if (document.getElementById('form-traceability-token')) {
+        document.getElementById('form-traceability-token').value = p.traceability_token || '';
+      }
       
       const farmerName = p.farmer_name || (p.first_name ? `${p.first_name} ${p.last_name || ''}`.trim() : '');
       const farmerNameField = document.getElementById('form-farmer-name');
@@ -883,6 +890,11 @@ const GeoMap = {
     window.currentDrawnSpatialCheck = check;
     const geoInput = document.getElementById('form-geojson-geometry');
     if (geoInput) geoInput.value = JSON.stringify(geometry);
+
+    // Reset editing IDs for new plot
+    if (document.getElementById('form-plot-id')) document.getElementById('form-plot-id').value = '';
+    if (document.getElementById('form-plot-code')) document.getElementById('form-plot-code').value = '';
+    if (document.getElementById('form-traceability-token')) document.getElementById('form-traceability-token').value = '';
     
     // Coordinates & Centroid
     const latInput = document.getElementById('form-centroid-lat');
