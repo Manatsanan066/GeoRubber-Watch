@@ -2368,6 +2368,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         updateModalSummaryCard();
       }
     }
+    window.goToModalStep = goToModalStep;
 
     function nextModalStep() {
       if (modalCurrentStep === 3) {

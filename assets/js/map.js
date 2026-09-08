@@ -371,24 +371,24 @@ const GeoMap = {
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-                <button type="button" onclick="GeoMap.showPlotQR(${p.id})" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: pointer; border-radius: 6px;">
+                <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).showPlotQR(${p.id});" data-action="qr-plot" data-plot-id="${p.id}" class="btn-qr-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: pointer; border-radius: 6px;">
                   📱 QR Code
                 </button>
-                <a href="trace.php?token=${tokenParam}" target="_blank" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">
+                <a href="trace.php?token=${tokenParam}" target="_blank" onclick="event.stopPropagation();" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">
                   🛡️ Passport
                 </a>
               </div>
               ${(window.IS_ADMIN === true || p.can_delete === true) ? `
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                <button type="button" onclick="GeoMap.openEditPlotModal(${p.id})" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px;">
+                <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px;">
                   ✏️ แก้ไข
                 </button>
-                <button type="button" onclick="GeoMap.deletePlot(${p.id}, '${safeName}')" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #e11d48; border-color: #fecdd3; background-color: #fff1f2; cursor: pointer; border-radius: 6px;">
+                <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).deletePlot(${p.id}, '${safeName}');" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #e11d48; border-color: #fecdd3; background-color: #fff1f2; cursor: pointer; border-radius: 6px;">
                   🗑️ ลบแปลง
                 </button>
               </div>` : `
               <div style="display: grid; grid-template-columns: 1fr; gap: 6px;">
-                <button type="button" onclick="GeoMap.openEditPlotModal(${p.id})" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 6px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px; font-weight: 600; text-align: center;">
+                <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 6px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px; font-weight: 600; text-align: center;">
                   ✏️ แก้ไขข้อมูลแปลง
                 </button>
               </div>`}
@@ -642,14 +642,12 @@ const GeoMap = {
   // Open Edit Modal for Plot - Directly Jumps to Step 2 (ขั้นตอนที่ 2)
   async openEditPlotModal(plotId) {
     try {
-      if (window.App && typeof window.App.showToast === 'function') {
-        App.showToast('กำลังโหลดข้อมูลแปลงปลูก...', 'info');
-      }
-      
       const targetId = Number(plotId);
+      if (!targetId) return;
+
       let p = null;
 
-      // Check local cache first
+      // 1. Check local cache first (GeoJSON features)
       if (this.plotsData && Array.isArray(this.plotsData)) {
         for (const item of this.plotsData) {
           const props = item.properties || item;
@@ -661,11 +659,14 @@ const GeoMap = {
         }
       }
 
-      // Fetch fresh from API if details not fully cached
-      if (!p || !p.title_deed_no) {
+      // 2. Fetch fresh from API if not cached
+      if (!p) {
+        if (window.App && typeof window.App.showToast === 'function') {
+          App.showToast('กำลังโหลดข้อมูลแปลงปลูก...', 'info');
+        }
         const res = await fetch(`api/plots.php?id=${targetId}`);
         const data = await res.json();
-        if (data.success && data.plot) {
+        if (data && data.plot) {
           p = data.plot;
         }
       }
@@ -675,59 +676,57 @@ const GeoMap = {
         return;
       }
 
-      // Populate form fields in Add/Edit Plot Modal
-      if (document.getElementById('form-plot-id')) {
-        document.getElementById('form-plot-id').value = p.id;
-      }
+      // 3. Populate form fields in Add/Edit Plot Modal (#addPlotModal)
+      const plotIdField = document.getElementById('form-plot-id');
+      if (plotIdField) plotIdField.value = p.id;
       
       const farmerName = p.farmer_name || (p.first_name ? `${p.first_name} ${p.last_name || ''}`.trim() : '');
-      if (document.getElementById('form-farmer-name')) {
-        document.getElementById('form-farmer-name').value = farmerName;
-      }
-      if (document.getElementById('form-plot-name')) {
-        document.getElementById('form-plot-name').value = p.plot_name || '';
-      }
-      if (document.getElementById('form-deed-type')) {
-        document.getElementById('form-deed-type').value = p.title_deed_type || 'โฉนดที่ดิน (น.ส. 4 จ)';
-      }
-      if (document.getElementById('form-deed-no')) {
-        document.getElementById('form-deed-no').value = p.title_deed_no || '';
-      }
-      if (document.getElementById('form-rubber-clone')) {
-        document.getElementById('form-rubber-clone').value = p.rubber_clone || 'RRIM 600';
-      }
-      if (document.getElementById('form-planting-year')) {
-        document.getElementById('form-planting-year').value = p.planting_year || 2018;
-      }
-      if (document.getElementById('form-tree-count')) {
-        document.getElementById('form-tree-count').value = p.tree_count || 300;
-      }
-      if (document.getElementById('form-tapping-status')) {
-        document.getElementById('form-tapping-status').value = p.tapping_status || 'tapping';
-      }
-      if (document.getElementById('form-notes')) {
-        document.getElementById('form-notes').value = p.notes || '';
-      }
+      const farmerNameField = document.getElementById('form-farmer-name');
+      if (farmerNameField) farmerNameField.value = farmerName;
 
-      // Populate coordinates & centroid
-      const lat = p.centroid_lat || (p.centroid ? p.centroid.lat : 9.138240);
-      const lng = p.centroid_lng || (p.centroid ? p.centroid.lng : 99.321850);
+      const plotNameField = document.getElementById('form-plot-name');
+      if (plotNameField) plotNameField.value = p.plot_name || '';
+
+      const deedTypeField = document.getElementById('form-deed-type');
+      if (deedTypeField) deedTypeField.value = p.title_deed_type || 'โฉนดที่ดิน (น.ส. 4 จ)';
+
+      const deedNoField = document.getElementById('form-deed-no');
+      if (deedNoField) deedNoField.value = p.title_deed_no || '';
+
+      const rubberCloneField = document.getElementById('form-rubber-clone');
+      if (rubberCloneField) rubberCloneField.value = p.rubber_clone || 'RRIM 600';
+
+      const plantingYearField = document.getElementById('form-planting-year');
+      if (plantingYearField) plantingYearField.value = p.planting_year || 2018;
+
+      const treeCountField = document.getElementById('form-tree-count');
+      if (treeCountField) treeCountField.value = p.tree_count || 300;
+
+      const tappingStatusField = document.getElementById('form-tapping-status');
+      if (tappingStatusField) tappingStatusField.value = p.tapping_status || 'tapping';
+
+      const notesField = document.getElementById('form-notes');
+      if (notesField) notesField.value = p.notes || '';
+
+      // 4. Populate coordinates & centroid
+      const lat = parseFloat(p.centroid_lat || (p.centroid ? p.centroid.lat : 9.138240)) || 9.138240;
+      const lng = parseFloat(p.centroid_lng || (p.centroid ? p.centroid.lng : 99.321850)) || 99.321850;
       if (document.getElementById('form-centroid-lat')) document.getElementById('form-centroid-lat').value = lat;
       if (document.getElementById('form-centroid-lng')) document.getElementById('form-centroid-lng').value = lng;
-      if (document.getElementById('form-centroid-display')) document.getElementById('form-centroid-display').value = `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+      if (document.getElementById('form-centroid-display')) document.getElementById('form-centroid-display').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
-      // Populate geometry
+      // 5. Populate geometry
       if (p.geojson_geometry && document.getElementById('form-geojson-geometry')) {
         document.getElementById('form-geojson-geometry').value = typeof p.geojson_geometry === 'object' ? JSON.stringify(p.geojson_geometry) : p.geojson_geometry;
       }
 
-      // Populate calculated area display in Step 2
+      // 6. Populate calculated area display in Step 2
       const areaText = p.formatted_area || `${p.area_rai || 0} ไร่ ${p.area_ngan || 0} งาน ${p.area_sqwah || 0} ตร.ว.`;
       if (document.getElementById('step2-area-text')) document.getElementById('step2-area-text').textContent = areaText;
       if (document.getElementById('step2-area-ha')) document.getElementById('step2-area-ha').textContent = p.area_hectare || ((p.area_sqm || 0) / 10000).toFixed(4);
-      if (document.getElementById('step2-area-sqm')) document.getElementById('step2-area-sqm').textContent = (p.area_sqm || 0).toLocaleString();
+      if (document.getElementById('step2-area-sqm')) document.getElementById('step2-area-sqm').textContent = Number(p.area_sqm || 0).toLocaleString();
 
-      // Populate status badge in Step 2
+      // 7. Populate status badge in Step 2
       const eudrBadge = document.getElementById('step2-eudr-badge');
       if (eudrBadge) {
         if (p.eudr_status === 'non_compliant') {
@@ -742,21 +741,29 @@ const GeoMap = {
         }
       }
 
-      // Close open map popup
+      // 8. Close open map popup
       if (this.map) {
         this.map.closePopup();
       }
 
-      // Open Add/Edit Plot Modal
+      // 9. Open Add/Edit Plot Modal (#addPlotModal)
       if (window.App && typeof window.App.openModal === 'function') {
         App.openModal('addPlotModal');
       } else {
-        document.getElementById('addPlotModal')?.classList.remove('hidden');
+        const modal = document.getElementById('addPlotModal');
+        if (modal) {
+          modal.classList.add('active');
+          modal.style.display = 'flex';
+          modal.style.opacity = '1';
+          modal.style.pointerEvents = 'auto';
+        }
       }
 
-      // Directly Jump to Step 2
+      // 10. Directly Jump to Step 2
       if (typeof goToModalStep === 'function') {
         goToModalStep(2);
+      } else if (typeof window.goToModalStep === 'function') {
+        window.goToModalStep(2);
       }
 
       if (window.App && typeof window.App.showToast === 'function') {
@@ -973,6 +980,31 @@ const GeoMap = {
 };
 
 window.GeoMap = GeoMap;
+window.openEditPlotModal = function(id) { GeoMap.openEditPlotModal(id); };
+window.showPlotQR = function(id) { GeoMap.showPlotQR(id); };
+
+// Global document click delegation for popup action buttons
+document.addEventListener('click', function(e) {
+  const btnEdit = e.target.closest('.btn-edit-plot-popup, [data-action="edit-plot"]');
+  if (btnEdit) {
+    e.preventDefault();
+    e.stopPropagation();
+    const plotId = btnEdit.getAttribute('data-plot-id');
+    if (plotId) {
+      GeoMap.openEditPlotModal(plotId);
+    }
+  }
+
+  const btnQr = e.target.closest('.btn-qr-plot-popup, [data-action="qr-plot"]');
+  if (btnQr) {
+    e.preventDefault();
+    e.stopPropagation();
+    const plotId = btnQr.getAttribute('data-plot-id');
+    if (plotId) {
+      GeoMap.showPlotQR(plotId);
+    }
+  }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   GeoMap.init();
