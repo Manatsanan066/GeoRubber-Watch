@@ -3,5 +3,11 @@ Thumbs.db
 data/*.db
 data/*.sqlite
 data/*.sqlite3
+data/*.sqlite-wal
+data/*.sqlite-shm
 data/.db_init_done
+data/backups/
 *.log
+
+
+

@@ -89,6 +89,117 @@ $totalRai = $pdo->query("SELECT COALESCE(SUM(area_rai), 0) FROM rubber_plots")->
 
   </div>
 
+  <!-- Supabase Cloud Database Backup & Local Persistence Section -->
+  <div class="clean-card" style="margin-bottom: 2.5rem; border-top: 4px solid #3ecf8e; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <div style="width: 52px; height: 52px; border-radius: 14px; background: #3ecf8e1a; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid #3ecf8e40;">
+          💾
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 class="font-heading" style="font-size: 1.35rem; color: #064e3b; margin: 0;">
+              ระบบสำรองฐานข้อมูล Supabase Cloud ลงโฟลเดอร์โปรเจกต์ (Local Database Backup)
+            </h3>
+            <span style="background: #3ecf8e; color: #064e3b; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">
+              ⚡ Cloud Synchronized
+            </span>
+          </div>
+          <p style="font-size: 0.875rem; color: #047857; margin-top: 4px; margin-bottom: 0;">
+            ดึงและคัดลอกข้อมูลทั้งหมด 100% จาก Supabase Cloud มาบันทึกลงในโฟลเดอร์ของโปรเจกต์ ป้องกันข้อมูลสูญหายและสามารถใช้งานแบบออฟไลน์ได้
+          </p>
+        </div>
+      </div>
+      <div>
+        <button id="btnSyncBackup" onclick="triggerSupabaseBackup()" class="btn" style="background: #059669; color: white; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 10px 20px; box-shadow: 0 2px 6px rgba(5,150,105,0.25);">
+          <span id="syncIcon">🔄</span> <span id="syncText">ซิงค์ & สำรองข้อมูลทันที</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="backupStatusAlert" style="display: none; margin-bottom: 1.25rem; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 0.875rem;"></div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+      <div style="background: #ffffff; border: 1px solid #d1fae5; padding: 1rem 1.25rem; border-radius: var(--radius-sm);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: #065f46; text-transform: uppercase; margin-bottom: 4px;">📂 ตำแหน่งไฟล์ในโปรเจกต์</div>
+        <div style="font-family: monospace; font-size: 0.8rem; color: #1e293b; line-height: 1.7;">
+          • <strong>sql/supabase_backup_latest.sql</strong><br>
+          • <strong>data/backups/supabase_backup_latest.json</strong><br>
+          • <strong>data/backups/tables/*.json</strong><br>
+          • <strong>data/georubber_watch_backup.sqlite</strong>
+        </div>
+      </div>
+
+      <div style="background: #ffffff; border: 1px solid #d1fae5; padding: 1rem 1.25rem; border-radius: var(--radius-sm); display: flex; flex-direction: column; justify-content: center;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: #065f46; text-transform: uppercase; margin-bottom: 8px;">📥 ดาวน์โหลดสำรองข้อมูลสู่เครื่อง</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <a href="api/backup_supabase.php?download=sql" class="btn" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.8rem; padding: 6px 12px;">
+            📄 SQL Dump (.sql)
+          </a>
+          <a href="api/backup_supabase.php?download=json" class="btn" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 0.8rem; padding: 6px 12px;">
+            📦 JSON Data (.json)
+          </a>
+          <a href="api/backup_supabase.php?download=sqlite" class="btn" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; font-size: 0.8rem; padding: 6px 12px;">
+            🗄️ SQLite (.sqlite)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  async function triggerSupabaseBackup() {
+    const btn = document.getElementById('btnSyncBackup');
+    const syncIcon = document.getElementById('syncIcon');
+    const syncText = document.getElementById('syncText');
+    const alertBox = document.getElementById('backupStatusAlert');
+    
+    btn.disabled = true;
+    syncIcon.style.display = 'inline-block';
+    syncIcon.style.animation = 'spin 1s linear infinite';
+    syncText.innerText = 'กำลังดึงข้อมูลและสำรองไฟล์...';
+    alertBox.style.display = 'none';
+
+    try {
+      const res = await fetch('api/backup_supabase.php');
+      const data = await res.json();
+      
+      if (data.success) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = '#d1fae5';
+        alertBox.style.color = '#065f46';
+        alertBox.style.border = '1px solid #6ee7b7';
+        
+        let countsHtml = Object.entries(data.summary.table_counts)
+          .map(([t, c]) => `<span><strong>${t}:</strong> ${c} รายการ</span>`)
+          .join(' • ');
+
+        alertBox.innerHTML = `
+          <strong>✅ ${data.message}</strong> (${data.timestamp})<br>
+          <div style="margin-top: 4px; font-size: 0.825rem;">
+            📊 รวมทั้งหมด ${data.summary.total_records} รายการ จาก ${data.summary.total_tables} ตาราง (${countsHtml})
+          </div>
+        `;
+      } else {
+        throw new Error(data.message || 'สำรองข้อมูลไม่สำเร็จ');
+      }
+    } catch (err) {
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#fee2e2';
+      alertBox.style.color = '#991b1b';
+      alertBox.style.border = '1px solid #fca5a5';
+      alertBox.innerHTML = `<strong>❌ ผิดพลาด:</strong> ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      syncIcon.style.animation = 'none';
+      syncText.innerText = 'ซิงค์ & สำรองข้อมูลทันที';
+    }
+  }
+  </script>
+  <style>
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  </style>
+
   <!-- EUDR Due Diligence Audit Guide (Clean Cards) -->
   <div class="clean-card">
     <div class="chart-header">
