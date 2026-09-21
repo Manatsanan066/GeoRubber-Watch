@@ -68,11 +68,13 @@ if ($driver === 'pgsql') {
             username VARCHAR(50) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
             full_name VARCHAR(100) NOT NULL,
+            id_card_num VARCHAR(20),
             email VARCHAR(100) UNIQUE,
             phone VARCHAR(20),
             role VARCHAR(30) DEFAULT 'farmer',
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS id_card_num VARCHAR(20);
     ");
 } else {
     $pdo->exec("
@@ -81,6 +83,7 @@ if ($driver === 'pgsql') {
             username VARCHAR(50) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
             full_name VARCHAR(100) NOT NULL,
+            id_card_num VARCHAR(20),
             email VARCHAR(100) UNIQUE,
             phone VARCHAR(20),
             role VARCHAR(30) DEFAULT 'farmer',

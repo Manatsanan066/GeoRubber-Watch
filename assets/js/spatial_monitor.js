@@ -174,11 +174,11 @@ const SpatialMonitor = {
         },
         onEachFeature: (feature, layer) => {
           const props = feature.properties;
-          let statusBadge = '<span style="color:#166534; font-weight:700;">🟢 ผ่านเกณฑ์ EUDR</span>';
+          let statusBadge = '<span style="color:#166534; font-weight:700;">🟢 ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>';
           if (props.eudr_status === 'non_compliant') {
-            statusBadge = '<span style="color:#991b1b; font-weight:700;">🔴 วิกฤต: ทับซ้อนป่าสงวน</span>';
+            statusBadge = '<span style="color:#991b1b; font-weight:700;">🔴 ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>';
           } else if (props.eudr_status === 'under_review') {
-            statusBadge = '<span style="color:#92400e; font-weight:700;">🟠 เฝ้าระวัง (<500ม.)</span>';
+            statusBadge = '<span style="color:#92400e; font-weight:700;">🟠 โซนเฝ้าระวัง (Buffer < 500 ม.)</span>';
           }
 
           layer.bindPopup(`

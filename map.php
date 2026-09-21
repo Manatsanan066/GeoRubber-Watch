@@ -8,7 +8,50 @@ $current_role = $currentUser['role'] ?? 'farmer';
 $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบบ';
 
 $pdo = getDatabaseConnection();
-$farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FROM farmers ORDER BY first_name ASC")->fetchAll();
+
+// Look up current farmer profile if logged in
+$currentFarmer = null;
+$defaultFarmerName = '';
+$currentFarmerPlotsCount = 0;
+
+if ($currentUser) {
+    if (!empty($currentUser['farmer_id'])) {
+        $fStmt = $pdo->prepare("SELECT * FROM farmers WHERE id = ?");
+        $fStmt->execute([$currentUser['farmer_id']]);
+        $currentFarmer = $fStmt->fetch(PDO::FETCH_ASSOC);
+    }
+    if (!$currentFarmer && !empty($currentUser['id'])) {
+        $fStmt = $pdo->prepare("SELECT * FROM farmers WHERE user_id = ? ORDER BY id ASC LIMIT 1");
+        $fStmt->execute([$currentUser['id']]);
+        $currentFarmer = $fStmt->fetch(PDO::FETCH_ASSOC);
+    }
+    if (!$currentFarmer && !empty($currentUser['full_name'])) {
+        $fStmt = $pdo->prepare("SELECT * FROM farmers WHERE CONCAT(COALESCE(prefix,''), first_name, ' ', COALESCE(last_name,'')) = ? OR first_name = ? LIMIT 1");
+        $fStmt->execute([$currentUser['full_name'], $currentUser['full_name']]);
+        $currentFarmer = $fStmt->fetch(PDO::FETCH_ASSOC);
+    }
+    if ($currentFarmer) {
+        $defaultFarmerName = trim(($currentFarmer['prefix'] ?? '') . $currentFarmer['first_name'] . (!empty($currentFarmer['last_name']) ? ' ' . $currentFarmer['last_name'] : ''));
+        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM rubber_plots WHERE farmer_id = ?");
+        $countStmt->execute([$currentFarmer['id']]);
+        $currentFarmerPlotsCount = (int)$countStmt->fetchColumn();
+    } elseif (!empty($currentUser['full_name']) && $currentUser['full_name'] !== 'ผู้ใช้งาน') {
+        $defaultFarmerName = $currentUser['full_name'];
+    }
+}
+
+// All registered farmers with plot counts for autocomplete and seamless selection
+$farmersList = $pdo->query("
+    SELECT f.id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
+           COUNT(p.id) as plot_count
+    FROM farmers f
+    LEFT JOIN rubber_plots p ON p.farmer_id = f.id
+    GROUP BY f.id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone
+    ORDER BY f.first_name ASC
+")->fetchAll(PDO::FETCH_ASSOC);
+
+// Total registered plots count for instant badge display
+$totalPlotsCount = (int)($pdo->query("SELECT COUNT(*) FROM rubber_plots")->fetchColumn() ?: 0);
 ?>
 <!DOCTYPE html>
 <html lang="th" class="scroll-smooth">
@@ -19,7 +62,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   
   <!-- Google Fonts: Google Sans, Open Sans & Sarabun -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
@@ -32,6 +75,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   <!-- QRCode.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
   <!-- Core App Styles & Bilingual i18n Engine -->
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="assets/js/i18n.js?v=<?= time() ?>"></script>
@@ -41,6 +87,20 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   <script>
     window.CURRENT_USER = <?= json_encode($currentUser, JSON_UNESCAPED_UNICODE) ?>;
     window.IS_ADMIN = <?= $currentUser['is_admin'] ? 'true' : 'false' ?>;
+    window.CURRENT_FARMER = <?= json_encode($currentFarmer, JSON_UNESCAPED_UNICODE) ?>;
+    window.DEFAULT_FARMER_NAME = <?= json_encode($defaultFarmerName, JSON_UNESCAPED_UNICODE) ?>;
+    window.CURRENT_FARMER_PLOTS_COUNT = <?= (int)$currentFarmerPlotsCount ?>;
+    window.REGISTERED_FARMERS = <?= json_encode(array_map(function($f) {
+        $fullName = trim(($f['prefix'] ?? '') . $f['first_name'] . (!empty($f['last_name']) ? ' ' . $f['last_name'] : ''));
+        return [
+            'id' => (int)$f['id'],
+            'code' => $f['farmer_code'],
+            'name' => $fullName,
+            'id_card_num' => $f['id_card_num'] ?? '',
+            'phone' => $f['phone'] ?? '',
+            'plot_count' => (int)$f['plot_count']
+        ];
+    }, $farmersList), JSON_UNESCAPED_UNICODE) ?>;
     window.SERVER_LAN_IP = '192.168.1.139';
     window.NGROK_PUBLIC_URL = 'https://earthling-retype-aroma.ngrok-free.dev';
   </script>
@@ -545,7 +605,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
     <div class="relative z-20 w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 my-auto py-6 sm:py-10 text-center">
       <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
         <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow" data-i18n="map_hero_tag">
-          🌱 WEB-GIS RUBBER PLOT REGISTRY & EUDR VERIFICATION
+          WEB-GIS RUBBER PLOT REGISTRY & EUDR VERIFICATION
         </div>
         <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md" data-i18n="map_hero_title">
           ระบบทะเบียนแปลงปลูกและพิกัดภูมิสารสนเทศ (GIS)
@@ -561,63 +621,72 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   <!-- =========================================================================
        [MOBILE RESPONSIVE DRAWER OVERLAY]
        ========================================================================= -->
-  <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0 lg:hidden">
-    <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-mezenc-deepTeal text-white p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/10">
+  <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0 lg:hidden">
+    <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white/95 backdrop-blur-2xl text-slate-800 p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/60">
       
       <div>
-        <div class="flex items-center justify-between pb-4 border-b border-white/15">
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-gray-200/70">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
-              🌲
-            </div>
-            <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
+            <img src="img/map_icon.png" alt="GeoRubber Logo" class="w-7 h-7 object-contain drop-shadow-sm" onerror="this.onerror=null; this.src='ปก.png';">
+            <span class="font-extrabold text-base text-mezenc-teal" data-i18n="nav_brand">GeoRubber Watch</span>
           </div>
-          <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+          <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer" aria-label="Close menu">
             ✕
           </button>
         </div>
 
         <!-- Mobile Language Toggle Switch -->
-        <div class="py-3 flex items-center justify-between border-b border-white/10">
-          <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+        <div class="py-3 flex items-center justify-between border-b border-gray-200/60">
+          <span class="text-xs text-slate-500 font-medium">Language / ภาษา:</span>
           <div 
             onclick="toggleLanguage()"
-            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0 bg-slate-200/80 border border-slate-300/80"
             id="lang-toggle-btn-mobile"
           >
-            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px] shadow-sm"></div>
             <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
-            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-slate-500 transition-colors duration-300 pointer-events-none">EN</div>
           </div>
         </div>
 
-        <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
-          <a href="index.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
+        <!-- Drawer Navigation Links -->
+        <nav class="flex flex-col gap-1.5 pt-4 text-sm font-medium">
+          <a href="index.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
+            <span data-i18n="nav_home">หน้าแรก</span>
           </a>
-          <a href="overview.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
+          <a href="overview.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
+            <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
-          <a href="dashboard.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
+          <a href="dashboard.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
+            <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
-          <a href="map.php" class="px-4 py-3 rounded-xl bg-white/15 text-white font-bold transition-colors flex items-center gap-3">
-            <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
+          <a href="map.php" class="px-4 py-2.5 rounded-xl bg-mezenc-teal text-white font-bold transition-all shadow-xs flex items-center gap-3">
+            <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
-          <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
+          <a href="yields.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
+            <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
-          <a href="contact.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-            <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
-          </a>
-          <a href="logout.php" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/40 transition-colors flex items-center gap-3 text-red-300 font-bold" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
+          <a href="contact.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
+            <span data-i18n="nav_contact">ติดต่อเรา</span>
           </a>
         </nav>
       </div>
 
-      <div class="pt-4 border-t border-white/15 text-center text-xs text-white/60">
-        GeoRubber Watch • ม.อ. สุราษฎร์ธานี
+      <!-- Drawer Footer Action -->
+      <div class="pt-4 border-t border-gray-200/70 space-y-2.5">
+        <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600 flex items-center justify-between">
+          <div class="truncate">
+            ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($user_name ?? ($currentUser['full_name'] ?? 'ผู้ใช้งาน')) ?></strong>
+          </div>
+          <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full font-bold border border-mezenc-mint/40 shrink-0 ml-1"><?= htmlspecialchars($current_role ?? ($currentUser['role'] ?? '')) ?></span>
+        </div>
+        <a href="logout.php" class="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all flex items-center justify-center gap-2" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+          <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
+        </a>
+        <div class="text-center text-[11px] text-slate-400 pt-1 font-normal">
+          &copy; 2026 GeoRubber Watch &bull; ม.อ. สุราษฎร์ธานี
+        </div>
       </div>
 
     </div>
@@ -664,7 +733,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             onclick="activateMapDrawDirect()" 
             class="px-4 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[14px] sm:text-[15px] shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <span data-i18n="map_btn_draw_new">✏️ วาดแปลงใหม่</span>
+            <span data-i18n="map_btn_draw_new">วาดแปลงใหม่</span>
           </button>
         </div>
 
@@ -686,12 +755,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           
           <!-- Panel Header with Close Button ✕ -->
           <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">🎛️</span>
-              <div>
-                <h3 class="font-extrabold text-[16px] text-mezenc-teal leading-tight" data-i18n="map_layer_panel_title">แผงควบคุมแผนที่</h3>
-                <span class="text-[14px] text-gray-500 font-medium block mt-0.5" data-i18n="map_layer_panel_sub">Layer Control &amp; Tools</span>
-              </div>
+            <div>
+              <h3 class="font-extrabold text-[16px] text-mezenc-teal leading-tight" data-i18n="map_layer_panel_title">แผงควบคุมแผนที่</h3>
+              <span class="text-[14px] text-gray-500 font-medium block mt-0.5" data-i18n="map_layer_panel_sub">Layer Control &amp; Tools</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-[13px] font-bold text-mezenc-brightCyan px-2.5 py-0.5 rounded-full bg-mezenc-lightCyan border border-[#bee6e1] shrink-0">
@@ -720,9 +786,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl px-3 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all cursor-pointer shadow-xs leading-relaxed"
                 onchange="GeoMap.setBaseMap(this.value)"
               >
-                <option value="satellite" data-i18n="map_opt_satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
-                <option value="osm" data-i18n="map_opt_osm">🗺️ แผนที่ถนน (OpenStreetMap)</option>
-                <option value="topo" data-i18n="map_opt_topo">⛰️ ภูมิประเทศ (Topographic)</option>
+                <option value="satellite" data-i18n="map_opt_satellite">ภาพถ่ายดาวเทียม (Satellite)</option>
+                <option value="osm" data-i18n="map_opt_osm">แผนที่ถนน (OpenStreetMap)</option>
+                <option value="topo" data-i18n="map_opt_topo">ภูมิประเทศ (Topographic)</option>
               </select>
             </div>
           </div>
@@ -730,7 +796,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           <!-- Overlays Section -->
           <div class="space-y-2">
             <div class="text-[15px] font-bold text-gray-700 flex items-center gap-1.5">
-              <span>📂</span> <span data-i18n="map_lbl_layers">เปิด/ปิดชั้นข้อมูล (Layers):</span>
+              <span data-i18n="map_lbl_layers">เปิด/ปิดชั้นข้อมูล (Layers):</span>
             </div>
 
             <!-- Toggle Row 1: Forest Reserves -->
@@ -794,17 +860,14 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           </div>
 
           <!-- Quick Drawing Tools & Actions -->
-          <div class="space-y-2">
-            <div class="text-[15px] font-bold text-gray-700 flex items-center gap-1.5">
-              <span>🛠️</span> <span data-i18n="map_tools_title">เครื่องมือจัดการแปลง:</span>
-            </div>
+          <div class="pt-1">
             <div class="grid grid-cols-2 gap-2">
               <button 
                 type="button" 
-                onclick="activateMapDrawDirect()" 
+                onclick="toggleMapPinMode()" 
                 class="py-2.5 px-3 rounded-2xl bg-mezenc-teal hover:bg-mezenc-brightCyan text-white font-bold text-[14px] shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span data-i18n="map_btn_draw_new">✏️ วาดแปลงใหม่</span>
+                <span data-i18n="map_btn_pin_check">ปักหมุดตรวจพิกัด</span>
               </button>
               <!-- GPS Locate Button -->
               <button 
@@ -945,8 +1008,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       <!-- Header & Action Bar -->
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-gray-100">
         <div class="flex items-center gap-3.5">
-          <div class="w-12 h-12 rounded-2xl bg-mezenc-lightCyan border border-[#bee6e1] flex items-center justify-center text-2xl shrink-0 shadow-xs">
-            🌱
+          <div class="w-12 h-12 rounded-2xl bg-mezenc-lightCyan border border-[#bee6e1] flex items-center justify-center text-xl shrink-0 shadow-xs">
+            <i class="fa-solid fa-tree text-mezenc-teal"></i>
           </div>
           <div>
             <div class="flex flex-wrap items-center gap-3">
@@ -954,7 +1017,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 แปลงปลูกยางพารา
               </h3>
               <span id="total-plots-count-badge" class="inline-flex items-center px-3.5 py-1 rounded-full text-[16px] font-bold bg-mezenc-lightCyan text-mezenc-teal border border-[#bee6e1]">
-                กำลังโหลด...
+                <?= $totalPlotsCount ?> แปลง
               </span>
             </div>
             <p class="text-[16px] text-gray-500 font-medium mt-1" data-i18n="map_registry_sub">
@@ -970,7 +1033,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             onclick="openAddPlotWizard()" 
             class="px-5 py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2 cursor-pointer group"
           >
-            <span class="group-hover:rotate-90 transition-transform font-bold text-lg">➕</span>
+            <i class="fa-solid fa-plus group-hover:rotate-90 transition-transform font-bold text-sm"></i>
             <span data-i18n="map_btn_add_plot">เพิ่มแปลง</span>
           </button>
         </div>
@@ -984,7 +1047,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           <input 
             type="text" 
             id="plot-search-input" 
-            placeholder="🔍 ค้นหาชื่อแปลง, รหัส, เกษตรกร..." 
+            placeholder="ค้นหาชื่อแปลง, รหัส, เกษตรกร..." 
             data-i18n-placeholder="map_search_ph"
             class="w-full bg-white text-gray-800 text-[16px] rounded-xl pl-11 pr-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-1 focus:ring-mezenc-brightCyan outline-none transition-all shadow-xs" 
             oninput="filterPlotsList()"
@@ -1002,9 +1065,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             onchange="filterPlotsList()"
           >
             <option value="" data-i18n="map_filter_all">ทั้งหมด</option>
-            <option value="compliant" data-i18n="map_filter_compliant">🟢 ผ่าน EUDR</option>
-            <option value="non_compliant" data-i18n="map_filter_non_compliant">🔴 ทับซ้อนป่า</option>
-            <option value="under_review" data-i18n="map_filter_review">🟠 โซนเฝ้าระวัง</option>
+            <option value="compliant" data-i18n="map_filter_compliant">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</option>
+            <option value="non_compliant" data-i18n="map_filter_non_compliant">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</option>
+            <option value="under_review" data-i18n="map_filter_review">โซนเฝ้าระวัง (Buffer < 500 ม.)</option>
           </select>
         </div>
 
@@ -1071,9 +1134,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           <div class="font-bold text-mezenc-mint uppercase" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
           <div class="text-[11px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[11px] text-white/90 space-y-0.5">
-            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div data-i18n="foot_email">✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
+            <div data-i18n="foot_authors"><strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor"><strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div data-i18n="foot_email"><strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
           </div>
         </div>
 
@@ -1081,8 +1144,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         <div class="md:col-span-3 flex justify-start md:justify-end">
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
             <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
-            <div class="text-2xl my-1">🗺️</div>
-            <div class="text-xs font-bold text-white" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-2xl my-1"><i class="fa-solid fa-map-location-dot text-mezenc-mint"></i></div>
+            <div class="text-xs font-bold text-white" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
             <div class="text-[10px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
@@ -1104,56 +1167,56 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
   <div id="addPlotModal" class="modal-overlay">
     <div class="modal-card w-full max-w-4xl max-h-[92vh] flex flex-col justify-between overflow-hidden bg-white rounded-3xl shadow-2xl border-2 border-[#bee6e1]">
       
-      <!-- Top Progress Step Indicators (Matching order.php & Screenshot) -->
-      <div class="border-b border-gray-100 px-6 sm:px-10 pt-6 pb-5 relative bg-white shrink-0">
+      <!-- Top Progress Step Indicators -->
+      <div class="border-b border-gray-100 px-5 sm:px-8 pt-5 pb-4 relative bg-white shrink-0">
         <!-- Close Button at top right -->
         <button 
           type="button" 
           onclick="App.closeModal('addPlotModal')" 
-          class="absolute right-5 top-5 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center font-bold text-sm transition-all cursor-pointer z-10"
+          class="absolute right-4 sm:right-6 top-4 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center font-bold text-xs sm:text-sm transition-all cursor-pointer z-10"
         >
           ✕
         </button>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 items-center relative pr-8">
+        <div class="grid grid-cols-4 gap-2 sm:gap-4 items-center relative pr-8">
           
           <!-- Step 1: วาดแปลงปลูก -->
-          <button type="button" onclick="goToModalStep(1)" class="flex items-center gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 1: วาดขอบเขตแปลงปลูก">
-            <div id="modal-step-badge-1" class="w-8 h-8 rounded-full bg-mezenc-brightCyan text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-[16px]">
+          <button type="button" onclick="goToModalStep(1)" class="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 1: วาดขอบเขตแปลงปลูก">
+            <div id="modal-step-badge-1" class="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-mezenc-brightCyan text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xs sm:text-sm">
               1
             </div>
-            <div class="leading-tight">
-              <span id="modal-step-label-1" class="text-[16px] font-bold text-mezenc-brightCyan group-hover:underline block">วาดแปลงปลูก</span>
+            <div class="leading-tight min-w-0">
+              <span id="modal-step-label-1" class="text-xs sm:text-sm font-extrabold text-mezenc-teal group-hover:text-mezenc-brightCyan transition-colors block truncate">วาดแปลงปลูก</span>
             </div>
           </button>
 
           <!-- Step 2: ข้อมูลเกษตรกร -->
-          <button type="button" onclick="goToModalStep(2)" class="flex items-center gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 2: กรอกข้อมูลเกษตรกรและแปลง">
-            <div id="modal-step-badge-2" class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0 font-bold text-[16px] shadow-xs">
+          <button type="button" onclick="goToModalStep(2)" class="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 2: กรอกข้อมูลเกษตรกรและแปลง">
+            <div id="modal-step-badge-2" class="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-xs">
               2
             </div>
-            <div class="leading-tight">
-              <span id="modal-step-label-2" class="text-[16px] font-semibold text-gray-400 group-hover:text-gray-600 block">ข้อมูลเกษตรกร</span>
+            <div class="leading-tight min-w-0">
+              <span id="modal-step-label-2" class="text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-600 transition-colors block truncate">ข้อมูลเกษตรกร</span>
             </div>
           </button>
 
           <!-- Step 3: ตรวจสอบ -->
-          <button type="button" onclick="goToModalStep(3)" class="flex items-center gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 3: ตรวจสอบความสอดคล้อง EUDR">
-            <div id="modal-step-badge-3" class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0 font-bold text-[16px] shadow-xs">
+          <button type="button" onclick="goToModalStep(3)" class="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 3: ตรวจสอบความสอดคล้อง EUDR">
+            <div id="modal-step-badge-3" class="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-xs">
               3
             </div>
-            <div class="leading-tight">
-              <span id="modal-step-label-3" class="text-[16px] font-semibold text-gray-400 group-hover:text-gray-600 block">ตรวจสอบ</span>
+            <div class="leading-tight min-w-0">
+              <span id="modal-step-label-3" class="text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-600 transition-colors block truncate">ตรวจสอบ</span>
             </div>
           </button>
 
           <!-- Step 4: QR Code -->
-          <button type="button" onclick="goToModalStep(4)" class="flex items-center gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 4: ออก QR Code และใบรับรอง">
-            <div id="modal-step-badge-4" class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0 font-bold text-[16px] shadow-xs">
+          <button type="button" onclick="goToModalStep(4)" class="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 4: ออก QR Code และใบรับรอง">
+            <div id="modal-step-badge-4" class="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-xs">
               4
             </div>
-            <div class="leading-tight">
-              <span id="modal-step-label-4" class="text-[16px] font-semibold text-gray-400 group-hover:text-gray-600 block">QR Code</span>
+            <div class="leading-tight min-w-0">
+              <span id="modal-step-label-4" class="text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-600 transition-colors block truncate">QR Code</span>
             </div>
           </button>
 
@@ -1179,26 +1242,26 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             </p>
           </div>
 
-          <!-- Drawing Action Card with Dashed Border (Matches Screenshot) -->
+          <!-- Drawing Action Card with Dashed Border -->
           <div class="border-2 border-dashed border-[#bee6e1] bg-[#f8faf9] rounded-3xl p-6 sm:p-7 text-center space-y-4">
             <div class="w-14 h-14 rounded-2xl bg-white text-mezenc-brightCyan flex items-center justify-center mx-auto text-2xl shadow-sm border border-[#bee6e1]">
-              📍
+              <i class="fa-solid fa-map-location-dot"></i>
             </div>
 
             <div class="max-w-md mx-auto space-y-1.5">
-              <h3 class="font-extrabold text-[16px] text-mezenc-teal">
-                ต้องการเปิดแผนที่ GIS เพื่อวาดแปลง หรือใช้พิกัดที่ระบุไว้?
+              <h3 class="font-extrabold text-[16px] text-mezenc-teal" id="modal-step1-title">
+                เปิดแผนที่ GIS เพื่อวาดขอบเขตแปลงปลูก
               </h3>
-              <p class="text-[16px] text-gray-500 leading-relaxed">
-                ท่านสามารถคลิกปุ่มด้านล่างเพื่อเปิดโหมดวาดแปลงพิกัดจริงบนแผนที่ หรือใช้พิกัดที่ระบุเพื่อเข้าสู่ขั้นตอนที่ 2 ทันที
+              <p class="text-[15px] text-gray-500 leading-relaxed" id="modal-step1-desc">
+                คลิกปุ่มด้านล่างเพื่อเปิดโหมดวาดรูปหลายเหลี่ยม (Polygon) กำหนดจุดพิกัดขอบเขตแปลงจริงบนแผนที่
               </p>
             </div>
 
-            <!-- Current Loaded Coordinates Badge -->
-            <div class="inline-flex flex-wrap items-center justify-center gap-2.5 bg-white px-4 py-2 rounded-full border border-gray-200 text-[16px] shadow-xs">
-              <span class="text-gray-400">พิกัดปัจจุบัน:</span>
+            <!-- Badges -->
+            <div class="inline-flex flex-wrap items-center justify-center gap-2.5 bg-white px-4 py-2 rounded-full border border-gray-200 text-[15px] shadow-xs">
+              <span class="text-gray-500 font-medium">พิกัดปัจจุบัน:</span>
               <span class="font-mono font-bold text-mezenc-teal">Lat: <span id="modal-disp-lat">9.138240</span>, Lng: <span id="modal-disp-lng">99.321850</span></span>
-              <span class="bg-mezenc-lightCyan text-mezenc-teal px-2.5 py-0.5 rounded-full font-bold text-[16px]"><span id="modal-disp-points">Polygon 6 จุด</span> (เนื้อที่ ~<span id="modal-disp-area">10.5</span> ไร่)</span>
+              <span class="bg-mezenc-lightCyan text-mezenc-teal px-2.5 py-0.5 rounded-full font-bold text-xs"><span id="modal-disp-points">Polygon 6 จุด</span> (เนื้อที่ ~<span id="modal-disp-area">10.5</span> ไร่)</span>
             </div>
 
             <!-- Action Buttons -->
@@ -1206,9 +1269,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <button 
                 type="button" 
                 onclick="activateMapDrawFromModal()" 
-                class="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white hover:bg-mezenc-teal hover:text-white text-mezenc-teal font-bold text-[16px] border-2 border-mezenc-teal transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                class="w-full sm:w-auto px-6 py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-sm sm:text-base shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>เปิดแผนที่เพื่อวาดแปลงใหม่</span>
+                <i class="fa-solid fa-draw-polygon"></i>
+                <span id="modal-step1-btn-draw-text">วาดขอบเขตแปลงใหม่บนแผนที่</span>
               </button>
             </div>
           </div>
@@ -1226,9 +1290,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           <div class="border-2 border-dashed border-[#bee6e1] bg-[#f8faf9] rounded-3xl p-6 sm:p-7 space-y-4">
             
             <!-- Real Calculated Area & Points Banner from Drawn Polygon -->
-            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border-2 border-emerald-300 shadow-xs flex flex-wrap items-center justify-between gap-3 text-[16px]">
+            <div id="step2-calculation-banner" class="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border-2 border-emerald-300 shadow-xs flex flex-wrap items-center justify-between gap-3 text-[16px]">
               <div class="flex items-center gap-3">
-                <span class="text-2xl">📐</span>
+                <i class="fa-solid fa-draw-polygon text-emerald-700 text-xl"></i>
                 <div>
                   <div class="text-[13px] text-emerald-800 font-bold uppercase">พิกัดและเนื้อที่จริงที่คำนวณได้จากแผนที่ GIS:</div>
                   <div class="text-mezenc-teal font-extrabold text-[17px]">
@@ -1242,33 +1306,82 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                   Polygon 6 จุด
                 </span>
                 <span class="bg-emerald-100 text-emerald-800 font-bold text-[14px] px-3 py-1 rounded-full border border-emerald-300" id="step2-eudr-badge">
-                  🟢 ปลอดการตัดไม้
+                  ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)
                 </span>
               </div>
             </div>
 
             <!-- Form Content Box -->
             <div class="bg-white p-5 sm:p-6 rounded-3xl border border-[#bee6e1] shadow-xs space-y-4 text-[16px]">
-              <!-- Row 1 -->
+              <!-- Row 1: 13-digit National ID (First) & Farmer Name (Second) -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- 1. National ID Input -->
                 <div>
-                  <label class="block font-bold text-mezenc-teal mb-1.5 pl-2 text-[16px]">ชื่อเกษตรกรเจ้าของแปลง <span class="text-red-500">*</span></label>
-                  <input 
-                    type="text" 
-                    id="form-farmer-name" 
-                    value="" 
-                    class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" 
-                    placeholder="กรอกชื่อ-นามสกุล เกษตรกรเจ้าของแปลง"
-                  >
+                  <div class="flex items-center justify-between mb-1.5 pl-2">
+                    <label class="font-bold text-mezenc-teal text-[16px]">
+                      1. เลขประจำตัวประชาชน 13 หลัก
+                    </label>
+                    <span id="idcard-status-badge" class="hidden"></span>
+                  </div>
+                  <div class="relative">
+                    <input 
+                      type="text" 
+                      id="form-farmer-idcard" 
+                      maxlength="17"
+                      placeholder="1-8499-00123-45-6" 
+                      value="<?= htmlspecialchars($currentFarmer['id_card_num'] ?? '') ?>"
+                      oninput="onFarmerIdCardInput(this.value)"
+                      class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] font-mono tracking-wide rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs"
+                    >
+                    <div id="idcard-lookup-loading" class="hidden absolute right-4 top-3 text-mezenc-brightCyan">
+                      <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    </div>
+                  </div>
+                  <div id="idcard-autofill-hint" class="hidden"></div>
                 </div>
+
+                <!-- 2. Farmer Name Input -->
                 <div>
-                  <label class="block font-bold text-mezenc-teal mb-1.5 pl-2 text-[16px]">ชื่อแปลงปลูก <span class="text-red-500">*</span></label>
-                  <input type="text" id="form-plot-name" value="" class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" placeholder="เช่น แปลงยางพาราเขาท่าเพชร 1">
+                  <div class="flex items-center justify-between mb-1.5 pl-2">
+                    <label class="font-bold text-mezenc-teal text-[16px]">
+                      2. ชื่อเกษตรกรเจ้าของแปลง <span class="text-red-500">*</span>
+                    </label>
+                    <span id="farmer-plot-badge" class="<?= $currentFarmerPlotsCount > 0 ? '' : 'hidden' ?> text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      แปลงที่ <?= $currentFarmerPlotsCount + 1 ?>
+                    </span>
+                  </div>
+                  <div class="relative">
+                    <input type="hidden" id="form-farmer-id" value="<?= !empty($currentFarmer['id']) ? (int)$currentFarmer['id'] : '' ?>">
+                    <input 
+                      type="text" 
+                      id="form-farmer-name" 
+                      list="farmers-datalist"
+                      value="<?= htmlspecialchars($defaultFarmerName) ?>" 
+                      autocomplete="off"
+                      oninput="onFarmerNameChanged(this.value)"
+                      class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" 
+                      placeholder="ชื่อ-นามสกุล เกษตรกรเจ้าของแปลง"
+                    >
+                    <datalist id="farmers-datalist">
+                      <?php foreach ($farmersList as $fl): 
+                        $flName = trim(($fl['prefix'] ?? '') . $fl['first_name'] . (!empty($fl['last_name']) ? ' ' . $fl['last_name'] : ''));
+                      ?>
+                        <option value="<?= htmlspecialchars($flName) ?>"><?= htmlspecialchars($fl['farmer_code']) ?> (มี <?= (int)$fl['plot_count'] ?> แปลงในระบบ)</option>
+                      <?php endforeach; ?>
+                    </datalist>
+                  </div>
+                  <div id="farmer-autofill-hint" class="hidden">
+                    <span id="farmer-autofill-text"></span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Row 2 -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Row 2: Plot Name, Deed Type, Deed No -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label class="block font-bold text-mezenc-teal mb-1.5 pl-2 text-[16px]">ชื่อแปลงปลูก <span class="text-red-500">*</span></label>
+                  <input type="text" id="form-plot-name" value="<?= $currentFarmerPlotsCount > 0 ? 'แปลงยางพารา ' . ($currentFarmerPlotsCount + 1) : 'แปลงยางพารา 1' ?>" class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs" placeholder="เช่น แปลงยางพาราเขาท่าเพชร 1">
+                </div>
                 <div>
                   <label class="block font-bold text-mezenc-teal mb-1.5 pl-2 text-[16px]">ประเภทเอกสารสิทธิ์</label>
                   <select id="form-deed-type" class="w-full bg-[#f8faf9] hover:bg-white focus:bg-white text-gray-800 text-[16px] rounded-full px-4 py-2.5 sm:py-3 border border-gray-200 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none transition-all shadow-xs cursor-pointer">
@@ -1360,10 +1473,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <!-- Real Analysis Status Badge -->
               <div id="step3-auto-status-badge" class="flex items-center gap-2">
                 <span class="text-[13px] font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
-                  ⚡ วิเคราะห์อัตโนมัติ 26 ผืนป่า
+                  วิเคราะห์อัตโนมัติ 26 ผืนป่า
                 </span>
                 <span id="step3-status-pill" class="px-3.5 py-1 rounded-full text-[14px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs">
-                  🟢 ปลอดภัย / ผ่านเกณฑ์
+                  ปลอดภัย / ผ่านเกณฑ์
                 </span>
               </div>
             </div>
@@ -1375,7 +1488,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <div id="modal-case-compliant" class="space-y-4">
                 <div class="p-4 sm:p-5 rounded-2xl bg-[#f4faf7] border-2 border-emerald-300 flex items-start gap-3.5">
                   <div class="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    ✅
+                    <i class="fa-solid fa-circle-check"></i>
                   </div>
                   <div class="flex-1">
                     <div class="flex flex-wrap items-center gap-2">
@@ -1383,7 +1496,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                         ผ่านเกณฑ์ EUDR 100% (Zero Deforestation Compliant)
                       </h3>
                       <span class="bg-emerald-100 text-emerald-800 font-bold text-[14px] px-2.5 py-0.5 rounded-full border border-emerald-300">
-                        🟢 ปลอดภัย
+                        ปลอดภัย
                       </span>
                     </div>
                     <p class="text-[16px] text-emerald-700 font-medium mt-1 leading-relaxed">
@@ -1395,26 +1508,26 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[16px]">
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
                     <span class="text-gray-400 block text-[13px] uppercase font-bold">Zero Deforestation</span>
-                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[15px]">🌲 ไม่อยู่ในเขตป่าสงวน</strong>
+                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[15px]">ไม่อยู่ในเขตป่าสงวน</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
                     <span class="text-gray-400 block text-[13px] uppercase font-bold">Buffer Distance</span>
-                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-compliant-buffer-text">📏 ห่างป่า > 500 ม. (ปลอดภัย)</strong>
+                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-compliant-buffer-text">ห่างป่า > 500 ม. (ปลอดภัย)</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
                     <span class="text-gray-400 block text-[13px] uppercase font-bold">Cut-off Date</span>
-                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-compliant-cutoff-text">📅 ปลูกก่อนปี 2020 (สอดคล้อง)</strong>
+                    <strong class="text-emerald-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-compliant-cutoff-text">ปลูกก่อนปี 2020 (สอดคล้อง)</strong>
                   </div>
                 </div>
 
                 <div class="p-3.5 bg-emerald-50 rounded-2xl text-[16px] text-emerald-900 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span class="leading-relaxed">🎉 แปลงนี้พร้อมสำหรับ <strong>บันทึกลงฐานข้อมูลและออกเอกสารรับรอง EUDR Passport (QR Code)</strong></span>
+                  <span class="leading-relaxed">แปลงนี้พร้อมสำหรับ <strong>บันทึกลงฐานข้อมูลและออกเอกสารรับรอง EUDR Passport (QR Code)</strong></span>
                   <button 
                     type="button" 
                     onclick="goToModalStep(4)" 
                     class="px-5 py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow transition-all whitespace-nowrap cursor-pointer"
                   >
-                    ออก QR Code ทันที ➔
+                    ออก QR Code ทันที
                   </button>
                 </div>
               </div>
@@ -1423,7 +1536,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <div id="modal-case-review" class="hidden space-y-4">
                 <div class="p-4 sm:p-5 rounded-2xl bg-orange-50/80 border-2 border-orange-300 flex items-start gap-3.5">
                   <div class="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    ⚠️
+                    <i class="fa-solid fa-triangle-exclamation"></i>
                   </div>
                   <div class="flex-1">
                     <div class="flex flex-wrap items-center gap-2">
@@ -1431,7 +1544,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                         มีความเสี่ยง / อยู่ในโซนเฝ้าระวังแนวเขตป่าสงวน (Buffer Zone)
                       </h3>
                       <span class="bg-orange-100 text-orange-900 font-bold text-[14px] px-2.5 py-0.5 rounded-full border border-orange-300" id="modal-review-badge">
-                        🟠 มีความเสี่ยง (&lt; 500 ม.)
+                        มีความเสี่ยง (&lt; 500 ม.)
                       </span>
                     </div>
                     <p class="text-[16px] text-orange-900 font-medium mt-1 leading-relaxed" id="modal-review-desc">
@@ -1443,27 +1556,27 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[16px]">
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
                     <span class="text-gray-400 block text-[13px] uppercase font-bold">Forest Proximity</span>
-                    <strong class="text-orange-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-review-proximity">⚠️ ประชิดแนวเขตป่าสงวน</strong>
+                    <strong class="text-orange-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-review-proximity">ประชิดแนวเขตป่าสงวน</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
                     <span class="text-gray-400 block text-[13px] uppercase font-bold">Buffer Distance</span>
-                    <strong class="text-orange-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-review-distance-text">📏 ระยะห่าง &lt; 500 ม. (เฝ้าระวัง)</strong>
+                    <strong class="text-orange-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-review-distance-text">ระยะห่าง &lt; 500 ม. (เฝ้าระวัง)</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
                     <span class="text-gray-400 block text-[13px] uppercase font-bold">EUDR Status</span>
-                    <strong class="text-orange-700 font-bold flex items-center gap-1 mt-1 text-[15px]">🟠 บันทึกสถานะเฝ้าระวัง</strong>
+                    <strong class="text-orange-700 font-bold flex items-center gap-1 mt-1 text-[15px]">บันทึกสถานะเฝ้าระวัง</strong>
                   </div>
                 </div>
 
                 <div class="p-3.5 bg-orange-50 rounded-2xl text-[16px] text-orange-950 border border-orange-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span class="leading-relaxed">📌 แปลงนี้อยู่ในโซนเฝ้าระวัง สามารถ <strong>ออกเอกสารรับรองเฝ้าระวัง (QR Code)</strong> หรือบันทึกข้อมูลได้</span>
+                  <span class="leading-relaxed">แปลงนี้อยู่ในโซนเฝ้าระวัง สามารถ <strong>ออกเอกสารรับรองเฝ้าระวัง (QR Code)</strong> หรือบันทึกข้อมูลได้</span>
                   <div class="flex items-center gap-2">
                     <button 
                       type="button" 
                       onclick="goToModalStep(4)" 
                       class="px-5 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-[16px] shadow transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>ออก QR Code เฝ้าระวัง ➔</span>
+                      <span>ออก QR Code เฝ้าระวัง</span>
                     </button>
                   </div>
                 </div>
@@ -1473,7 +1586,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               <div id="modal-case-overlap" class="hidden space-y-4">
                 <div class="p-4 sm:p-5 rounded-2xl bg-red-50/80 border-2 border-red-300 flex items-start gap-3.5">
                   <div class="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center text-xl shrink-0 shadow-xs">
-                    ⛔
+                    <i class="fa-solid fa-ban"></i>
                   </div>
                   <div class="flex-1">
                     <div class="flex flex-wrap items-center gap-2">
@@ -1481,7 +1594,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                         ซ้อนทับแนวเขตป่าสงวนแห่งชาติ (Non-Compliant)
                       </h3>
                       <span class="bg-red-100 text-red-900 font-bold text-[14px] px-2.5 py-0.5 rounded-full border border-red-300">
-                        🔴 ซ้อนทับเขตป่า
+                        ซ้อนทับเขตป่า
                       </span>
                     </div>
                     <p class="text-[16px] text-red-800 font-medium mt-1 leading-relaxed" id="modal-overlap-desc">
@@ -1493,26 +1606,26 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[16px]">
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
                     <span class="text-gray-400 block text-[13px] uppercase font-bold">Forest Proximity</span>
-                    <strong class="text-red-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-overlap-forest-name">⛔ อยู่ในเขตป่าสงวน</strong>
+                    <strong class="text-red-700 font-bold flex items-center gap-1 mt-1 text-[15px]" id="modal-overlap-forest-name">อยู่ในเขตป่าสงวน</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
                     <span class="text-gray-400 block text-[13px] uppercase font-bold">Compliance Status</span>
-                    <strong class="text-red-700 font-bold flex items-center gap-1 mt-1 text-[15px]">🔴 ไม่ผ่านเกณฑ์ EUDR</strong>
+                    <strong class="text-red-700 font-bold flex items-center gap-1 mt-1 text-[15px]">ไม่ผ่านเกณฑ์ EUDR</strong>
                   </div>
                   <div class="p-3 rounded-2xl bg-[#f8faf9] border border-gray-200">
                     <span class="text-gray-400 block text-[13px] uppercase font-bold">Action</span>
-                    <strong class="text-red-700 font-bold flex items-center gap-1 mt-1 text-[15px]">⚠️ ระงับการออก Passport</strong>
+                    <strong class="text-red-700 font-bold flex items-center gap-1 mt-1 text-[15px]">ระงับการออก Passport</strong>
                   </div>
                 </div>
 
                 <div class="p-3.5 bg-red-50 rounded-2xl border border-red-200 text-[16px] text-red-900 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span class="leading-relaxed">📌 ระบบจะทำการบันทึกข้อมูลแปลงนี้เป็น <strong>"ไม่ผ่านเกณฑ์ (Non-Compliant)"</strong> เพื่อเก็บประวัติในระบบ</span>
+                  <span class="leading-relaxed">ระบบจะทำการบันทึกข้อมูลแปลงนี้เป็น <strong>"ไม่ผ่านเกณฑ์ (Non-Compliant)"</strong> เพื่อเก็บประวัติในระบบ</span>
                   <button 
                     type="button" 
                     onclick="submitPlotFromModal('non_compliant')" 
                     class="px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-[16px] shadow transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
                   >
-                    <span>💾 บันทึกข้อมูล</span>
+                    <span>บันทึกข้อมูล</span>
                   </button>
                 </div>
               </div>
@@ -1534,10 +1647,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             <!-- Header bar of the card -->
             <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#bee6e1] shadow-xs flex flex-wrap justify-between items-center gap-2">
               <div class="flex items-center gap-2 text-[16px] text-mezenc-teal font-bold">
-                <span class="text-lg">🛡️</span>
+                <i class="fa-solid fa-shield-halved text-mezenc-teal text-lg"></i>
                 <span>EUDR DIGITAL PASSPORT CERTIFICATE</span>
                 <span class="text-[16px] text-emerald-700 font-bold bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
-                  ✅ VERIFIED
+                  VERIFIED
                 </span>
               </div>
               <div class="text-right">
@@ -1565,6 +1678,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                     <strong class="text-mezenc-teal font-bold text-[16px]" id="modal-sum-farmer">นางสาวมนัสนันท์ อนันตณรงค์</strong>
                   </div>
                   <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">เลขประจำตัวประชาชน:</span>
+                    <strong class="font-mono text-gray-800 text-[16px]" id="modal-sum-idcard">-</strong>
+                  </div>
+                  <div class="flex justify-between py-1.5 border-b border-gray-100">
                     <span class="text-gray-500">ชื่อแปลงปลูก:</span>
                     <strong class="text-gray-800 font-bold text-[16px]" id="modal-sum-plot">แปลงยางพาราเขาท่าเพชร 1</strong>
                   </div>
@@ -1578,7 +1695,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                   </div>
                   <div class="flex justify-between py-1.5">
                     <span class="text-gray-500">สถานะ EUDR:</span>
-                    <span id="modal-sum-eudr-badge" class="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[16px]">🟢 ผ่านเกณฑ์ 100% (Compliant)</span>
+                    <span id="modal-sum-eudr-badge" class="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[16px]">ผ่านเกณฑ์ 100% (Compliant)</span>
                   </div>
                 </div>
               </div>
@@ -1591,7 +1708,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
                   onclick="submitPlotFromModal()" 
                   class="w-full sm:w-auto px-6 py-2.5 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer uppercase"
                 >
-                  <span>💾 บันทึกแปลงปลูกและเสร็จสิ้นกระบวนการ</span>
+                  <span>บันทึกแปลงปลูกและเสร็จสิ้นกระบวนการ</span>
                 </button>
               </div>
             </div>
@@ -1600,20 +1717,20 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
       </div>
 
-      <!-- Modal Footer (Matching order.php / Screenshot) -->
-      <div class="bg-[#fcfdfd] border-t border-gray-100 px-6 sm:px-10 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-[16px]">
-        <div class="text-[16px] font-semibold text-mezenc-teal flex items-center gap-2">
-          <span>🌲 GeoRubber Watch</span>
-          <span class="text-gray-300">|</span>
-          <span class="text-gray-500 font-normal">ระบบมาตรฐานการตรวจสอบย้อนกลับ EUDR สุราษฎร์ธานี</span>
+      <!-- Modal Footer (Single line compact navigation) -->
+      <div class="bg-[#fcfdfd] border-t border-gray-200 px-4 sm:px-8 py-3 flex items-center justify-between gap-2 shrink-0 flex-nowrap w-full select-none overflow-hidden">
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 text-xs sm:text-sm font-semibold text-mezenc-teal whitespace-nowrap overflow-hidden">
+          <span class="font-extrabold tracking-tight shrink-0">GeoRubber Watch</span>
+          <span class="text-gray-300 font-light shrink-0">|</span>
+          <span class="text-gray-500 font-normal truncate max-w-[140px] sm:max-w-none text-[11px] sm:text-xs">ระบบมาตรฐานการตรวจสอบย้อนกลับ EUDR สุราษฎร์ธานี</span>
         </div>
 
-        <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 whitespace-nowrap">
           <button 
             type="button" 
             id="modal-btn-prev" 
             onclick="prevModalStep()" 
-            class="hidden px-4 py-2 rounded-full bg-white hover:bg-gray-100 text-gray-600 font-bold text-[16px] border border-gray-300 transition-all cursor-pointer shadow-xs"
+            class="hidden px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm border border-gray-300 transition-all cursor-pointer shadow-xs whitespace-nowrap inline-flex items-center gap-1"
           >
             ‹ ย้อนกลับ
           </button>
@@ -1621,18 +1738,18 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
             type="button" 
             id="modal-btn-save" 
             onclick="submitPlotFromModal()" 
-            class="px-5 py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-[16px] border-2 border-[#bee6e1] hover:border-mezenc-brightCyan transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+            class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white hover:bg-mezenc-lightCyan text-mezenc-teal font-bold text-xs sm:text-sm border-2 border-[#bee6e1] hover:border-mezenc-brightCyan transition-all inline-flex items-center gap-1 cursor-pointer shadow-xs whitespace-nowrap"
           >
-            <span id="modal-btn-save-label">💾 บันทึกข้อมูล</span>
+            <span id="modal-btn-save-label">บันทึกข้อมูล</span>
           </button>
           <button 
             type="button" 
             id="modal-btn-next" 
             onclick="nextModalStep()" 
-            class="px-5 py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[16px] shadow-sm hover:shadow transition-all flex items-center gap-1 cursor-pointer"
+            class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-sm shadow-xs hover:shadow transition-all inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
           >
             <span id="modal-btn-next-label">หน้าถัดไป</span>
-            <span class="text-[16px] font-bold">›</span>
+            <span class="font-bold">›</span>
           </button>
         </div>
       </div>
@@ -1669,10 +1786,10 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       <!-- Action Buttons Matching Screenshot -->
       <div class="pt-2 space-y-2.5">
         <a id="qr-url-link" href="#" target="_blank" class="w-full py-3 px-5 rounded-full bg-[#00a699] hover:bg-[#008779] text-white font-bold text-[14px] shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
-          <span class="text-base">🌐</span> <span>เปิดตรวจสอบหนังสือรับรอง (EUDR Passport)</span>
+          <i class="fa-solid fa-globe text-sm"></i> <span>เปิดตรวจสอบหนังสือรับรอง (EUDR Passport)</span>
         </a>
         <button type="button" onclick="App.copyCurrentQrUrl()" class="w-full py-2.5 px-5 rounded-full bg-white hover:bg-gray-50 text-[#064e3b] font-bold text-[14px] border border-gray-200 shadow-2xs hover:border-gray-300 transition-all flex items-center justify-center gap-2 cursor-pointer">
-          <span class="text-base">📋</span> <span>คัดลอกลิงก์ตรวจสอบ</span>
+          <i class="fa-regular fa-copy text-sm"></i> <span>คัดลอกลิงก์ตรวจสอบ</span>
         </button>
       </div>
     </div>
@@ -1757,7 +1874,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         App.showToast('เบราว์เซอร์ของคุณไม่รองรับการระบุพิกัด GPS', 'error');
         return;
       }
-      App.showToast('📡 กำลังค้นหาและปักหมุดพิกัด GPS ของคุณ...', 'info');
+      App.showToast('กำลังค้นหาและปักหมุดพิกัด GPS ของคุณ...', 'info');
       
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -1801,25 +1918,25 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
           const popupContent = `
             <div style="font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif; min-width: 240px; padding: 4px;">
-              <div style="font-size: 15px; font-weight: 800; color: #0e4d4e; margin-bottom: 2px;">📍 ตำแหน่งพิกัดปัจจุบันของคุณ</div>
+              <div style="font-size: 15px; font-weight: 800; color: #0e4d4e; margin-bottom: 2px;">ตำแหน่งพิกัดปัจจุบันของคุณ</div>
               <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">Live GPS Geolocation (ความแม่นยำ ±${accuracy} ม.)</div>
               <div style="background: #f8faf9; border: 1.5px solid #bee6e1; border-radius: 8px; padding: 6px 8px; font-size: 12px; margin-bottom: 8px;">
-                <div>🌐 <strong>ละติจูด:</strong> <span style="font-family: monospace; font-weight: bold; color: #0e4d4e;">${lat.toFixed(6)}</span></div>
-                <div>🌐 <strong>ลองจิจูด:</strong> <span style="font-family: monospace; font-weight: bold; color: #0e4d4e;">${lng.toFixed(6)}</span></div>
+                <div><strong>ละติจูด:</strong> <span style="font-family: monospace; font-weight: bold; color: #0e4d4e;">${lat.toFixed(6)}</span></div>
+                <div><strong>ลองจิจูด:</strong> <span style="font-family: monospace; font-weight: bold; color: #0e4d4e;">${lng.toFixed(6)}</span></div>
               </div>
               <div style="display: flex; gap: 6px;">
                 <button type="button" onclick="activateMapDrawDirect()" style="flex: 1; padding: 6px 8px; border-radius: 6px; background: #00a699; color: #fff; font-size: 11px; font-weight: bold; border: none; cursor: pointer;">
-                  ✏️ เริ่มวาดแปลงที่นี่
+                  เริ่มวาดแปลงที่นี่
                 </button>
                 <button type="button" onclick="clearUserGpsPin()" style="padding: 6px 8px; border-radius: 6px; background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: bold; border: 1px solid #fca5a5; cursor: pointer;">
-                  🗑️ ลบหมุด
+                  ลบหมุด
                 </button>
               </div>
             </div>
           `;
 
           userGpsMarker.bindPopup(popupContent).openPopup();
-          App.showToast(`📍 ระบุตำแหน่ง GPS สำเร็จ: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
+          App.showToast(`ระบุตำแหน่ง GPS สำเร็จ: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success');
         },
         (err) => {
           App.showToast('ไม่สามารถดึงพิกัด GPS ได้: ' + err.message, 'error');
@@ -1873,7 +1990,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
           placeMapPin(center.lat, center.lng);
         }
         if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
-          App.showToast('📍 โหมดปักหมุดเปิดใช้งาน: คลิกหรือลากหมุดบนแผนที่เพื่อดูพิกัดและความเสี่ยง', 'info');
+          App.showToast('โหมดปักหมุดเปิดใช้งาน: คลิกหรือลากหมุดบนแผนที่เพื่อดูพิกัดและความเสี่ยง', 'info');
         }
       } else {
         if (btn) {
@@ -2048,26 +2165,26 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       let statusTitle = '';
       let statusBadge = '';
       let adviceText = '';
-      let circleColor = '#059669'; // 🟢 ปลอดภัย (Green)
+      let circleColor = '#059669';
       let circleFill = '#10b981';
 
       if (status === 'non_compliant') {
-        statusTitle = `🔴 ซ้อนทับเขต ${insideForest.name_th || 'ป่าสงวนแห่งชาติ'}`;
-        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-red-600 text-white font-bold text-xs inline-block">🔴 ซ้อนทับเขตป่าสงวน (ไม่ผ่านเกณฑ์)</span>';
+        statusTitle = `ซ้อนทับเขต ${insideForest.name_th || 'ป่าสงวนแห่งชาติ'}`;
+        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-red-600 text-white font-bold text-xs inline-block">ซ้อนทับเขตป่าสงวน (ไม่ผ่านเกณฑ์)</span>';
         adviceText = `จุดพิกัดนี้ตั้งอยู่ในแนวเขตป่าสงวนแห่งชาติ <strong>${insideForest.name_th || 'ป่าสงวน'}</strong> (รหัส: ${insideForest.forest_code || '-'}) ซึ่งเป็นเขตป่าเพื่อการอนุรักษ์ (Zone C)`;
-        circleColor = '#dc2626'; // 🔴 ซ้อนทับ (Red)
+        circleColor = '#dc2626';
         circleFill = '#ef4444';
       } else if (status === 'buffer_zone') {
-        statusTitle = `🟠 มีความเสี่ยง (โซนเฝ้าระวัง Buffer ${distMeters} ม.)`;
-        statusBadge = `<span class="px-2.5 py-0.5 rounded-lg bg-orange-500 text-white font-bold text-xs inline-block">🟠 มีความเสี่ยง (โซนเฝ้าระวัง ${distMeters} ม.)</span>`;
+        statusTitle = `มีความเสี่ยง (โซนเฝ้าระวัง Buffer ${distMeters} ม.)`;
+        statusBadge = `<span class="px-2.5 py-0.5 rounded-lg bg-orange-500 text-white font-bold text-xs inline-block">มีความเสี่ยง (โซนเฝ้าระวัง ${distMeters} ม.)</span>`;
         adviceText = `อยู่นอกแนวเขตป่า แต่อยู่ในระยะกันชนใกล้กับ <strong>${nearestForest ? nearestForest.name_th : 'ป่าสงวน'}</strong> เพียง ${distMeters} เมตร (อยู่ในระยะเฝ้าระวังไม่เกิน 500 ม.)`;
-        circleColor = '#ea580c'; // 🟠 มีความเสี่ยง (Orange)
+        circleColor = '#ea580c';
         circleFill = '#f97316';
       } else {
-        statusTitle = `🟢 ปลอดภัย ผ่านเกณฑ์ EUDR`;
-        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-xs inline-block">🟢 ปลอดภัย (ผ่านเกณฑ์ EUDR)</span>';
+        statusTitle = `ปลอดภัย ผ่านเกณฑ์ EUDR`;
+        statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-xs inline-block">ปลอดภัย (ผ่านเกณฑ์ EUDR)</span>';
         adviceText = `อยู่นอกแนวเขตป่าสงวนแห่งชาติ โดยห่างจาก <strong>${nearestForest ? nearestForest.name_th : 'แนวเขตป่า'}</strong> ประมาณ ${distMeters >= 1000 ? (distMeters/1000).toFixed(2) + ' กม.' : distMeters + ' ม.'}`;
-        circleColor = '#059669'; // 🟢 ปลอดภัย (Green)
+        circleColor = '#059669';
         circleFill = '#10b981';
       }
 
@@ -2093,14 +2210,14 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
               ${adviceText}
             </div>
             <div style="font-size: 12px; color: #64748b; font-family: monospace; margin-bottom: 8px;">
-              🌐 พิกัด: <strong>${lat.toFixed(5)}, ${lng.toFixed(5)}</strong>
+              พิกัด: <strong>${lat.toFixed(5)}, ${lng.toFixed(5)}</strong>
             </div>
             <div style="display: flex; gap: 6px;">
               <button type="button" onclick="if(GeoMap.drawControl && GeoMap.drawControl._toolbars && GeoMap.drawControl._toolbars.draw) { GeoMap.drawControl._toolbars.draw._modes.polygon.handler.enable(); } else if (GeoMap.startDrawPolygon) { GeoMap.startDrawPolygon(); }" style="flex: 1; padding: 6px 8px; border-radius: 8px; background: #00a699; color: #fff; font-size: 11px; font-weight: bold; border: none; cursor: pointer;">
-                ✏️ เริ่มวาดแปลงที่นี่
+                เริ่มวาดแปลงที่นี่
               </button>
               <button type="button" onclick="clearMapPin()" style="padding: 6px 8px; border-radius: 8px; background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: bold; border: 1px solid #fca5a5; cursor: pointer;">
-                🗑️ ลบหมุด
+                ลบหมุด
               </button>
             </div>
           </div>
@@ -2129,14 +2246,19 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
     // Filter Rubber Plots in Sidebar List
     function filterPlotsList() {
-      const query = document.getElementById('plot-search-input').value.toLowerCase();
-      const status = document.getElementById('plot-status-filter').value;
+      const searchInput = document.getElementById('plot-search-input');
+      const statusFilter = document.getElementById('plot-status-filter');
+      const query = searchInput ? (searchInput.value || '').trim().toLowerCase() : '';
+      const status = statusFilter ? statusFilter.value : '';
+
+      if (!GeoMap || !Array.isArray(GeoMap.plotsData)) return;
 
       const filtered = GeoMap.plotsData.filter(f => {
-        const p = f.properties;
-        const matchesText = p.plot_name.toLowerCase().includes(query) ||
-                            p.plot_code.toLowerCase().includes(query) ||
-                            p.farmer_name.toLowerCase().includes(query);
+        const p = f.properties || f;
+        const name = String(p.plot_name || '').toLowerCase();
+        const code = String(p.plot_code || '').toLowerCase();
+        const farmer = String(p.farmer_name || '').toLowerCase();
+        const matchesText = !query || name.includes(query) || code.includes(query) || farmer.includes(query);
         const matchesStatus = !status || p.eudr_status === status;
         return matchesText && matchesStatus;
       });
@@ -2148,22 +2270,235 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
     let modalCurrentStep = 1;
     let modalPresetMode = "compliant";
 
+    // Format 13-digit National ID Helper
+    function formatNationalId(id) {
+      if (!id) return '-';
+      const clean = String(id).replace(/\D/g, '');
+      if (clean.length === 13) {
+        return `${clean.substring(0, 1)}-${clean.substring(1, 5)}-${clean.substring(5, 10)}-${clean.substring(10, 12)}-${clean.substring(12, 13)}`;
+      }
+      return id;
+    }
+
+    let idCardLookupTimeout = null;
+    async function onFarmerIdCardInput(val) {
+      const input = document.getElementById('form-farmer-idcard');
+      const hint = document.getElementById('idcard-autofill-hint');
+      const badge = document.getElementById('idcard-status-badge');
+      const loader = document.getElementById('idcard-lookup-loading');
+
+      const raw = (val || '').trim();
+      const clean = raw.replace(/\D/g, '').substring(0, 13);
+      
+      // Auto-format with standard Thai hyphens
+      let formatted = '';
+      if (clean.length > 0) formatted += clean.substring(0, 1);
+      if (clean.length > 1) formatted += '-' + clean.substring(1, 5);
+      if (clean.length > 5) formatted += '-' + clean.substring(5, 10);
+      if (clean.length > 10) formatted += '-' + clean.substring(10, 12);
+      if (clean.length > 12) formatted += '-' + clean.substring(12, 13);
+
+      if (input && input.value !== formatted && clean.length > 0) {
+        input.value = formatted;
+      }
+
+      if (clean.length < 13) {
+        if (badge) {
+          badge.className = 'text-xs text-slate-500 font-medium';
+          badge.textContent = `${clean.length}/13 หลัก`;
+        }
+        if (hint) {
+          hint.className = 'mt-1.5 pl-2 text-xs text-slate-500 font-medium';
+          hint.textContent = 'เชื่อมโยงเกษตรกรและบันทึกผลผลิตตามมาตรฐาน EUDR';
+        }
+        return;
+      }
+
+      if (badge) {
+        badge.className = 'text-xs text-mezenc-brightCyan font-bold';
+        badge.textContent = 'ตรวจสอบเลข 13 หลัก...';
+      }
+      if (loader) loader.classList.remove('hidden');
+
+      if (idCardLookupTimeout) clearTimeout(idCardLookupTimeout);
+      idCardLookupTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`api/plots.php?action=lookup_farmer&id_card=${encodeURIComponent(clean)}`);
+          const data = await res.json();
+          if (loader) loader.classList.add('hidden');
+
+          if (data && data.found && data.farmer) {
+            const f = data.farmer;
+            const farmerNameInput = document.getElementById('form-farmer-name');
+            const farmerIdInput = document.getElementById('form-farmer-id');
+
+            if (farmerNameInput) farmerNameInput.value = f.full_name;
+            if (farmerIdInput) farmerIdInput.value = f.id;
+
+            if (badge) badge.classList.add('hidden');
+            if (hint) hint.classList.add('hidden');
+
+            onFarmerNameChanged(f.full_name);
+          } else {
+            if (badge) badge.classList.add('hidden');
+            if (hint) hint.classList.add('hidden');
+          }
+        } catch (e) {
+          if (loader) loader.classList.add('hidden');
+          console.warn('ID Card lookup error:', e);
+        }
+      }, 300);
+    }
+
+    // Handle dynamic farmer selection & auto-fill detection
+    function onFarmerNameChanged(val) {
+      const isEdit = parseInt(document.getElementById('form-plot-id')?.value) > 0;
+      const inputVal = (val || '').trim();
+      const hintElem = document.getElementById('farmer-autofill-hint');
+      const hintText = document.getElementById('farmer-autofill-text');
+      const badgeElem = document.getElementById('farmer-plot-badge');
+      const farmerIdInput = document.getElementById('form-farmer-id');
+      const plotNameInput = document.getElementById('form-plot-name');
+      const idCardInput = document.getElementById('form-farmer-idcard');
+
+      if (hintElem) hintElem.classList.add('hidden');
+      if (hintText) hintText.innerHTML = '';
+
+      if (!inputVal) {
+        if (badgeElem) badgeElem.classList.add('hidden');
+        if (farmerIdInput) farmerIdInput.value = '';
+        return;
+      }
+
+      // Normalization helper for Thai names
+      const norm = (s) => {
+        let clean = (s || '').trim();
+        ['นางสาว', 'นาง', 'นาย'].forEach(p => {
+          if (clean.startsWith(p)) clean = clean.substring(p.length).trim();
+        });
+        return clean.toLowerCase().replace(/\s+/g, ' ');
+      };
+
+      const targetNorm = norm(inputVal);
+
+      // Search in registered farmers list
+      const farmers = window.REGISTERED_FARMERS || [];
+      const match = farmers.find(f => {
+        return f.name === inputVal || f.code === inputVal || norm(f.name) === targetNorm;
+      });
+
+      // In EDIT mode: never overwrite plot name or show "แปลงใหม่นี้เป็นแปลงที่ X"
+      if (isEdit) {
+        if (match && farmerIdInput) farmerIdInput.value = match.id;
+        if (match && idCardInput && match.id_card_num && !idCardInput.value) {
+          idCardInput.value = formatNationalId(match.id_card_num);
+        }
+        if (badgeElem) {
+          badgeElem.classList.remove('hidden');
+          badgeElem.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-sky-100 text-sky-800 border border-sky-300';
+          badgeElem.textContent = 'โหมดแก้ไขแปลง';
+        }
+        return;
+      }
+
+      // In CREATE NEW PLOT mode:
+      if (match) {
+        if (farmerIdInput) farmerIdInput.value = match.id;
+        const nextPlotNo = (match.plot_count || 0) + 1;
+
+        if (idCardInput && match.id_card_num && !idCardInput.value) {
+          idCardInput.value = formatNationalId(match.id_card_num);
+        }
+
+        if (badgeElem) {
+          badgeElem.classList.remove('hidden');
+          badgeElem.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+          badgeElem.textContent = `แปลงที่ ${nextPlotNo}`;
+        }
+
+        // Auto-suggest next plot name if empty or generic
+        if (plotNameInput && (!plotNameInput.value || plotNameInput.value.startsWith('แปลงยางพารา') || plotNameInput.value === 'แปลงใหม่')) {
+          plotNameInput.value = `แปลงยางพารา ${nextPlotNo}`;
+        }
+      } else {
+        if (window.CURRENT_FARMER && (inputVal === window.DEFAULT_FARMER_NAME || targetNorm === norm(window.DEFAULT_FARMER_NAME))) {
+          if (farmerIdInput) farmerIdInput.value = window.CURRENT_FARMER.id;
+          const nextPlotNo = (window.CURRENT_FARMER_PLOTS_COUNT || 0) + 1;
+          if (idCardInput && window.CURRENT_FARMER.id_card_num && !idCardInput.value) {
+            idCardInput.value = formatNationalId(window.CURRENT_FARMER.id_card_num);
+          }
+          if (badgeElem) {
+            badgeElem.classList.remove('hidden');
+            badgeElem.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+            badgeElem.textContent = `แปลงที่ ${nextPlotNo}`;
+          }
+        } else {
+          if (farmerIdInput) farmerIdInput.value = '';
+          if (badgeElem) badgeElem.classList.add('hidden');
+        }
+      }
+    }
+
     function openAddPlotWizard() {
+      window.modalMode = 'create';
       if (document.getElementById('form-plot-id')) {
         document.getElementById('form-plot-id').value = '';
       }
-      if (document.getElementById('form-farmer-name')) {
-        document.getElementById('form-farmer-name').value = '';
+      if (document.getElementById('form-plot-code')) {
+        document.getElementById('form-plot-code').value = '';
       }
-      if (document.getElementById('form-plot-name')) {
-        document.getElementById('form-plot-name').value = '';
+      if (document.getElementById('form-traceability-token')) {
+        document.getElementById('form-traceability-token').value = '';
       }
+
+      // Reset Step 2 UI for creation
+      const badgeElem = document.getElementById('farmer-plot-badge');
+      if (badgeElem) {
+        badgeElem.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+      }
+      const idCardBadge = document.getElementById('idcard-status-badge');
+      if (idCardBadge) {
+        idCardBadge.classList.add('hidden');
+      }
+      const idCardHint = document.getElementById('idcard-autofill-hint');
+      if (idCardHint) {
+        idCardHint.classList.add('hidden');
+      }
+
+      // Auto-fill farmer name and suggested plot name from existing user/farmer profile
+      const defaultName = window.DEFAULT_FARMER_NAME || '';
+      const defaultFarmerId = window.CURRENT_FARMER ? window.CURRENT_FARMER.id : '';
+      const defaultIdCard = window.CURRENT_FARMER && window.CURRENT_FARMER.id_card_num ? window.CURRENT_FARMER.id_card_num : '';
+      const plotCount = window.CURRENT_FARMER_PLOTS_COUNT || 0;
+
+      const farmerIdInput = document.getElementById('form-farmer-id');
+      const farmerNameInput = document.getElementById('form-farmer-name');
+      const farmerIdCardInput = document.getElementById('form-farmer-idcard');
+      const plotNameInput = document.getElementById('form-plot-name');
+
+      if (farmerIdInput) {
+        farmerIdInput.value = defaultFarmerId;
+      }
+      if (farmerNameInput) {
+        farmerNameInput.value = defaultName;
+      }
+      if (farmerIdCardInput) {
+        farmerIdCardInput.value = defaultIdCard ? formatNationalId(defaultIdCard) : '';
+      }
+      if (plotNameInput) {
+        plotNameInput.value = plotCount > 0 ? `แปลงยางพารา ${plotCount + 1}` : 'แปลงยางพารา 1';
+      }
+
       if (document.getElementById('form-deed-no')) {
         document.getElementById('form-deed-no').value = '';
       }
       if (document.getElementById('form-notes')) {
         document.getElementById('form-notes').value = '';
       }
+
+      // Update hint and badge according to the auto-filled name
+      onFarmerNameChanged(defaultName);
+
       goToModalStep(1);
       App.openModal('addPlotModal');
     }
@@ -2200,16 +2535,16 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         if (caseCompliant) caseCompliant.classList.remove("hidden");
         if (statusPill) {
           statusPill.className = "px-3.5 py-1 rounded-full text-[14px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs";
-          statusPill.innerHTML = "🟢 ปลอดภัย / ผ่านเกณฑ์ EUDR";
+          statusPill.innerHTML = "ปลอดภัย / ผ่านเกณฑ์ EUDR";
         }
         const bufferTextElem = document.getElementById("modal-compliant-buffer-text");
         if (bufferTextElem && check && check.nearest_forest_distance_m) {
-          bufferTextElem.innerText = `📏 ห่างป่า ${Math.round(check.nearest_forest_distance_m).toLocaleString()} ม. (ปลอดภัย)`;
+          bufferTextElem.innerText = `ห่างป่า ${Math.round(check.nearest_forest_distance_m).toLocaleString()} ม. (ปลอดภัย)`;
         }
         const plantYear = parseInt(document.getElementById("form-planting-year")?.value) || 2018;
         const cutoffElem = document.getElementById("modal-compliant-cutoff-text");
         if (cutoffElem) {
-          cutoffElem.innerText = `📅 ปลูกปี ${plantYear} (สอดคล้อง)`;
+          cutoffElem.innerText = `ปลูกปี ${plantYear} (สอดคล้อง)`;
         }
         // ปลอดภัย: แสดงปุ่มหน้าถัดไปเพื่อไปขั้นตอนที่ 4
         if (btnNext) btnNext.classList.remove("hidden");
@@ -2219,15 +2554,15 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         const dist = check && check.nearest_forest_distance_m ? Math.round(check.nearest_forest_distance_m) : null;
         if (statusPill) {
           statusPill.className = "px-3.5 py-1 rounded-full text-[14px] font-bold bg-orange-100 text-orange-900 border border-orange-300 shadow-xs";
-          statusPill.innerHTML = `🟠 โซนเฝ้าระวัง ${dist ? `(${dist} ม.)` : '(< 500 ม.)'}`;
+          statusPill.innerHTML = `โซนเฝ้าระวัง ${dist ? `(${dist} ม.)` : '(< 500 ม.)'}`;
         }
         const reviewDistElem = document.getElementById("modal-review-distance-text");
         if (reviewDistElem && dist) {
-          reviewDistElem.innerText = `📏 ระยะห่าง ${dist} ม. (เฝ้าระวัง)`;
+          reviewDistElem.innerText = `ระยะห่าง ${dist} ม. (เฝ้าระวัง)`;
         }
         const reviewProxElem = document.getElementById("modal-review-proximity");
         if (reviewProxElem && check && check.nearest_forest_name) {
-          reviewProxElem.innerText = `⚠️ ใกล้ ${check.nearest_forest_name}`;
+          reviewProxElem.innerText = `ใกล้ ${check.nearest_forest_name}`;
         }
         const reviewDesc = document.getElementById("modal-review-desc");
         if (reviewDesc && check && check.nearest_forest_name) {
@@ -2235,17 +2570,20 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         }
         // มีความเสี่ยง: แสดงปุ่มหน้าถัดไปเพื่อไปขั้นตอนที่ 4 ได้
         if (btnNext) btnNext.classList.remove("hidden");
-        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ออก QR Code (เฝ้าระวัง)";
+        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ออก QR Code";
       } else {
         if (caseOverlap) caseOverlap.classList.remove("hidden");
         if (statusPill) {
           statusPill.className = "px-3.5 py-1 rounded-full text-[14px] font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-xs";
-          statusPill.innerHTML = "🔴 ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)";
+          statusPill.innerHTML = "ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)";
         }
-        const forestName = check && check.overlapping_forests && check.overlapping_forests.length > 0 ? check.overlapping_forests.join(', ') : (check?.nearest_forest_name || 'เขตป่าสงวนแห่งชาติ');
+        const rawForests = check && check.overlapping_forests ? (Array.isArray(check.overlapping_forests) ? check.overlapping_forests : [check.overlapping_forests]) : [];
+        const forestName = rawForests.length > 0 
+          ? rawForests.map(f => typeof f === 'object' && f !== null ? (f.name || f.forest_name || JSON.stringify(f)) : String(f)).filter(Boolean).join(', ') 
+          : (check?.nearest_forest_name || 'เขตป่าสงวนแห่งชาติเขาท่าเพชร');
         const overlapForestElem = document.getElementById("modal-overlap-forest-name");
         if (overlapForestElem) {
-          overlapForestElem.innerText = `⛔ ซ้อนทับ ${forestName}`;
+          overlapForestElem.innerText = `ซ้อนทับ ${forestName}`;
         }
         const overlapDesc = document.getElementById("modal-overlap-desc");
         if (overlapDesc) {
@@ -2299,7 +2637,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       // ตรวจสอบเงื่อนไข: หากแปลงทับซ้อนป่าสงวน จะไม่สามารถไปขั้นตอนที่ 4 ได้
       if (step === 4 && modalPresetMode === 'non_compliant') {
         if (typeof App !== 'undefined' && typeof App.showToast === 'function') {
-          App.showToast('⚠️ แปลงนี้ทับซ้อนเขตป่าสงวน ไม่สามารถออกหนังสือรับรอง QR Code ได้ กรุณาบันทึกข้อมูลในขั้นตอนที่ 3', 'warning');
+          App.showToast('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่สามารถออกหนังสือรับรอง QR Code ได้ กรุณาบันทึกข้อมูลในขั้นตอนที่ 3', 'warning');
         }
         step = 3;
       }
@@ -2325,19 +2663,31 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
         if (i < step) {
           // Done
-          badge.className = "w-7 h-7 rounded-full bg-mezenc-brightCyan text-white flex items-center justify-center shrink-0 shadow-xs";
-          badge.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
-          label.className = "text-xs font-semibold text-mezenc-brightCyan group-hover:underline block";
+          if (badge) {
+            badge.className = "w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs";
+            badge.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
+          }
+          if (label) {
+            label.className = "text-xs sm:text-sm font-bold text-emerald-700 group-hover:text-emerald-800 transition-colors block truncate";
+          }
         } else if (i === step) {
           // Active
-          badge.className = "w-7 h-7 rounded-full bg-mezenc-brightCyan text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xs";
-          badge.innerHTML = i;
-          label.className = "text-xs font-bold text-mezenc-brightCyan group-hover:underline block";
+          if (badge) {
+            badge.className = "w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-mezenc-brightCyan text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xs sm:text-sm ring-2 ring-mezenc-brightCyan/20";
+            badge.innerHTML = i;
+          }
+          if (label) {
+            label.className = "text-xs sm:text-sm font-extrabold text-mezenc-teal group-hover:text-mezenc-brightCyan transition-colors block truncate";
+          }
         } else {
           // Pending
-          badge.className = "w-7 h-7 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0 font-bold text-xs shadow-xs";
-          badge.innerHTML = i;
-          label.className = "text-xs font-semibold text-gray-400 group-hover:text-gray-600 block";
+          if (badge) {
+            badge.className = "w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-xs";
+            badge.innerHTML = i;
+          }
+          if (label) {
+            label.className = "text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-600 transition-colors block truncate";
+          }
         }
       }
 
@@ -2359,24 +2709,31 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         if (btnPrev) btnPrev.classList.add("hidden");
         if (btnSave) {
           btnSave.classList.remove("hidden");
-          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกข้อมูล";
+          if (btnSaveLabel) btnSaveLabel.innerText = "บันทึกข้อมูล";
           btnSave.onclick = function() { submitPlotFromModal(); };
         }
         if (btnNext) btnNext.classList.remove("hidden");
-        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ข้อมูลแปลง";
+        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป";
       } else if (step === 2) {
         // ขั้นตอนที่ 2: ปุ่มย้อนกลับ, ปุ่มบันทึกข้อมูล, และ ปุ่มหน้าถัดไป
         if (btnPrev) {
           btnPrev.classList.remove("hidden");
-          btnPrev.innerHTML = "‹ วาดแปลงใหม่อีกครั้ง";
+          btnPrev.innerHTML = "‹ ย้อนกลับ";
         }
         if (btnSave) {
           btnSave.classList.remove("hidden");
-          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกข้อมูล";
+          if (btnSaveLabel) btnSaveLabel.innerText = "บันทึกข้อมูล";
           btnSave.onclick = function() { submitPlotFromModal(); };
         }
         if (btnNext) btnNext.classList.remove("hidden");
-        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ตรวจสอบ EUDR";
+        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป";
+        
+        setTimeout(() => {
+          const idCardEl = document.getElementById('form-farmer-idcard');
+          if (idCardEl && !idCardEl.value) {
+            idCardEl.focus();
+          }
+        }, 150);
       } else if (step === 3) {
         // ขั้นตอนที่ 3: ปุ่มย้อนกลับ, ปุ่มบันทึกข้อมูล, และ ปุ่มหน้าถัดไป
         if (btnPrev) {
@@ -2385,9 +2742,11 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         }
         if (btnSave) {
           btnSave.classList.remove("hidden");
-          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกข้อมูล";
+          if (btnSaveLabel) btnSaveLabel.innerText = "บันทึกข้อมูล";
           btnSave.onclick = function() { submitPlotFromModal(modalPresetMode); };
         }
+        if (btnNext) btnNext.classList.remove("hidden");
+        if (btnNextLabel) btnNextLabel.innerText = "หน้าถัดไป: ออก QR Code";
         renderStep3SpatialResult();
       } else if (step === 4) {
         // ขั้นตอนที่ 4: ปุ่มย้อนกลับ และ ปุ่มบันทึกแปลงปลูก
@@ -2397,7 +2756,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         }
         if (btnSave) {
           btnSave.classList.remove("hidden");
-          if (btnSaveLabel) btnSaveLabel.innerText = "💾 บันทึกแปลงปลูกและเสร็จสิ้น";
+          if (btnSaveLabel) btnSaveLabel.innerText = "บันทึกข้อมูล";
           btnSave.onclick = function() { submitPlotFromModal(modalPresetMode || 'compliant'); };
         }
         if (btnNext) btnNext.classList.add("hidden");
@@ -2429,6 +2788,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
     function updateModalSummaryCard() {
       const farmerName = document.getElementById("form-farmer-name")?.value || "-";
+      const farmerIdCard = document.getElementById("form-farmer-idcard")?.value?.trim() || "";
       const plotName = document.getElementById("form-plot-name")?.value || "แปลงยางพารา";
       const deedType = document.getElementById("form-deed-type")?.value || "โฉนดที่ดิน (น.ส. 4 จ)";
       const deedNo = document.getElementById("form-deed-no")?.value || "-";
@@ -2451,6 +2811,9 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       }
 
       document.getElementById("modal-sum-farmer").innerText = farmerName;
+      if (document.getElementById("modal-sum-idcard")) {
+        document.getElementById("modal-sum-idcard").innerText = farmerIdCard ? formatNationalId(farmerIdCard) : "-";
+      }
       document.getElementById("modal-sum-plot").innerText = plotName;
       document.getElementById("modal-sum-deed").innerText = `${deedType} เลขที่ ${deedNo}`;
       document.getElementById("modal-sum-coords").innerText = coords;
@@ -2468,14 +2831,14 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         const check = window.currentDrawnSpatialCheck;
         if (check && (check.has_overlap || check.eudr_status === 'non_compliant' || modalPresetMode === 'non_compliant')) {
           eudrBadgeElem.className = "font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200 text-[16px]";
-          eudrBadgeElem.innerHTML = "🔴 ไม่ผ่านเกณฑ์ (ทับซ้อนป่าสงวน)";
+          eudrBadgeElem.innerHTML = "ไม่ผ่านเกณฑ์ (ทับซ้อนป่าสงวน)";
         } else if (check && (check.eudr_status === 'under_review' || check.nearest_forest_distance_m < 500 || modalPresetMode === 'under_review')) {
           const dist = check && check.nearest_forest_distance_m ? Math.round(check.nearest_forest_distance_m) : null;
           eudrBadgeElem.className = "font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 text-[16px]";
-          eudrBadgeElem.innerHTML = `🟠 โซนเฝ้าระวัง Buffer ${dist ? `(${dist} ม.)` : '(< 500 ม.)'}`;
+          eudrBadgeElem.innerHTML = `โซนเฝ้าระวัง Buffer ${dist ? `(${dist} ม.)` : '(< 500 ม.)'}`;
         } else {
           eudrBadgeElem.className = "font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[16px]";
-          eudrBadgeElem.innerHTML = "🟢 ผ่านเกณฑ์ 100% (Compliant)";
+          eudrBadgeElem.innerHTML = "ผ่านเกณฑ์ 100% (Compliant)";
         }
       }
 
@@ -2489,7 +2852,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         if (!basePath.startsWith('/')) basePath = '/' + basePath;
         if (basePath === '/') basePath = '';
 
-        const cleanBase = 'https://earthling-retype-aroma.ngrok-free.dev';
+        const cleanBase = window.NGROK_PUBLIC_URL || 'https://earthling-retype-aroma.ngrok-free.dev';
         let fullUrl;
         if (cleanBase.endsWith(basePath) && basePath !== '') {
           fullUrl = `${cleanBase}/trace.php?token=${encodeURIComponent(token)}`;
@@ -2559,6 +2922,7 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
       }
 
       const farmerNameVal = document.getElementById('form-farmer-name')?.value?.trim() || '';
+      const farmerIdCardVal = document.getElementById('form-farmer-idcard')?.value?.trim() || '';
       const plotNameVal = document.getElementById('form-plot-name')?.value?.trim() || 'แปลงยางพาราใหม่';
       const editingPlotId = parseInt(document.getElementById('form-plot-id')?.value) || 0;
       const isEdit = editingPlotId > 0;
@@ -2576,6 +2940,8 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
 
       const payload = {
         farmer_name: farmerNameVal,
+        farmer_id: document.getElementById('form-farmer-id')?.value || '',
+        id_card_num: farmerIdCardVal,
         plot_name: plotNameVal,
         title_deed_type: document.getElementById('form-deed-type').value,
         title_deed_no: document.getElementById('form-deed-no').value,
@@ -2611,10 +2977,21 @@ $farmers = $pdo->query("SELECT id, farmer_code, prefix, first_name, last_name FR
         }
 
         if (data && (data.success || res.ok)) {
-          App.showToast(isEdit ? `🎉 บันทึกการแก้ไขแปลงปลูก "${payload.plot_name}" สำเร็จ!` : `🎉 บันทึกแปลงปลูก "${payload.plot_name}" สำเร็จ!`, 'success');
+          App.showToast(isEdit ? `บันทึกการแก้ไขแปลงปลูก "${payload.plot_name}" สำเร็จ!` : `บันทึกแปลงปลูก "${payload.plot_name}" สำเร็จ!`, 'success');
           if (document.getElementById('form-plot-id')) {
             document.getElementById('form-plot-id').value = '';
           }
+
+          // Update in-memory farmer profile and plot count only on NEW plot creation
+          if (!isEdit && payload.farmer_name) {
+            window.DEFAULT_FARMER_NAME = payload.farmer_name;
+            window.CURRENT_FARMER_PLOTS_COUNT = (window.CURRENT_FARMER_PLOTS_COUNT || 0) + 1;
+            const match = (window.REGISTERED_FARMERS || []).find(f => f.name === payload.farmer_name);
+            if (match) {
+              match.plot_count = (match.plot_count || 0) + 1;
+            }
+          }
+
           App.closeModal('addPlotModal');
           
           if (GeoMap && GeoMap.drawnItems) {

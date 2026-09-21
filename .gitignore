@@ -3,4 +3,5 @@ Thumbs.db
 data/*.db
 data/*.sqlite
 data/*.sqlite3
+data/.db_init_done
 *.log

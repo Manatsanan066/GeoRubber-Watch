@@ -22,7 +22,7 @@ const GeoMap = {
   defaultCenter: [9.0805, 99.3515],
   defaultZoom: 14,
 
-  init(options = {}) {
+  async init(options = {}) {
     if (!document.getElementById('map-view')) return;
     if (this.map) return; // prevent double initialization
 
@@ -36,9 +36,14 @@ const GeoMap = {
     this.initBaseLayers();
     if (!isOverviewPage) {
       this.initDrawTools();
-      this.loadRubberPlots();
     }
-    this.loadForestReserves();
+    
+    // Fast parallel loading of forests & rubber plots (< 50ms)
+    const loadTasks = [this.loadForestReserves()];
+    if (!isOverviewPage) {
+      loadTasks.push(this.loadRubberPlots());
+    }
+    await Promise.all(loadTasks);
   },
 
   initMap(options = {}) {
@@ -234,6 +239,7 @@ const GeoMap = {
       const res = await fetch('api/forests.php');
       const data = await res.json();
       this.forestData = data.features || [];
+      this.forestsData = this.forestData;
 
       this.forestLayerGroup.clearLayers();
 
@@ -249,7 +255,7 @@ const GeoMap = {
           const props = feature.properties;
           layer.bindPopup(`
             <div style="font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif; color: #1e293b; padding: 4px; min-width: 260px;">
-              <div style="font-weight: 800; color: #0e4d4e; font-size: 17px; margin-bottom: 2px;">🌲 ${props.name_th}</div>
+              <div style="font-weight: 800; color: #0e4d4e; font-size: 17px; margin-bottom: 2px;">${props.name_th}</div>
               <div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">${props.name_en || ''}</div>
               <div style="background: #f8faf9; border: 1.5px solid #bee6e1; padding: 8px 10px; border-radius: 10px; font-size: 14px; line-height: 1.6; margin-bottom: 8px;">
                 <div><strong>รหัสพื้นที่:</strong> <span style="font-family:monospace; color:#0e4d4e; font-weight:700; font-size:14px;">${props.forest_code}</span></div>
@@ -257,7 +263,7 @@ const GeoMap = {
                 <div><strong>ประเภท:</strong> ${props.category || 'Zone-C ป่าสงวนแห่งชาติ'}</div>
               </div>
               <div style="font-size: 13px; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 6px 10px; border-radius: 8px; font-weight: 700; line-height: 1.3;">
-                ⚠️ พื้นที่คุ้มครองตามเกณฑ์ EUDR ห้ามบุกรุก/ตัดไม้ทำลายป่า
+                พื้นที่คุ้มครองตามเกณฑ์ EUDR ห้ามบุกรุก/ตัดไม้ทำลายป่า
               </div>
             </div>
           `);
@@ -285,7 +291,7 @@ const GeoMap = {
       // Hide or update loading indicator
       const loadingEl = document.getElementById('forest-loading-status');
       if (loadingEl) {
-        loadingEl.innerHTML = '<span class="text-emerald-600">✅</span> <span class="text-emerald-800">แสดงครบ 26 แนวเขตป่าสงวน</span>';
+        loadingEl.innerHTML = '<span class="text-emerald-800 font-semibold">แสดงครบ 26 แนวเขตป่าสงวน</span>';
         loadingEl.className = 'absolute top-4 left-16 z-[400] bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border-2 border-emerald-300 shadow-md flex items-center gap-2 text-xs font-bold transition-all duration-500 pointer-events-none opacity-100';
         setTimeout(() => {
           loadingEl.style.opacity = '0';
@@ -316,18 +322,19 @@ const GeoMap = {
       const geoJsonLayer = L.geoJSON(data, {
         style: (feature) => {
           const status = feature.properties.eudr_status;
-          let strokeColor = '#059669'; // 🟢 ปลอดภัย (Green)
+          
+          let strokeColor = '#059669'; // ปลอดภัย (Green)
           let fillColor = '#10b981';
           let fillOpacity = 0.45;
           let weight = 2.5;
 
           if (status === 'non_compliant') {
-            strokeColor = '#dc2626'; // 🔴 ซ้อนทับเขตป่าสงวน (Red)
+            strokeColor = '#dc2626'; // ซ้อนทับเขตป่าสงวน (Red)
             fillColor = '#ef4444';
             fillOpacity = 0.55;
             weight = 3.0;
           } else if (status === 'under_review') {
-            strokeColor = '#ea580c'; // 🟠 มีความเสี่ยง (Orange)
+            strokeColor = '#ea580c'; // มีความเสี่ยง (Orange)
             fillColor = '#f97316';
             fillOpacity = 0.50;
             weight = 2.5;
@@ -342,11 +349,12 @@ const GeoMap = {
         },
         onEachFeature: (feature, layer) => {
           const p = feature.properties;
-          let statusBadge = '<span class="badge" style="background:#d1fae5; color:#065f46; border:1.5px solid #34d399; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">🟢 ปลอดภัย (สอดคล้อง EUDR)</span>';
+
+          let statusBadge = '<span class="badge" style="background:#d1fae5; color:#065f46; border:1.5px solid #34d399; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>';
           if (p.eudr_status === 'non_compliant') {
-            statusBadge = '<span class="badge" style="background:#fee2e2; color:#991b1b; border:1.5px solid #f87171; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">🔴 ซ้อนทับเขตป่าสงวน</span>';
+            statusBadge = '<span class="badge" style="background:#fee2e2; color:#991b1b; border:1.5px solid #f87171; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>';
           } else if (p.eudr_status === 'under_review') {
-            statusBadge = '<span class="badge" style="background:#ffedd5; color:#9a3412; border:1.5px solid #fb923c; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">🟠 มีความเสี่ยง (โซนเฝ้าระวัง)</span>';
+            statusBadge = '<span class="badge" style="background:#ffedd5; color:#9a3412; border:1.5px solid #fb923c; font-weight:700; padding:4px 10px; border-radius:9999px; font-size:13px;">โซนเฝ้าระวัง (Buffer < 500 ม.)</span>';
           }
 
           const safeToken = (p.traceability_token || p.plot_code || '').replace(/'/g, "\\'");
@@ -354,42 +362,54 @@ const GeoMap = {
           const safeCode = (p.plot_code || '').replace(/'/g, "\\'");
           const tokenParam = encodeURIComponent(p.traceability_token || p.plot_code || '');
 
+          const isNonCompliant = (p.eudr_status === 'non_compliant');
+
           const popupContent = `
             <div style="min-width: 270px; font-family: 'Open Sans', 'Google Sans', 'Sarabun', sans-serif; color: #1e293b; padding: 6px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; gap: 8px;">
-                <span style="font-size: 16px; color: #00a699; font-family: monospace; font-weight:700;">${p.plot_code}</span>
+                <span style="font-size: 16px; color: ${isNonCompliant ? '#dc2626' : '#00a699'}; font-family: monospace; font-weight:700;">${p.plot_code}</span>
                 ${statusBadge}
               </div>
               <div style="font-weight: 700; font-size: 18px; color: #0e4d4e; margin-bottom: 6px;">${p.plot_name}</div>
-              <div style="font-size: 16px; color: #475569; margin-bottom: 10px;">👨‍🌾 <strong>เจ้าของ:</strong> ${p.farmer_name}</div>
+              <div style="font-size: 16px; color: #475569; margin-bottom: 10px;"><strong>เจ้าของ:</strong> ${p.farmer_name}</div>
               
-              <div style="background: #f8faf9; border: 1.5px solid #bee6e1; padding: 10px 12px; border-radius: 12px; font-size: 16px; margin-bottom: 12px; line-height: 1.6;">
-                <div>📐 <strong>เนื้อที่:</strong> <span style="color:#059669; font-weight:700;">${p.formatted_area}</span> (${p.area_hectare} ha)</div>
-                <div>🌱 <strong>พันธุ์ยาง:</strong> <span style="color:#0e4d4e; font-weight:700;">${p.rubber_clone}</span> | <strong>ปี:</strong> ${p.planting_year}</div>
-                <div>🌳 <strong>จำนวนต้น:</strong> ${p.tree_count.toLocaleString()} ต้น</div>
-                <div>📍 <strong>พิกัด:</strong> ${p.centroid.lat.toFixed(5)}, ${p.centroid.lng.toFixed(5)}</div>
+              <div style="background: ${isNonCompliant ? '#fef2f2' : '#f8faf9'}; border: 1.5px solid ${isNonCompliant ? '#fca5a5' : '#bee6e1'}; padding: 10px 12px; border-radius: 12px; font-size: 16px; margin-bottom: 12px; line-height: 1.6;">
+                <div><strong>เนื้อที่:</strong> <span style="color:${isNonCompliant ? '#dc2626' : '#059669'}; font-weight:700;">${p.formatted_area}</span> (${p.area_hectare} ha)</div>
+                <div><strong>พันธุ์ยาง:</strong> <span style="color:#0e4d4e; font-weight:700;">${p.rubber_clone}</span> | <strong>ปี:</strong> ${p.planting_year}</div>
+                <div><strong>จำนวนต้น:</strong> ${p.tree_count.toLocaleString()} ต้น</div>
+                <div><strong>พิกัด:</strong> ${p.centroid.lat.toFixed(5)}, ${p.centroid.lng.toFixed(5)}</div>
+                ${isNonCompliant ? `<div style="color: #991b1b; font-weight: 700; margin-top: 4px; font-size: 13px;">ทับซ้อน: ${p.nearest_forest_name || 'เขตป่าสงวนแห่งชาติเขาท่าเพชร'} 100%</div>` : ''}
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                ${isNonCompliant ? `
+                <button type="button" onclick="event.stopPropagation(); (window.App && App.showToast) ? App.showToast('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออกใบรับรองและ QR Code (Non-Compliant)', 'warning') : alert('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออก QR Code');" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: not-allowed; border-radius: 6px; color: #dc2626; border-color: #fca5a5; background: #fef2f2;" title="ไม่อนุญาตให้ออก QR Code สำหรับแปลงทับซ้อนป่าสงวน">
+                  ไม่ผ่านเกณฑ์
+                </button>
+                <a href="trace.php?token=${tokenParam}" target="_blank" onclick="event.stopPropagation();" class="btn btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #dc2626; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600;">
+                  ตรวจสอบย้อนกลับ
+                </a>
+                ` : `
                 <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).showPlotQR(${p.id});" data-action="qr-plot" data-plot-id="${p.id}" class="btn-qr-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: pointer; border-radius: 6px;">
-                  📱 QR Code
+                  QR Code
                 </button>
                 <a href="trace.php?token=${tokenParam}" target="_blank" onclick="event.stopPropagation();" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">
-                  🛡️ Passport
+                  Passport
                 </a>
+                `}
               </div>
               ${(window.IS_ADMIN === true || p.can_delete === true) ? `
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                 <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px;">
-                  ✏️ แก้ไข
+                  แก้ไข
                 </button>
                 <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).deletePlot(${p.id}, '${safeName}');" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #e11d48; border-color: #fecdd3; background-color: #fff1f2; cursor: pointer; border-radius: 6px;">
-                  🗑️ ลบแปลง
+                  ลบแปลง
                 </button>
               </div>` : `
               <div style="display: grid; grid-template-columns: 1fr; gap: 6px;">
                 <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 6px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px; font-weight: 600; text-align: center;">
-                  ✏️ แก้ไขข้อมูลแปลง
+                  แก้ไขข้อมูลแปลง
                 </button>
               </div>`}
             </div>
@@ -431,6 +451,10 @@ const GeoMap = {
 
     } catch (e) {
       console.error('Error loading rubber plots:', e);
+      const listContainer = document.getElementById('plots-list-container');
+      if (listContainer && listContainer.innerHTML.includes('กำลังโหลด')) {
+        listContainer.innerHTML = '<tr><td colspan="7" class="text-center text-rose-500 py-12 text-[15px]">เกิดข้อผิดพลาดในการโหลดข้อมูลแปลงปลูก กรุณารีเฟรชหน้านี้ใหม่อีกครั้ง</td></tr>';
+      }
     }
   },
 
@@ -466,7 +490,7 @@ const GeoMap = {
       let statusHtml = `
         <div class="inline-flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-          <span class="font-bold text-emerald-700 text-[13px]">ผ่าน EUDR</span>
+          <span class="font-bold text-emerald-700 text-[13px]">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>
         </div>
       `;
 
@@ -475,7 +499,7 @@ const GeoMap = {
         statusHtml = `
           <div class="inline-flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0 animate-pulse"></span>
-            <span class="font-bold text-rose-700 text-[13px]">ซ้อนทับป่า</span>
+            <span class="font-bold text-rose-700 text-[13px]">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>
           </div>
         `;
       } else if (p.eudr_status === 'under_review') {
@@ -483,7 +507,7 @@ const GeoMap = {
         statusHtml = `
           <div class="inline-flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
-            <span class="font-bold text-amber-700 text-[13px]">มีความเสี่ยง</span>
+            <span class="font-bold text-amber-700 text-[13px]">โซนเฝ้าระวัง (Buffer < 500 ม.)</span>
           </div>
         `;
       }
@@ -512,7 +536,7 @@ const GeoMap = {
                 <div class="text-[12px] text-gray-500 flex items-center gap-2 mt-0.5">
                   <span class="font-mono font-bold text-mezenc-brightCyan">${p.plot_code}</span>
                   <span>•</span>
-                  <span class="truncate">👨‍🌾 ${p.farmer_name}</span>
+                  <span class="truncate">${p.farmer_name}</span>
                 </div>
               </div>
             </div>
@@ -533,7 +557,7 @@ const GeoMap = {
           <!-- 5. Tree Count -->
           <td class="py-4 px-4">
             <div class="font-extrabold text-gray-900 text-[14px]">${p.tree_count ? p.tree_count.toLocaleString() : '0'} ต้น</div>
-            <div class="text-[12px] text-gray-500 font-medium">${p.tapping_status === 'tapping' ? '⚡ กรีดได้แล้ว' : '🌱 ยังไม่เปิดกรีด'}</div>
+            <div class="text-[12px] text-gray-500 font-medium">${p.tapping_status === 'tapping' ? 'กรีดได้แล้ว' : 'ยังไม่เปิดกรีด'}</div>
           </td>
 
           <!-- 6. EUDR Status Badge (Dot Style from Reference) -->
@@ -545,14 +569,25 @@ const GeoMap = {
           <td class="py-4 pr-6 pl-4 text-center select-none" onclick="event.stopPropagation();">
             <div class="flex items-center justify-center gap-2">
               <!-- QR Code / Passport Button -->
+              ${p.eudr_status === 'non_compliant' ? `
+              <button 
+                type="button" 
+                onclick="event.stopPropagation(); (window.App && App.showToast) ? App.showToast('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออกใบรับรองและ QR Code (Non-Compliant)', 'warning') : alert('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออก QR Code');" 
+                title="ไม่อนุญาตให้ออก QR Code สำหรับแปลงทับซ้อนป่าสงวน" 
+                class="w-9 h-9 rounded-full bg-rose-50 text-rose-500 border border-rose-200 flex items-center justify-center transition-all cursor-not-allowed opacity-75"
+              >
+                <i class="fa-solid fa-ban text-xs"></i>
+              </button>
+              ` : `
               <button 
                 type="button" 
                 onclick="GeoMap.showPlotQR(${p.id})" 
                 title="QR Code ตรวจสอบย้อนกลับ (Digital Passport)" 
                 class="w-9 h-9 rounded-full bg-slate-100 hover:bg-mezenc-lightCyan text-gray-600 hover:text-mezenc-teal flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
               >
-                <span class="text-sm">📱</span>
+                <i class="fa-solid fa-qrcode text-xs"></i>
               </button>
+              `}
 
               <!-- Edit Button (Pastel Cyan Circle with Pencil matching screenshot) -->
               <button 
@@ -604,7 +639,7 @@ const GeoMap = {
       
       if (data.success || res.ok) {
         if (window.App && typeof window.App.showToast === 'function') {
-          App.showToast(`🗑️ ลบแปลง "${plotName}" เรียบร้อยแล้ว`, 'success');
+          App.showToast(`ลบแปลง "${plotName}" เรียบร้อยแล้ว`, 'success');
         } else {
           alert(`ลบแปลง "${plotName}" เรียบร้อยแล้ว`);
         }
@@ -633,6 +668,14 @@ const GeoMap = {
     }
 
     if (plotProps) {
+      if (plotProps.eudr_status === 'non_compliant' || plotProps.eudr_overlap_pct > 0) {
+        if (window.App && typeof window.App.showToast === 'function') {
+          App.showToast('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออกใบรับรองและ QR Code (Non-Compliant)', 'warning');
+        } else {
+          alert('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออกใบรับรองและ QR Code (Non-Compliant)');
+        }
+        return;
+      }
       const token = plotProps.traceability_token || plotProps.plot_code;
       const plotName = plotProps.plot_name || 'แปลงปลูกยางพารา';
       const plotCode = plotProps.plot_code || `RB-ST-2026-${String(targetId).padStart(3, '0')}`;
@@ -644,6 +687,14 @@ const GeoMap = {
         .then(data => {
           if (data && data.plot) {
             const p = data.plot;
+            if (p.eudr_status === 'non_compliant' || p.eudr_overlap_pct > 0) {
+              if (window.App && typeof window.App.showToast === 'function') {
+                App.showToast('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออกใบรับรองและ QR Code (Non-Compliant)', 'warning');
+              } else {
+                alert('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออกใบรับรองและ QR Code (Non-Compliant)');
+              }
+              return;
+            }
             App.showQRCodeModal(p.traceability_token || p.plot_code, p.plot_name, p.plot_code);
           } else {
             App.showQRCodeModal(`EUDR-TH-ST-84000-${String(targetId).padStart(3, '0')}`, 'แปลงปลูกยางพารา', `RB-ST-2026-${String(targetId).padStart(3, '0')}`);
@@ -707,6 +758,16 @@ const GeoMap = {
       const farmerNameField = document.getElementById('form-farmer-name');
       if (farmerNameField) farmerNameField.value = farmerName;
 
+      const farmerId = p.farmer_id || '';
+      const farmerIdField = document.getElementById('form-farmer-id');
+      if (farmerIdField) farmerIdField.value = farmerId;
+
+      const farmerIdCard = p.id_card_num || p.farmer_id_card || '';
+      const farmerIdCardField = document.getElementById('form-farmer-idcard');
+      if (farmerIdCardField) {
+        farmerIdCardField.value = (typeof formatNationalId === 'function' && farmerIdCard) ? formatNationalId(farmerIdCard) : farmerIdCard;
+      }
+
       const plotNameField = document.getElementById('form-plot-name');
       if (plotNameField) plotNameField.value = p.plot_name || '';
 
@@ -743,33 +804,95 @@ const GeoMap = {
         document.getElementById('form-geojson-geometry').value = typeof p.geojson_geometry === 'object' ? JSON.stringify(p.geojson_geometry) : p.geojson_geometry;
       }
 
-      // 6. Populate calculated area display in Step 2
+      // 6. Double check spatial overlap with forest layer dynamically
+      let isOverlap = (p.eudr_status === 'non_compliant' || (p.eudr_overlap_pct > 0));
+      let forestName = p.nearest_forest_name || 'เขตป่าสงวนแห่งชาติเขาท่าเพชร';
+
+      if (this.forestsData && Array.isArray(this.forestsData) && typeof turf !== 'undefined' && p.geojson_geometry) {
+        try {
+          const plotGeo = typeof p.geojson_geometry === 'string' ? JSON.parse(p.geojson_geometry) : p.geojson_geometry;
+          const plotFeature = { type: 'Feature', geometry: plotGeo };
+          const centroidPt = turf.centroid(plotFeature);
+
+          for (const f of this.forestsData) {
+            if (turf.booleanIntersects(plotFeature, f) || turf.booleanOverlap(plotFeature, f) || turf.booleanPointInPolygon(centroidPt, f)) {
+              isOverlap = true;
+              p.eudr_status = 'non_compliant';
+              p.eudr_overlap_pct = 100.0;
+              forestName = f.properties?.name_th || f.properties?.FR_NAME || 'เขตป่าสงวนแห่งชาติเขาท่าเพชร';
+              break;
+            }
+          }
+        } catch(tfErr) {}
+      }
+
+      // 7. Populate calculated area display in Step 2
       const areaText = p.formatted_area || `${p.area_rai || 0} ไร่ ${p.area_ngan || 0} งาน ${p.area_sqwah || 0} ตร.ว.`;
       if (document.getElementById('step2-area-text')) document.getElementById('step2-area-text').textContent = areaText;
       if (document.getElementById('step2-area-ha')) document.getElementById('step2-area-ha').textContent = p.area_hectare || ((p.area_sqm || 0) / 10000).toFixed(4);
       if (document.getElementById('step2-area-sqm')) document.getElementById('step2-area-sqm').textContent = Number(p.area_sqm || 0).toLocaleString();
 
-      // 7. Populate status badge in Step 2
+      // 8. Populate status badge in Step 2
       const eudrBadge = document.getElementById('step2-eudr-badge');
       if (eudrBadge) {
-        if (p.eudr_status === 'non_compliant') {
+        if (isOverlap || p.eudr_status === 'non_compliant') {
           eudrBadge.className = 'bg-rose-100 text-rose-800 font-bold text-[14px] px-3 py-1 rounded-full border border-rose-300';
-          eudrBadge.innerHTML = '🔴 ไม่ผ่านเกณฑ์ (ทับซ้อนป่า)';
+          eudrBadge.innerHTML = 'ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)';
         } else if (p.eudr_status === 'under_review') {
           eudrBadge.className = 'bg-amber-100 text-amber-800 font-bold text-[14px] px-3 py-1 rounded-full border border-amber-300';
-          eudrBadge.innerHTML = '🟠 โซนเฝ้าระวัง Buffer';
+          eudrBadge.innerHTML = 'โซนเฝ้าระวัง (Buffer < 500 ม.)';
         } else {
           eudrBadge.className = 'bg-emerald-100 text-emerald-800 font-bold text-[14px] px-3 py-1 rounded-full border border-emerald-300';
-          eudrBadge.innerHTML = '🟢 ปลอดการตัดไม้ 100%';
+          eudrBadge.innerHTML = 'ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)';
         }
       }
 
-      // 8. Close open map popup
+      // 9. Set modal mode to EDIT and update badges & hints
+      window.modalMode = 'edit';
+      const isReview = (p.eudr_status === 'under_review');
+      window.currentDrawnSpatialCheck = {
+        has_overlap: isOverlap,
+        overlap_percentage: p.eudr_overlap_pct || (isOverlap ? 100 : 0),
+        overlapping_forests: isOverlap ? [{ name: forestName }] : [],
+        eudr_status: isOverlap ? 'non_compliant' : (isReview ? 'under_review' : 'compliant'),
+        nearest_forest_distance_m: isOverlap ? 0 : (isReview ? 120 : (p.nearest_forest_distance_m || 2450)),
+        nearest_forest_name: forestName,
+        centroid: { lat: lat, lng: lng },
+        area_thai: { formatted: areaText },
+        points_count: p.points_count || 4
+      };
+      if (typeof modalPresetMode !== 'undefined') {
+        modalPresetMode = isOverlap ? 'non_compliant' : (isReview ? 'under_review' : 'compliant');
+      }
+
+      const farmerBadge = document.getElementById('farmer-plot-badge');
+      if (farmerBadge) {
+        farmerBadge.classList.remove('hidden');
+        farmerBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-sky-100 text-sky-800 border border-sky-300';
+        farmerBadge.textContent = `แก้ไขแปลง (${p.plot_code || '#' + p.id})`;
+      }
+
+      const farmerHint = document.getElementById('farmer-autofill-hint');
+      if (farmerHint) {
+        farmerHint.classList.add('hidden');
+      }
+
+      const idCardStatusBadge = document.getElementById('idcard-status-badge');
+      if (idCardStatusBadge) {
+        idCardStatusBadge.classList.add('hidden');
+      }
+
+      const idCardHint = document.getElementById('idcard-autofill-hint');
+      if (idCardHint) {
+        idCardHint.classList.add('hidden');
+      }
+
+      // 9. Close open map popup
       if (this.map) {
         this.map.closePopup();
       }
 
-      // 9. Open Add/Edit Plot Modal (#addPlotModal)
+      // 10. Open Add/Edit Plot Modal (#addPlotModal)
       if (window.App && typeof window.App.openModal === 'function') {
         App.openModal('addPlotModal');
       } else {
@@ -782,7 +905,7 @@ const GeoMap = {
         }
       }
 
-      // 10. Directly Jump to Step 2
+      // 11. Directly Jump to Step 2
       if (typeof goToModalStep === 'function') {
         goToModalStep(2);
       } else if (typeof window.goToModalStep === 'function') {
@@ -790,7 +913,7 @@ const GeoMap = {
       }
 
       if (window.App && typeof window.App.showToast === 'function') {
-        App.showToast(`✏️ เปิดหน้าแก้ไขแปลง "${p.plot_name}" (ขั้นตอนที่ 2)`, 'info');
+        App.showToast(`เปิดหน้าแก้ไขแปลง "${p.plot_name}" (ขั้นตอนที่ 2)`, 'info');
       }
     } catch (e) {
       console.error('Error opening edit plot modal:', e);
@@ -855,10 +978,46 @@ const GeoMap = {
         const sqwah = Math.round((remSqWah - (ngan * 100.0)) * 100) / 100;
         const hectare = Math.round((areaSqm / 10000.0) * 10000) / 10000;
 
+        let hasOverlap = false;
+        let nearestForestDist = 999999;
+        let forestName = 'ป่าสงวนแห่งชาติ';
+
+        if (this.forestsData && Array.isArray(this.forestsData)) {
+          for (const f of this.forestsData) {
+            const fName = f.properties?.name_th || f.properties?.FR_NAME || 'ป่าสงวนแห่งชาติ';
+            try {
+              const isOver = turf.booleanOverlap(geojson, f) || turf.booleanIntersects(geojson, f) || turf.booleanPointInPolygon(centroid, f);
+              if (isOver) {
+                hasOverlap = true;
+                forestName = fName;
+                nearestForestDist = 0;
+                break;
+              }
+              const d = turf.pointToLineDistance(centroid, turf.polygonToLine(f), { units: 'meters' });
+              if (d < nearestForestDist) {
+                nearestForestDist = d;
+                forestName = fName;
+              }
+            } catch(tfErr) {}
+          }
+        }
+
+        let status = 'compliant';
+        if (hasOverlap) {
+          status = 'non_compliant';
+        } else if (nearestForestDist < 500) {
+          status = 'under_review';
+        }
+
         checkResult = {
           success: true,
-          eudr_status: 'compliant',
-          eudr_deforestation_free: true,
+          has_overlap: hasOverlap,
+          overlap_percentage: hasOverlap ? 100.0 : 0.0,
+          overlapping_forests: hasOverlap ? [{ name: forestName }] : [],
+          nearest_forest_distance_m: hasOverlap ? 0 : nearestForestDist,
+          nearest_forest_name: forestName,
+          eudr_status: status,
+          eudr_deforestation_free: !hasOverlap,
           centroid: {
             lat: centroid.geometry.coordinates[1],
             lng: centroid.geometry.coordinates[0]
@@ -897,7 +1056,7 @@ const GeoMap = {
     }
     if (typeof App !== 'undefined' && typeof App.openModal === 'function') {
       App.openModal('addPlotModal');
-      App.showToast('✅ วิเคราะห์แปลงสำเร็จ! กรุณากรอกรายละเอียดแปลงปลูก', 'success');
+      App.showToast('วิเคราะห์แปลงสำเร็จ! กรุณากรอกรายละเอียดแปลงปลูก', 'success');
     }
   },
 
@@ -908,6 +1067,7 @@ const GeoMap = {
     if (geoInput) geoInput.value = JSON.stringify(geometry);
 
     // Reset editing IDs for new plot
+    window.modalMode = 'create';
     if (document.getElementById('form-plot-id')) document.getElementById('form-plot-id').value = '';
     if (document.getElementById('form-plot-code')) document.getElementById('form-plot-code').value = '';
     if (document.getElementById('form-traceability-token')) document.getElementById('form-traceability-token').value = '';
@@ -974,14 +1134,14 @@ const GeoMap = {
     if (step2EudrBadge) {
       if (check.eudr_status === 'compliant') {
         step2EudrBadge.className = 'bg-emerald-100 text-emerald-800 font-bold text-[14px] px-3.5 py-1 rounded-full border border-emerald-300 shadow-xs';
-        step2EudrBadge.innerText = '🟢 ปลอดการตัดไม้ (EUDR ผ่าน)';
+        step2EudrBadge.innerText = 'ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)';
       } else if (check.eudr_status === 'under_review' || (check.nearest_forest_distance_m && check.nearest_forest_distance_m < 500 && !check.has_overlap)) {
         step2EudrBadge.className = 'bg-orange-100 text-orange-900 font-bold text-[14px] px-3.5 py-1 rounded-full border border-orange-300 shadow-xs';
         const distText = check.nearest_forest_distance_m ? ` (${Math.round(check.nearest_forest_distance_m)} ม.)` : '';
-        step2EudrBadge.innerText = `🟠 มีความเสี่ยง (โซนเฝ้าระวัง${distText})`;
+        step2EudrBadge.innerText = `โซนเฝ้าระวัง (Buffer < 500 ม.)${distText}`;
       } else {
         step2EudrBadge.className = 'bg-rose-100 text-rose-800 font-bold text-[14px] px-3.5 py-1 rounded-full border border-rose-300 shadow-xs';
-        step2EudrBadge.innerText = '🔴 ซ้อนทับเขตป่าสงวน';
+        step2EudrBadge.innerText = 'ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)';
       }
     }
 

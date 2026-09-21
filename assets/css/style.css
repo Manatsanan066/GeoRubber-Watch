@@ -975,3 +975,282 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* ==========================================================================
+   Responsive Web Design (RWD) Master System
+   Optimized for:
+   1. Smartphones (iPhone 15 Pro Max, Android ~360px - 480px / up to 640px)
+   2. Tablets (iPad Pro M1 11"/12.9", iPad Air ~768px - 1024px)
+   3. Desktops & Laptops (1024px - 1440px+)
+   ========================================================================== */
+
+/* --- 1. Global Responsive Resets & Safe Area Handling --- */
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Responsive Container */
+.container-responsive {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media screen and (min-width: 640px) {
+  .container-responsive {
+    max-width: 640px;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .container-responsive {
+    max-width: 768px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .container-responsive {
+    max-width: 1024px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media screen and (min-width: 1280px) {
+  .container-responsive {
+    max-width: 1280px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media screen and (min-width: 1536px) {
+  .container-responsive {
+    max-width: 1520px;
+  }
+}
+
+/* Responsive Table Wrapper with Momentum Scroll */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-sm);
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+/* Responsive Form Rows & Inputs */
+.form-row-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  width: 100%;
+}
+
+@media screen and (min-width: 768px) {
+  .form-row-responsive {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .form-row-responsive > * {
+    flex: 1;
+  }
+}
+
+/* Touch-friendly Minimum Target Heights for Mobile Form Inputs */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+select,
+textarea {
+  min-height: 44px;
+  font-size: 16px; /* Prevents auto-zoom in iOS Safari */
+  box-sizing: border-box;
+}
+
+/* --- 2. Mobile-First Specific Styles (iPhone 15 Pro Max & Smartphones <= 640px) --- */
+@media screen and (max-width: 640px) {
+  body {
+    font-size: 14.5px;
+  }
+
+  /* Compact Navbar Padding & Floating Margins */
+  .top-navbar {
+    top: 8px;
+    padding: 0 0.5rem;
+  }
+  
+  .nav-pill-container {
+    padding: 0.45rem 0.85rem;
+  }
+
+  .brand-title {
+    font-size: 1rem;
+  }
+
+  .brand-subtitle {
+    display: none; /* Hide long subtitle on small screens */
+  }
+
+  .nav-links {
+    display: none; /* Handled by mobile drawer */
+  }
+
+  /* Header & Banner Text Scaling */
+  h1, .text-3xl, .text-4xl, .text-5xl {
+    line-height: 1.25 !important;
+  }
+
+  /* Responsive Map Height for Handhelds */
+  #map, #surat-map, .leaflet-container {
+    min-height: 320px;
+  }
+
+  /* Floating Legend Adaptation on Mobile */
+  .spatial-legend-floating {
+    bottom: 12px;
+    padding: 6px 14px;
+    gap: 10px;
+    font-size: 0.72rem;
+    max-width: 92%;
+    overflow-x: auto;
+  }
+
+  /* Cadastral / A4 Document Horizontal Preview on Mobile */
+  .cadastral-paper-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 1rem;
+  }
+
+  .cadastral-paper {
+    min-width: 780px; /* Preserve crisp vector A4 proportions while allowing side-scroll */
+  }
+
+  /* Full Width Buttons for Mobile */
+  .btn-mobile-full {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Grid Layouts to Single Column */
+  .grid-cols-2, .grid-cols-3, .grid-cols-4, .grid-cols-6, .grid-cols-12 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- 3. Tablet Specific Styles (iPad Pro M1, iPad Air, 641px - 1024px) --- */
+@media screen and (min-width: 641px) and (max-width: 1024px) {
+  body {
+    font-size: 15.5px;
+  }
+
+  .nav-pill-container {
+    padding: 0.5rem 1.15rem;
+  }
+
+  .spatial-workbench-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .spatial-col-center {
+    height: 480px;
+  }
+
+  #map, #surat-map, .leaflet-container {
+    min-height: 440px;
+  }
+
+  .cadastral-paper-container {
+    overflow-x: auto;
+  }
+}
+
+/* --- 4. Desktop & Laptop Enhancements (min-width: 1025px) --- */
+@media screen and (min-width: 1025px) {
+  body {
+    font-size: 16px;
+  }
+
+  .spatial-workbench-grid {
+    height: calc(100vh - 180px);
+    min-height: 640px;
+  }
+
+  #map, #surat-map, .leaflet-container {
+    min-height: 520px;
+  }
+}
+
+/* --- 5. Print Optimization (A4 Portrait Master) --- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  *, *::before, *::after {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print, header, footer, .top-navbar, button, .no-print-area {
+    display: none !important;
+  }
+
+  .page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  .page-break-after {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+
+

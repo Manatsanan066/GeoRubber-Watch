@@ -6,7 +6,7 @@ $currentUser = getCurrentUser();
 <html lang="th" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GeoRubber Watch - ระบบภูมิสารสนเทศอัจฉริยะติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี</title>
   
   <!-- Google Fonts: Google Sans, Open Sans & Sarabun -->
@@ -19,7 +19,7 @@ $currentUser = getCurrentUser();
 
   <!-- Core Eco-GIS Styles & Centralized i18n Engine -->
   <link rel="stylesheet" href="assets/css/style.css" />
-  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/i18n.js?v=<?= time() ?>"></script>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -158,6 +158,33 @@ $currentUser = getCurrentUser();
     .leaflet-popup-content-wrapper {
       border-radius: 14px !important;
       box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+      padding: 4px !important;
+    }
+    .leaflet-popup-content {
+      margin: 10px 12px !important;
+      line-height: 1.5 !important;
+    }
+    .forest-leaflet-tooltip {
+      background: rgba(14, 77, 78, 0.95) !important;
+      color: #ffffff !important;
+      border: 1px solid #2dd4bf !important;
+      border-radius: 8px !important;
+      padding: 6px 10px !important;
+      font-size: 11.5px !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+      font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif !important;
+    }
+    .forest-leaflet-tooltip::before {
+      border-top-color: rgba(14, 77, 78, 0.95) !important;
+    }
+    .leaflet-container {
+      cursor: grab;
+    }
+    .leaflet-container.leaflet-grab {
+      cursor: grab;
+    }
+    .leaflet-container.leaflet-grabbing {
+      cursor: grabbing;
     }
   </style>
 </head>
@@ -414,71 +441,72 @@ $currentUser = getCurrentUser();
     <!-- =========================================================================
          [MOBILE / IPAD RESPONSIVE DRAWER OVERLAY]
          ========================================================================= -->
-    <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0 lg:hidden">
-      <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-mezenc-deepTeal text-white p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/10">
+    <!-- =========================================================================
+         [MOBILE / IPAD RESPONSIVE DRAWER OVERLAY]
+         ========================================================================= -->
+    <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0 lg:hidden">
+      <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white/90 backdrop-blur-2xl text-slate-800 p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/60">
         
         <div>
           <!-- Drawer Header -->
-          <div class="flex items-center justify-between pb-4 border-b border-white/15">
+          <div class="flex items-center justify-between pb-4 border-b border-gray-200/70">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
-                🌲
-              </div>
-              <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
+              <img src="img/map_icon.png" alt="GeoRubber Logo" class="w-7 h-7 object-contain drop-shadow-sm">
+              <span class="font-extrabold text-base text-mezenc-teal" data-i18n="nav_brand">GeoRubber Watch</span>
             </div>
-            <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+            <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer" aria-label="Close menu">
               ✕
             </button>
           </div>
 
           <!-- Mobile Language Toggle Switch -->
-          <div class="py-3 flex items-center justify-between border-b border-white/10">
-            <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+          <div class="py-3 flex items-center justify-between border-b border-gray-200/60">
+            <span class="text-xs text-slate-500 font-medium">Language / ภาษา:</span>
             <div 
               onclick="toggleLanguage()"
-              class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+              class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0 bg-slate-200/80 border border-slate-300/80"
               id="lang-toggle-btn-mobile"
             >
-              <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+              <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px] shadow-sm"></div>
               <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
-              <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+              <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-slate-500 transition-colors duration-300 pointer-events-none">EN</div>
             </div>
           </div>
 
           <!-- Drawer Navigation Links -->
-          <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
-            <a href="index.php" class="px-4 py-3 rounded-xl bg-white/15 text-white font-bold transition-colors flex items-center gap-3">
-              <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
+          <nav class="flex flex-col gap-1.5 pt-4 text-sm font-medium">
+            <a href="index.php" class="px-4 py-2.5 rounded-xl bg-mezenc-teal text-white font-bold transition-all shadow-xs flex items-center">
+              <span data-i18n="nav_home">หน้าแรก</span>
             </a>
-            <a href="overview.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-              <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
+            <a href="overview.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+              <span data-i18n="nav_gis">แผนที่ GIS</span>
             </a>
-            <a href="dashboard.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-              <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
+            <a href="dashboard.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+              <span data-i18n="nav_dashboard">แดชบอร์ด</span>
             </a>
-            <a href="map.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-              <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
+            <a href="map.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+              <span data-i18n="nav_plots">แปลงปลูก</span>
             </a>
-            <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-              <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
+            <a href="yields.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+              <span data-i18n="nav_yields">ผลผลิต</span>
             </a>
-            <a href="contact.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
-              <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
+            <a href="contact.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+              <span data-i18n="nav_contact">ติดต่อเรา</span>
             </a>
           </nav>
         </div>
 
         <!-- Drawer Footer Action -->
-        <div class="pt-6 border-t border-white/15 space-y-2.5">
-          <div class="text-xs text-white/80 px-1">
-            ผู้ใช้งาน: <strong class="text-white"><?= htmlspecialchars($currentUser['full_name'] ?? 'ผู้ใช้งาน') ?></strong> 
-            <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full ml-1"><?= htmlspecialchars($currentUser['role'] ?? '') ?></span>
+        <div class="pt-5 border-t border-gray-200/70 space-y-2.5">
+          <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600">
+            ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($currentUser['full_name'] ?? 'ผู้ใช้งาน') ?></strong> 
+            <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full ml-1 font-bold border border-mezenc-mint/40"><?= htmlspecialchars($currentUser['role'] ?? '') ?></span>
           </div>
-          <a href="overview.php" class="w-full py-3 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-mint text-white font-bold text-center block shadow transition-all text-sm" data-i18n="idx_sec3_btn">
+          <a href="overview.php" class="w-full py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center block shadow transition-all text-xs uppercase tracking-wider" data-i18n="idx_sec3_btn">
             เปิดแผนที่ระบบภูมิสารสนเทศ (Full GIS Map) ➔
           </a>
-          <a href="logout.php" class="w-full py-2.5 rounded-xl bg-red-500/80 hover:bg-red-600 text-white font-bold text-center block text-xs transition-all" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            🚪 <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
+          <a href="logout.php" class="w-full py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+            <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </div>
 
@@ -668,13 +696,13 @@ $currentUser = getCurrentUser();
   <!-- 3.1 Section Header -->
   <div class="w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 mb-10 sm:mb-14 xl:mb-16 pt-2 sm:pt-4 text-center">
     <div class="max-w-4xl mx-auto space-y-3 sm:space-y-3.5">
-      <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-brightCyan uppercase tracking-widest leading-relaxed" data-i18n="sec3_tag">
+      <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-brightCyan uppercase tracking-widest leading-relaxed" data-i18n="idx_sec3_tag">
         การจำแนกแนวเขตป่าสงวนและประเมินพื้นที่เสี่ยงเชิงภูมิสารสนเทศ
       </div>
-      <h2 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-mezenc-teal tracking-wide leading-[1.3] sm:leading-[1.35]" data-i18n="sec3_heading">
+      <h2 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-mezenc-teal tracking-wide leading-[1.3] sm:leading-[1.35]" data-i18n="idx_sec3_heading">
         พื้นที่คุ้มครองและการใช้ประโยชน์ที่ดิน<br>จังหวัดสุราษฎร์ธานี
       </h2>
-      <p class="text-[14px] text-gray-500 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1" data-i18n="sec3_sub">
+      <p class="text-[14px] text-gray-500 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1" data-i18n="idx_sec3_sub">
         ศูนย์กลางข้อมูลเชิงพื้นที่เพื่อสร้างความเข้าใจและเฝ้าระวังแนวเขตป่าสงวนแห่งชาติ 26 แห่งในจังหวัดสุราษฎร์ธานี
       </p>
     </div>
@@ -697,10 +725,10 @@ $currentUser = getCurrentUser();
           
           <!-- Description Paragraphs -->
           <div class="space-y-3 text-sm sm:text-base lg:text-[15px] xl:text-[16px] text-gray-600 leading-relaxed font-light">
-            <p data-i18n="sec3_p1">
+            <p data-i18n="idx_sec3_p1">
               ศูนย์กลางข้อมูลเชิงพื้นที่เพื่อสร้างความเข้าใจและเฝ้าระวังแนวเขตป่าสงวนแห่งชาติ 26 แห่งในจังหวัดสุราษฎร์ธานี โดยเชื่อมโยงฐานข้อมูลสารสนเทศจริงร่วมกับแบบจำลองพื้นที่โดยรอบมหาวิทยาลัย เพื่อยกระดับการบริหารจัดการทรัพยากรธรรมชาติอย่างยั่งยืน
             </p>
-            <p data-i18n="sec3_p2">
+            <p data-i18n="idx_sec3_p2">
               ระบบรองรับทั้งการศึกษาเรียนรู้มิติด้านการอนุรักษ์ และการตรวจสอบพิกัดแปลงปลูกพืชเศรษฐกิจเทียบกับแนวเขตคุ้มครอง ช่วยประเมินและจำแนกโซนความเสี่ยงเพื่อป้องกันปัญหาการทับซ้อนพื้นที่หวงห้ามได้อย่างถูกต้อง
             </p>
           </div>
@@ -708,23 +736,23 @@ $currentUser = getCurrentUser();
           <!-- Key Stats Cards -->
           <div class="grid grid-cols-3 gap-2.5 sm:gap-3 xl:gap-4">
             <div class="p-3 sm:p-3.5 xl:p-4 bg-white/95 rounded-2xl border border-gray-200/90 text-center shadow-xs">
-              <div class="text-[10px] sm:text-xs text-mezenc-teal font-medium uppercase" data-i18n="sec3_stat1_lbl">พื้นที่คุ้มครองรวม</div>
-              <div class="text-xs sm:text-sm lg:text-base xl:text-lg font-black text-mezenc-teal mt-0.5" data-i18n="sec3_stat1_val">784,618 ไร่</div>
+              <div class="text-[10px] sm:text-xs text-mezenc-teal font-medium uppercase" data-i18n="idx_sec3_stat1_lbl">พื้นที่คุ้มครองรวม</div>
+              <div class="text-xs sm:text-sm lg:text-base xl:text-lg font-black text-mezenc-teal mt-0.5" data-i18n="idx_sec3_stat1_val">3,643,595 ไร่</div>
             </div>
             <div class="p-3 sm:p-3.5 xl:p-4 bg-white/95 rounded-2xl border border-gray-200/90 text-center shadow-xs">
-              <div class="text-[10px] sm:text-xs text-mezenc-teal font-medium uppercase" data-i18n="sec3_stat2_lbl">ป่าสงวนแห่งชาติ</div>
-              <div class="text-xs sm:text-sm lg:text-base xl:text-lg font-black text-mezenc-teal mt-0.5" data-i18n="sec3_stat2_val">26 ผืนป่า</div>
+              <div class="text-[10px] sm:text-xs text-mezenc-teal font-medium uppercase" data-i18n="idx_sec3_stat2_lbl">ป่าสงวนแห่งชาติ</div>
+              <div class="text-xs sm:text-sm lg:text-base xl:text-lg font-black text-mezenc-teal mt-0.5" data-i18n="idx_sec3_stat2_val">26 ผืนป่า</div>
             </div>
             <div class="p-3 sm:p-3.5 xl:p-4 bg-white/95 rounded-2xl border border-gray-200/90 text-center shadow-xs">
-              <div class="text-[10px] sm:text-xs text-mezenc-teal font-medium uppercase" data-i18n="sec3_stat3_lbl">ระยะกันชน Buffer</div>
-              <div class="text-xs sm:text-sm lg:text-base xl:text-lg font-black text-emerald-700 mt-0.5" data-i18n="sec3_stat3_val">500 เมตร</div>
+              <div class="text-[10px] sm:text-xs text-mezenc-teal font-medium uppercase" data-i18n="idx_sec3_stat3_lbl">ระยะกันชน Buffer</div>
+              <div class="text-xs sm:text-sm lg:text-base xl:text-lg font-black text-emerald-700 mt-0.5" data-i18n="idx_sec3_stat3_val">500 เมตร</div>
             </div>
           </div>
 
           <!-- Main Full Map Action Button -->
           <div class="pt-0.5">
             <a href="overview.php" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-mezenc-brightCyan hover:bg-mezenc-teal text-white px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 transition-all">
-              <span data-i18n="sec3_btn">เปิดแผนที่ระบบภูมิสารสนเทศ (Full GIS Map) ➔</span>
+              <span data-i18n="idx_sec3_btn">เปิดแผนที่ระบบภูมิสารสนเทศ (Full GIS Map) ➔</span>
             </a>
           </div>
 
@@ -738,26 +766,32 @@ $currentUser = getCurrentUser();
             <div class="flex justify-between items-center px-1">
               <span class="text-sm sm:text-base font-bold text-mezenc-teal flex items-center gap-2">
                 <img src="img/map_icon.png" alt="Map Icon" class="w-7 h-7 sm:w-8 sm:h-8 object-contain inline-block drop-shadow-sm">
-                <span data-i18n="sec3_map_title">แผนที่แนวเขตป่าสงวนแห่งชาติ จังหวัดสุราษฎร์ธานี</span>
+                <span data-i18n="idx_sec3_map_title">แผนที่แนวเขตป่าสงวนแห่งชาติ จังหวัดสุราษฎร์ธานี</span>
               </span>
-              <span class="text-xs sm:text-sm font-bold text-rose-600 flex items-center gap-1" data-i18n="sec3_map_badge">
-                🔴 เขตคุ้มครองเข้มงวด
-              </span>
+              <div class="flex items-center gap-1.5 sm:gap-2">
+                <button id="reset-forest-map-btn" type="button" class="text-[10px] sm:text-xs font-semibold px-2 sm:px-2.5 py-1 rounded-lg bg-mezenc-lightCyan/80 hover:bg-mezenc-mint/30 text-mezenc-teal border border-mezenc-mint/40 transition-all flex items-center gap-1 shadow-xs cursor-pointer hover:scale-105 active:scale-95" title="คืนค่ามุมมองเริ่มต้น (Reset View)">
+                  <span class="hidden xs:inline">มุมมองรวม</span>
+                </button>
+                <span class="text-xs sm:text-sm font-bold text-rose-600 flex items-center gap-1.5 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                  <span class="w-2 h-2 rounded-full bg-rose-500 inline-block animate-pulse"></span>
+                  <span data-i18n="idx_sec3_map_badge">เขตคุ้มครองเข้มงวด</span>
+                </span>
+              </div>
             </div>
 
             <!-- Real Leaflet Map Container -->
             <div id="surat-real-territory-map" class="shadow-inner border border-gray-200"></div>
 
             <!-- Dynamic Info Box Below Map -->
-            <div class="bg-mezenc-lightCyan/60 p-2.5 sm:p-3 rounded-xl border border-mezenc-mint/30 text-center">
-              <div id="district-title" class="text-xs sm:text-sm font-bold text-mezenc-teal" data-i18n="sec3_info_title">
+            <div id="district-info-box" class="bg-mezenc-lightCyan/60 p-2.5 sm:p-3 rounded-xl border border-mezenc-mint/30 text-center transition-all duration-300">
+              <div id="district-title" class="text-xs sm:text-sm font-bold text-mezenc-teal" data-i18n="idx_sec3_info_title">
                 ป่าสงวนแห่งชาติ จ.สุราษฎร์ธานี (แตะหรือเลื่อนเมาส์บนแผนที่เพื่อดูข้อมูล)
               </div>
-              <div id="district-desc" class="text-[10px] sm:text-xs text-gray-600 mt-0.5 font-light" data-i18n="sec3_info_desc">
+              <div id="district-desc" class="text-[10px] sm:text-xs text-gray-600 mt-0.5 font-light" data-i18n="idx_sec3_info_desc">
                 ฐานข้อมูลแนวเขตป่าสงวนแห่งชาติ 26 แห่ง (Zone-c) • ปลอดการตัดไม้ทำลายป่า 100%
               </div>
-              <div id="district-forest" class="text-[10px] sm:text-[11px] text-emerald-700 font-semibold mt-0.5" data-i18n="sec3_info_sub">
-                ครอบคลุมพื้นที่คุ้มครองรวมกว่า 784,618 ไร่
+              <div id="district-forest" class="text-[10px] sm:text-[11px] text-emerald-700 font-semibold mt-0.5" data-i18n="idx_sec3_info_sub">
+                ครอบคลุมพื้นที่คุ้มครองรวมกว่า 3,643,595 ไร่
               </div>
             </div>
 
@@ -774,13 +808,13 @@ $currentUser = getCurrentUser();
   <!-- 4.1 Section Header -->
   <div class="w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 mb-10 sm:mb-14 xl:mb-16 pt-2 sm:pt-4 text-center">
     <div class="max-w-4xl mx-auto space-y-3 sm:space-y-3.5">
-      <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-brightCyan uppercase tracking-widest leading-relaxed" data-i18n="sec4_tag">
+      <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-brightCyan uppercase tracking-widest leading-relaxed" data-i18n="idx_sec4_tag">
         ขั้นตอนการทำงานของระบบ
       </div>
-      <h2 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-mezenc-teal tracking-wide leading-[1.3] sm:leading-[1.35]" data-i18n="sec4_heading">
+      <h2 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-mezenc-teal tracking-wide leading-[1.3] sm:leading-[1.35]" data-i18n="idx_sec4_heading">
         4 ขั้นตอนสู่การรับรองมาตรฐาน EUDR
       </h2>
-      <p class="text-[14px] text-gray-500 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1" data-i18n="sec4_sub">
+      <p class="text-[14px] text-gray-500 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1" data-i18n="idx_sec4_sub">
         คู่มือและขั้นตอนการใช้งานระบบภูมิสารสนเทศสำหรับเกษตรกรและผู้ประกอบการสวนยาง เพื่อการขึ้นทะเบียนและขอรับรองมาตรฐาน EUDR อย่างถูกต้องครบวงจร
       </p>
     </div>
@@ -1074,8 +1108,7 @@ $currentUser = getCurrentUser();
         <div class="md:col-span-3 flex justify-start md:justify-end">
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
             <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
-            <div class="text-2xl my-1">🗺️</div>
-            <div class="text-[14px] font-bold text-white leading-tight" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-[14px] font-bold text-white leading-tight mt-2" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
             <div class="text-[12px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
@@ -1125,27 +1158,27 @@ $currentUser = getCurrentUser();
         <!-- Details Grid -->
         <div class="bg-mezenc-sand p-3.5 sm:p-4 rounded-2xl border border-gray-200 space-y-2">
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500" data-i18n="deed_lbl_farmer">👨‍🌾 เจ้าของแปลง / เกษตรกร:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_farmer">เจ้าของแปลง / เกษตรกร:</span>
             <span class="font-bold text-gray-800" id="modal-farmer-name">-</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500" data-i18n="deed_lbl_doc">📄 ประเภทเอกสารสิทธิ์:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_doc">ประเภทเอกสารสิทธิ์:</span>
             <span class="font-bold text-gray-800" id="modal-doc-type">โฉนดที่ดิน (น.ส.4 จ)</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500" data-i18n="deed_lbl_loc">🗺️ ที่ตั้งแปลง:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_loc">ที่ตั้งแปลง:</span>
             <span class="font-bold text-gray-800" id="modal-location">-</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500" data-i18n="deed_lbl_area">📐 เนื้อที่คำนวณ:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_area">เนื้อที่คำนวณ:</span>
             <span class="font-bold text-gray-800" id="modal-area">-</span>
           </div>
           <div class="flex justify-between border-b border-gray-200/60 pb-1.5">
-            <span class="text-gray-500" data-i18n="deed_lbl_clone">🌳 พันธุ์ยางพารา / สถานะ:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_clone">พันธุ์ยางพารา / สถานะ:</span>
             <span class="font-bold text-gray-800" id="modal-rubber-clone">-</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500" data-i18n="deed_lbl_dist">🌲 ระยะห่างป่าสงวนที่ใกล้ที่สุด:</span>
+            <span class="text-gray-500" data-i18n="deed_lbl_dist">ระยะห่างป่าสงวนที่ใกล้ที่สุด:</span>
             <span class="font-bold" id="modal-forest-dist">-</span>
           </div>
         </div>
@@ -1154,13 +1187,16 @@ $currentUser = getCurrentUser();
         <div class="space-y-1.5">
           <div class="font-bold text-gray-700" data-i18n="deed_lbl_checklist">การประเมินความสอดคล้องตามมาตรฐาน EUDR:</div>
           <div class="flex items-center gap-2 text-gray-600" id="modal-check-1">
-            <span>✅</span> <span data-i18n="deed_chk1">พิกัด Polygon WGS84 บันทึกบน Supabase Cloud ครบถ้วน</span>
+            <svg class="w-4 h-4 inline-block text-emerald-600 shrink-0" fill="#00A896" viewBox="0 0 200 200" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M177.6,80.43a10,10,0,1,0-19.5,4.5,60.76,60.76,0,0,1-6,44.5c-16.5,28.5-53.5,38.5-82,22-28.5-16-38.5-53-22-81.5s53.5-38.5,82-22a9.86,9.86,0,1,0,10-17c-38.5-22.5-87-9.5-109.5,29a80.19,80.19,0,1,0,147,20.5Zm-109.5,11a10.12,10.12,0,0,0-11,17l40,25a10.08,10.08,0,0,0,5.5,1.5,10.44,10.44,0,0,0,8-4l52.5-67.5c3.5-4.5,2.5-10.5-2-14s-10.5-2.5-14,2l-47,60Z"></path></g></svg>
+            <span data-i18n="deed_chk1">พิกัด Polygon WGS84 บันทึกบน Supabase Cloud ครบถ้วน</span>
           </div>
           <div class="flex items-center gap-2 text-gray-600" id="modal-check-2">
-            <span>✅</span> <span data-i18n="deed_chk2">ปลอดการตัดไม้ทำลายป่าหลัง 31 ธ.ค. 2020</span>
+            <svg class="w-4 h-4 inline-block text-emerald-600 shrink-0" fill="#00A896" viewBox="0 0 200 200" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M177.6,80.43a10,10,0,1,0-19.5,4.5,60.76,60.76,0,0,1-6,44.5c-16.5,28.5-53.5,38.5-82,22-28.5-16-38.5-53-22-81.5s53.5-38.5,82-22a9.86,9.86,0,1,0,10-17c-38.5-22.5-87-9.5-109.5,29a80.19,80.19,0,1,0,147,20.5Zm-109.5,11a10.12,10.12,0,0,0-11,17l40,25a10.08,10.08,0,0,0,5.5,1.5,10.44,10.44,0,0,0,8-4l52.5-67.5c3.5-4.5,2.5-10.5-2-14s-10.5-2.5-14,2l-47,60Z"></path></g></svg>
+            <span data-i18n="deed_chk2">ปลอดการตัดไม้ทำลายป่าหลัง 31 ธ.ค. 2020</span>
           </div>
           <div class="flex items-center gap-2 text-gray-600" id="modal-check-3">
-            <span>✅</span> <span data-i18n="deed_chk3">เอกสารสิทธิ์ถูกต้อง สามารถออก EUDR Passport ได้ทันที</span>
+            <svg class="w-4 h-4 inline-block text-emerald-600 shrink-0" fill="#00A896" viewBox="0 0 200 200" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M177.6,80.43a10,10,0,1,0-19.5,4.5,60.76,60.76,0,0,1-6,44.5c-16.5,28.5-53.5,38.5-82,22-28.5-16-38.5-53-22-81.5s53.5-38.5,82-22a9.86,9.86,0,1,0,10-17c-38.5-22.5-87-9.5-109.5,29a80.19,80.19,0,1,0,147,20.5Zm-109.5,11a10.12,10.12,0,0,0-11,17l40,25a10.08,10.08,0,0,0,5.5,1.5,10.44,10.44,0,0,0,8-4l52.5-67.5c3.5-4.5,2.5-10.5-2-14s-10.5-2.5-14,2l-47,60Z"></path></g></svg>
+            <span data-i18n="deed_chk3">เอกสารสิทธิ์ถูกต้อง สามารถออก EUDR Passport ได้ทันที</span>
           </div>
         </div>
 
@@ -1207,6 +1243,20 @@ $currentUser = getCurrentUser();
 
   <!-- Scripts: Real Map & Interactive Modals -->
   <script>
+    // Language detection and synchronization helper
+    function getCurrentLang() {
+      if (typeof I18n !== 'undefined' && typeof I18n.getLang === 'function') {
+        return I18n.getLang();
+      }
+      return localStorage.getItem('georubber_lang') || 'th';
+    }
+    let currentIndexLang = getCurrentLang();
+    window.addEventListener('languageChanged', (e) => {
+      if (e.detail && e.detail.lang) {
+        currentIndexLang = e.detail.lang;
+      }
+    });
+
     // Mobile Drawer Toggle
     function toggleMobileDrawer() {
       const drawer = document.getElementById('mobile-drawer');
@@ -1415,20 +1465,126 @@ $currentUser = getCurrentUser();
     let miniForestMap = null;
     let geoForestLayer = null;
     let isForestLayerVisible = true;
+    let activeSelectedForest = null;
+    let infoBoxResetTimer = null;
+
+    // Comprehensive Lookup for all 26 National Forest Reserves (Zone C) in Surat Thani
+    const SURAT_FOREST_LOOKUP = {
+      "R1.001": { name_th: "ป่าเขาพุทธทอง", name_en: "Khao Phuttha Thong Forest Reserve", area_rai: 16250 },
+      "R1.002": { name_th: "ป่าทุ่งรัง ควนเสียด บกไก่ฟ้า และคลองกงชัง", name_en: "Thung Rang, Khuan Siat, Bok Kai Fa & Khlong Kong Chang Forest Reserve", area_rai: 121737.5 },
+      "R1.003": { name_th: "ป่าคลองสินปุน", name_en: "Khlong Sin Pun Forest Reserve", area_rai: 75000 },
+      "R1.004": { name_th: "ป่าคลองเหยียน", name_en: "Khlong Yan Forest Reserve", area_rai: 178125 },
+      "R1.005": { name_th: "ป่าวัดประดู่", name_en: "Wat Pradu Forest Reserve", area_rai: 5100 },
+      "R1.006": { name_th: "ป่าน้ำตกหินลาด", name_en: "Hin Lat Waterfall Forest Reserve", area_rai: 6943 },
+      "R1.007": { name_th: "ป่าเลนดอนสัก", name_en: "Don Sak Mangrove Forest Reserve", area_rai: 19443 },
+      "R1.008": { name_th: "ป่าคลองน้ำเฒ่า", name_en: "Khlong Nam Thao Forest Reserve", area_rai: 396250 },
+      "R1.009": { name_th: "ป่าเขาพลู", name_en: "Khao Phlu Forest Reserve", area_rai: 29375 },
+      "R1.010": { name_th: "ป่าเลนน้ำเค็มท่าฉาง", name_en: "Tha Chang Mangrove Forest Reserve", area_rai: 8343 },
+      "R1.011": { name_th: "ป่าเขาท่าเพชร", name_en: "Khao Tha Phet Forest Reserve", area_rai: 2893 },
+      "R1.012": { name_th: "ป่าเกาะพะงัน", name_en: "Koh Pha-ngan Forest Reserve", area_rai: 24450 },
+      "R1.013": { name_th: "ป่าบ้านนา ป่าท่าเรือ และป่าเคียนซา", name_en: "Ban Na, Tha Ruea & Khian Sa Forest Reserve", area_rai: 89075 },
+      "R1.014": { name_th: "ป่าท่าชนะ", name_en: "Tha Chana Forest Reserve", area_rai: 662781 },
+      "R1.015": { name_th: "ป่าชัยคราม และป่าวัดประดู่", name_en: "Chaiya Khram & Wat Pradu Forest Reserve", area_rai: 280340 },
+      "R1.016": { name_th: "ป่าบางเบา และป่าคลองเซียด", name_en: "Bang Bao & Khlong Siat Forest Reserve", area_rai: 175837 },
+      "R1.017": { name_th: "ป่าคลองท่าเนียน และป่าเลนคลองพุมเรียง", name_en: "Khlong Tha Nian & Phum Riang Mangrove Forest Reserve", area_rai: 5884 },
+      "R1.018": { name_th: "ป่าทุ่งใสไช", name_en: "Thung Sai Chai Forest Reserve", area_rai: 5000 },
+      "R1.019": { name_th: "ป่าท่าเคย ป่าคลองไทร ป่ามะลวน และป่าบางงอน", name_en: "Tha Khoei, Khlong Sai, Maluan & Bang Ngon Forest Reserve", area_rai: 145937.5 },
+      "R1.020": { name_th: "ป่าบ้านหมากและป่าปากพัง", name_en: "Ban Mak & Pak Phang Forest Reserve", area_rai: 187500 },
+      "R1.021": { name_th: "ป่าคลองสก และป่าคลองพนม", name_en: "Khlong Sok & Khlong Phanom Forest Reserve", area_rai: 295000 },
+      "R1.022": { name_th: "ป่าย่านยาว ป่าเขาวง และป่ากระซุม", name_en: "Yan Yao, Khao Wong & Krasum Forest Reserve", area_rai: 630000 },
+      "R1.023": { name_th: "ป่าใสท้อน และป่าคลองโซง", name_en: "Sai Thon & Khlong Song Forest Reserve", area_rai: 114762 },
+      "R1.024": { name_th: "ป่าไชยคราม และป่าวัดประดู่ แปลงที่สอง", name_en: "Chaiya Khram & Wat Pradu (Plot 2) Forest Reserve", area_rai: 106744 },
+      "R1.025": { name_th: "ป่าเขาพนม และป่าพลูเถื่อน", name_en: "Khao Phanom & Phlu Thuean Forest Reserve", area_rai: 43359 },
+      "R1.026": { name_th: "ป่าเขาแดงราม และป่าเขาหน้าราหู", name_en: "Khao Daeng Ram & Khao Na Rahu Forest Reserve", area_rai: 17466 }
+    };
+
+    // Helper to safely extract and normalize properties from GeoJSON feature
+    function getForestData(props) {
+      if (!props) return null;
+      const code = props.forest_code || props.NRF_CODE || props.code || 'Zone-C';
+      const lookup = SURAT_FOREST_LOOKUP[code] || {};
+      
+      const nameTh = props.name_th || props.FR_NAME || props.NAME_TH || props.name || lookup.name_th || 'ป่าสงวนแห่งชาติ';
+      const nameEn = props.name_en || lookup.name_en || props.NAME_EN || (nameTh + ' Forest Reserve');
+      const areaRai = parseFloat(props.area_rai || props.AREA_RAI || props.rai_GIS || lookup.area_rai || 0);
+      const areaHa = areaRai > 0 ? (areaRai * 0.16).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0';
+      const category = props.category || props.Typ || 'ป่าสงวนแห่งชาติ (Zone C)';
+      const office = props['สจป'] || props.office || 'สจป.ที่ 11 (สุราษฎร์ธานี)';
+      const province = props.Province || props.province || 'สุราษฎร์ธานี';
+
+      return { code, nameTh, nameEn, areaRai, areaHa, category, office, province };
+    }
+
+    // SVG Icons for Map Components
+    const TREE_ICON_SVG = `<svg class="w-4 h-4 inline-block align-middle mr-1 -mt-0.5" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" xml:space="preserve"><style type="text/css">.st_tree{fill:#00A896;}</style><g><path class="st_tree" d="M346.483,226.653c-58.176-75.765-90.498-181.813-90.498-181.813s-32.318,106.048-90.505,181.813 c0,0,26.66,16.09,41.21,7.569c0,0-14.55,65.341-79.995,151.514c58.176,18.923,101.81-12.328,101.81-12.328v93.75h21.025h12.916 h21.021v-93.75c0,0,43.642,31.25,101.817,12.328c-65.457-86.174-79.995-151.514-79.995-151.514 C319.826,242.743,346.483,226.653,346.483,226.653z"></path><path class="st_tree" d="M160.886,307.087c-19.185-35.761-24.363-59.015-24.363-59.015c8.768,5.141,23.33-1.454,29.058-4.376 c1.522-0.84,2.417-1.379,2.417-1.379c-5.313-6.985-10.353-14.276-15.186-21.718c-34.855-54.482-53.972-117.26-53.972-117.26 s-24.711,81.041-69.23,138.977c0,0,20.361,12.283,31.542,5.756c0,0-11.181,49.956-61.151,115.88 c44.451,14.426,77.788-9.443,77.788-9.443v71.674h42.034v-71.674c0,0,3.035,2.151,8.415,4.759 C141.633,340.391,152.332,322.817,160.886,307.087z"></path><path class="st_tree" d="M450.849,248.071c11.121,6.527,31.474-5.756,31.474-5.756c-44.454-57.936-69.155-138.977-69.155-138.977 s-19.125,62.778-54.05,117.26c-4.766,7.441-9.803,14.733-15.123,21.718c0,0,0.906,0.54,2.428,1.379 c5.725,2.922,20.29,9.517,29.058,4.376c0,0-5.178,23.328-24.442,59.09c8.566,15.655,19.331,33.303,32.723,52.106 c5.381-2.608,8.423-4.759,8.423-4.759v71.674h41.967v-71.674c0,0,33.394,23.869,77.848,9.443 C461.97,298.027,450.849,248.071,450.849,248.071z"></path></g></svg>`;
+    const VERIFY_ICON_SVG = `<svg class="w-4 h-4 inline-block align-middle mr-1 -mt-0.5" fill="#00a896" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M8,21H4a1,1,0,0,1-1-1V16a1,1,0,0,0-2,0v4a3,3,0,0,0,3,3H8a1,1,0,0,0,0-2Zm14-6a1,1,0,0,0-1,1v4a1,1,0,0,1-1,1H16a1,1,0,0,0,0,2h4a3,3,0,0,0,3-3V16A1,1,0,0,0,22,15ZM20,1H16a1,1,0,0,0,0,2h4a1,1,0,0,1,1,1V8a1,1,0,0,0,2,0V4A3,3,0,0,0,20,1ZM2,9A1,1,0,0,0,3,8V4A1,1,0,0,1,4,3H8A1,1,0,0,0,8,1H4A3,3,0,0,0,1,4V8A1,1,0,0,0,2,9Zm8-4H6A1,1,0,0,0,5,6v4a1,1,0,0,0,1,1h4a1,1,0,0,0,1-1V6A1,1,0,0,0,10,5ZM9,9H7V7H9Zm5,2h4a1,1,0,0,0,1-1V6a1,1,0,0,0-1-1H14a1,1,0,0,0-1,1v4A1,1,0,0,0,14,11Zm1-4h2V9H15Zm-5,6H6a1,1,0,0,0-1,1v4a1,1,0,0,0,1,1h4a1,1,0,0,0,1-1V14A1,1,0,0,0,10,13ZM9,17H7V15H9Zm5-1a1,1,0,0,0,1-1,1,1,0,0,0,0-2H14a1,1,0,0,0-1,1v1A1,1,0,0,0,14,16Zm4-3a1,1,0,0,0-1,1v3a1,1,0,0,0,0,2h1a1,1,0,0,0,1-1V14A1,1,0,0,0,18,13Zm-4,4a1,1,0,1,0,1,1A1,1,0,0,0,14,17Z"></path></g></svg>`;
+
+    // Update dynamic info card below map
+    function updateForestInfoBox(f) {
+      if (!f) return;
+      if (infoBoxResetTimer) {
+        clearTimeout(infoBoxResetTimer);
+        infoBoxResetTimer = null;
+      }
+      const isEn = getCurrentLang() === 'en';
+      const titleEl = document.getElementById('district-title');
+      const descEl = document.getElementById('district-desc');
+      const forestEl = document.getElementById('district-forest');
+
+      if (titleEl) {
+        titleEl.innerHTML = isEn 
+          ? `${TREE_ICON_SVG}<span class="font-extrabold text-mezenc-teal">${f.nameEn}</span> <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Code: ${f.code}</span>`
+          : `${TREE_ICON_SVG}<span class="font-extrabold text-mezenc-teal">${f.nameTh}</span> <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">รหัส: ${f.code}</span>`;
+      }
+      if (descEl) {
+        descEl.innerHTML = isEn
+          ? `Reserve Category: <strong class="text-gray-800">${f.category}</strong> • Jurisdiction: ${f.office}`
+          : `ประเภท: <strong class="text-gray-800">${f.category}</strong> • หน่วยงานรับผิดชอบ: ${f.office}`;
+      }
+      if (forestEl) {
+        forestEl.innerHTML = isEn
+          ? `Protected Area: <strong class="text-emerald-800">${Number(f.areaRai).toLocaleString()} Rai</strong> (${f.areaHa} Ha) • <span class="text-emerald-700 font-bold">100% EUDR Zero Deforestation</span>`
+          : `เนื้อที่คุ้มครองจริง: <strong class="text-emerald-800">${Number(f.areaRai).toLocaleString()} ไร่</strong> (${f.areaHa} เฮกตาร์) • <span class="text-emerald-700 font-bold">ปลอดการตัดไม้ทำลายป่า 100% (EUDR)</span>`;
+      }
+    }
+
+    // Reset info card to default summary state
+    function resetForestInfoBox() {
+      const isEn = getCurrentLang() === 'en';
+      const titleEl = document.getElementById('district-title');
+      const descEl = document.getElementById('district-desc');
+      const forestEl = document.getElementById('district-forest');
+
+      if (titleEl) {
+        titleEl.textContent = isEn 
+          ? 'Surat Thani National Forest Reserves (Hover or tap on map for details)' 
+          : 'ป่าสงวนแห่งชาติ จ.สุราษฎร์ธานี 26 แห่ง (แตะหรือเลื่อนเมาส์บนแผนที่เพื่อดูข้อมูล)';
+      }
+      if (descEl) {
+        descEl.textContent = isEn 
+          ? '26 National Forest Reserves Database (Zone C) • 100% Zero Deforestation' 
+          : 'ฐานข้อมูลแนวเขตป่าสงวนแห่งชาติ 26 แห่ง (Zone C) • ปลอดการตัดไม้ทำลายป่า 100%';
+      }
+      if (forestEl) {
+        forestEl.textContent = isEn 
+          ? 'Covering over 3,643,595 Rai of protected conservation territory' 
+          : 'ครอบคลุมพื้นที่คุ้มครองรวมกว่า 3,643,595 ไร่ (26 ผืนป่าคุ้มครอง)';
+      }
+    }
 
     function toggleForestLayer() {
       if (!miniForestMap || !geoForestLayer) return;
       const btn = document.getElementById('toggle-forest-layer-btn');
-      const isEn = currentIndexLang === 'en';
+      const isEn = getCurrentLang() === 'en';
       
       if (isForestLayerVisible) {
         miniForestMap.removeLayer(geoForestLayer);
         isForestLayerVisible = false;
-        if (btn) btn.innerHTML = isEn ? `<span>🌲 Show 26 Forest Reserves Layer</span>` : `<span>🌲 แสดงเลเยอร์ป่าสงวน 26 แห่ง</span>`;
+        if (btn) btn.innerHTML = isEn ? `<span>${TREE_ICON_SVG}Show 26 Forest Reserves Layer</span>` : `<span>${TREE_ICON_SVG}แสดงเลเยอร์ป่าสงวน 26 แห่ง</span>`;
       } else {
         miniForestMap.addLayer(geoForestLayer);
         isForestLayerVisible = true;
-        if (btn) btn.innerHTML = isEn ? `<span>🌲 Hide 26 Forest Reserves Layer</span>` : `<span>🌲 ซ่อนเลเยอร์ป่าสงวน 26 แห่ง</span>`;
+        if (btn) btn.innerHTML = isEn ? `<span>${TREE_ICON_SVG}Hide 26 Forest Reserves Layer</span>` : `<span>${TREE_ICON_SVG}ซ่อนเลเยอร์ป่าสงวน 26 แห่ง</span>`;
       }
     }
 
@@ -1436,88 +1592,156 @@ $currentUser = getCurrentUser();
       const mapContainer = document.getElementById('surat-real-territory-map');
       if (!mapContainer) return;
 
+      // Initialize Leaflet Map centered over Surat Thani
       miniForestMap = L.map('surat-real-territory-map', {
-        center: [9.05, 99.1],
+        center: [9.10, 99.20],
         zoom: 9,
         zoomControl: true,
         scrollWheelZoom: false
       });
 
+      // Sleek Voyager Basemap
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CartoDB &copy; OpenStreetMap',
         maxZoom: 18
       }).addTo(miniForestMap);
 
-      const titleEl = document.getElementById('district-title');
-      const descEl = document.getElementById('district-desc');
-      const forestEl = document.getElementById('district-forest');
+      // Reset View Button Event Handler
+      const resetBtn = document.getElementById('reset-forest-map-btn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          if (geoForestLayer && miniForestMap) {
+            try {
+              miniForestMap.fitBounds(geoForestLayer.getBounds(), { padding: [15, 15] });
+              activeSelectedForest = null;
+              resetForestInfoBox();
+            } catch (e) {}
+          }
+        });
+      }
 
+      // Fetch Forest Reserves GeoJSON data from API
       fetch('api/forests.php')
         .then(res => res.json())
         .then(data => {
-          if (!data || !data.features) return;
+          if (!data || !data.features || data.features.length === 0) return;
 
           geoForestLayer = L.geoJSON(data, {
             style: (feature) => ({
               color: '#0e4d4e',
               fillColor: '#00a699',
-              fillOpacity: 0.55,
-              weight: 1.8
+              fillOpacity: 0.50,
+              weight: 2.0,
+              dashArray: '4, 4'
             }),
             onEachFeature: (feature, layer) => {
-              const props = feature.properties;
-              
+              const f = getForestData(feature.properties);
+              if (!f) return;
+
+              // Tooltip on Hover
+              const isEn = getCurrentLang() === 'en';
+              const tooltipName = isEn ? f.nameEn : f.nameTh;
+              layer.bindTooltip(`
+                <div style="font-family:'Google Sans', 'Open Sans', 'Sarabun', sans-serif;">
+                  <strong style="color:#2dd4bf;">${TREE_ICON_SVG}${tooltipName}</strong> (${f.code})<br>
+                  <span style="font-size:11px; color:#e2e8f0;">เนื้อที่: ${Number(f.areaRai).toLocaleString()} ไร่</span>
+                </div>
+              `, {
+                sticky: true,
+                direction: 'top',
+                className: 'forest-leaflet-tooltip',
+                opacity: 0.95
+              });
+
+              // Hover Interactions
               layer.on('mouseover', function(e) {
                 this.setStyle({
                   color: '#062627',
-                  fillColor: '#5ebbb6',
+                  fillColor: '#2dd4bf',
                   fillOpacity: 0.85,
-                  weight: 3
+                  weight: 3.5,
+                  dashArray: ''
                 });
-
-                const isEn = currentIndexLang === 'en';
-                if (titleEl) titleEl.textContent = isEn ? (props.name_en || props.name_th) : props.name_th;
-                if (descEl) descEl.textContent = isEn 
-                  ? `${props.name_th} • Reserve Code: ${props.forest_code} • ${props.category}` 
-                  : `${props.name_en || ''} • รหัสป่าสงวน: ${props.forest_code} • ${props.category}`;
-                if (forestEl) forestEl.textContent = isEn 
-                  ? `Protected Territory: ${Number(props.area_rai).toLocaleString()} Rai • 100% Zero Deforestation` 
-                  : `เนื้อที่คุ้มครองจริง: ${Number(props.area_rai).toLocaleString()} ไร่ • ปลอดการตัดไม้ทำลายป่า 100%`;
+                if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                  this.bringToFront();
+                }
+                updateForestInfoBox(f);
               });
 
+              // Mouseout Interaction (with delay to avoid flickering)
               layer.on('mouseout', function(e) {
                 if (geoForestLayer) geoForestLayer.resetStyle(this);
+                if (activeSelectedForest) {
+                  updateForestInfoBox(activeSelectedForest);
+                } else {
+                  infoBoxResetTimer = setTimeout(() => {
+                    resetForestInfoBox();
+                  }, 1200);
+                }
               });
 
+              // Click Interaction: Zoom to forest bounds & display popup
               layer.on('click', function(e) {
-                miniForestMap.fitBounds(this.getBounds(), { padding: [25, 25] });
+                activeSelectedForest = f;
+                miniForestMap.fitBounds(this.getBounds(), { padding: [35, 35], maxZoom: 13 });
+                updateForestInfoBox(f);
+                this.openPopup();
               });
 
-              const isEn = currentIndexLang === 'en';
-              const popupTitle = isEn ? (props.name_en || props.name_th) : props.name_th;
-              const popupSub = isEn ? props.name_th : (props.name_en || '');
-              const codeLbl = isEn ? 'Code:' : 'รหัส:';
-              const areaLbl = isEn ? 'Area:' : 'เนื้อที่:';
+              // Rich Popup Card matching Mezenc design
+              const popupTitle = isEn ? f.nameEn : f.nameTh;
+              const popupSub = isEn ? f.nameTh : f.nameEn;
+              const codeLbl = isEn ? 'Forest Code:' : 'รหัสป่าสงวน:';
+              const areaLbl = isEn ? 'Protected Area:' : 'เนื้อที่คุ้มครอง:';
               const raiLbl = isEn ? 'Rai' : 'ไร่';
+              const haLbl = isEn ? 'Hectares' : 'เฮกตาร์';
+              const officeLbl = isEn ? 'Supervision:' : 'หน่วยงานดูแล:';
+              const catLbl = isEn ? 'Classification:' : 'ประเภท:';
+              const eudrBadge = isEn 
+                ? `${VERIFY_ICON_SVG}Strict EUDR Conservation Zone (100% Zero Deforestation)` 
+                : `${VERIFY_ICON_SVG}เขตป่าสงวนคุ้มครองเข้มงวด มาตรฐาน EUDR ปลอดการตัดไม้ 100%`;
+              const openGisLbl = isEn ? 'Open Full Web-GIS Map ➔' : 'เปิดดูบนแผนที่ GIS เต็มรูปแบบ ➔';
 
               layer.bindPopup(`
-                <div style="font-family:'Google Sans', 'Open Sans', 'Sarabun', sans-serif; min-width:180px; padding:3px;">
-                  <div style="font-weight:700; color:#0e4d4e; font-size:13px;">🌲 ${popupTitle}</div>
-                  <div style="font-size:11px; color:#6b7280; margin-bottom:4px;">${popupSub}</div>
-                  <div style="font-size:11px; line-height:1.5;">
-                    <div><strong>${codeLbl}</strong> ${props.forest_code}</div>
-                    <div><strong>${areaLbl}</strong> ${Number(props.area_rai).toLocaleString()} ${raiLbl}</div>
+                <div class="forest-popup-card" style="font-family:'Google Sans', 'Open Sans', 'Sarabun', sans-serif; min-width:230px; max-width:290px;">
+                  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:6px; border-bottom:1.5px solid #bee6e1; padding-bottom:6px; margin-bottom:8px;">
+                    <div>
+                      <div style="font-weight:800; color:#0e4d4e; font-size:14px; line-height:1.25;">${TREE_ICON_SVG}${popupTitle}</div>
+                      <div style="font-size:11px; color:#64748b; margin-top:2px;">${popupSub}</div>
+                    </div>
+                    <span style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; white-space:nowrap;">${f.code}</span>
                   </div>
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 8px; font-size:11.5px; line-height:1.6; margin-bottom:8px;">
+                    <div><strong>${areaLbl}</strong> <span style="color:#0e4d4e; font-weight:700;">${Number(f.areaRai).toLocaleString()} ${raiLbl}</span> (${f.areaHa} ${haLbl})</div>
+                    <div><strong>${catLbl}</strong> ${f.category}</div>
+                    <div><strong>${officeLbl}</strong> ${f.office}</div>
+                  </div>
+                  <div style="font-size:10.5px; background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:5px 8px; border-radius:6px; font-weight:600; text-align:center; margin-bottom:8px;">
+                    ${eudrBadge}
+                  </div>
+                  <a href="overview.php" style="display:block; text-align:center; padding:6px 10px; background:#00a699; color:#ffffff; border-radius:8px; font-size:11.5px; font-weight:700; text-decoration:none; box-shadow:0 2px 4px rgba(0,166,153,0.3); transition:background 0.2s;" onmouseover="this.style.background='#0e4d4e'" onmouseout="this.style.background='#00a699'">
+                    ${openGisLbl}
+                  </a>
                 </div>
               `);
             }
           }).addTo(miniForestMap);
 
+          // Fit initial bounds to show all 26 forest reserves
           if (data.features.length > 0) {
-            miniForestMap.fitBounds(geoForestLayer.getBounds(), { padding: [10, 10] });
+            miniForestMap.fitBounds(geoForestLayer.getBounds(), { padding: [12, 12] });
           }
         })
-        .catch(err => console.error('Map loading error:', err));
+        .catch(err => console.error('Forest GIS map loading error:', err));
+    });
+
+    // Reactive Language Switch Listener for Map
+    window.addEventListener('languageChanged', () => {
+      if (activeSelectedForest) {
+        updateForestInfoBox(activeSelectedForest);
+      } else {
+        resetForestInfoBox();
+      }
     });
 
     /* Read More Modal Control Functions (Bilingual TH & EN) */
@@ -1594,8 +1818,9 @@ $currentUser = getCurrentUser();
     function openCardModal(cardId) {
       const item = cardData[cardId];
       if (item) {
-        const title = currentIndexLang === 'en' ? item.title_en : item.title_th;
-        const text = currentIndexLang === 'en' ? item.text_en : item.text_th;
+        const isEn = getCurrentLang() === 'en';
+        const title = isEn ? item.title_en : item.title_th;
+        const text = isEn ? item.text_en : item.text_th;
         openReadMoreModal(item.icon, title, text, item.link);
       }
     }
@@ -1603,8 +1828,9 @@ $currentUser = getCurrentUser();
     function openRiskModal(riskId) {
       const item = riskModalData[riskId];
       if (item) {
-        const title = currentIndexLang === 'en' ? item.title_en : item.title_th;
-        const text = currentIndexLang === 'en' ? item.text_en : item.text_th;
+        const isEn = getCurrentLang() === 'en';
+        const title = isEn ? item.title_en : item.title_th;
+        const text = isEn ? item.text_en : item.text_th;
         openReadMoreModal(item.icon, title, text, item.link);
       }
     }

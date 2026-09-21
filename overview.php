@@ -16,7 +16,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
 <html lang="th" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>แผนที่ภูมิสารสนเทศภาพรวม (Web-GIS Explorer) • GeoRubber Watch</title>
   
   <!-- Google Fonts: Google Sans, Open Sans & Sarabun -->
@@ -30,7 +30,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
 
   <!-- Core Eco-GIS Styles & Centralized i18n Engine -->
   <link rel="stylesheet" href="assets/css/style.css" />
-  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/i18n.js?v=<?= time() ?>"></script>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -232,7 +232,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
     
     <!-- Hero Image Background with Clean Dark Overlay & Smooth Soft Fade Lowered to Bottom Edge -->
     <div class="absolute inset-0 z-0 overflow-hidden">
-      <img src="img/forest_gis_hero.jpg" alt="Surat Thani Pristine National Forest Reserve & Landscape" class="w-full h-full object-cover object-center filter brightness-95 contrast-105" onerror="this.onerror=null; this.src='ปก.png';">
+      <img src="img/gis2.jpg?v=<?= filemtime(__DIR__ . '/img/gis2.jpg') ?>" alt="Surat Thani Pristine National Forest Reserve & Rubber GIS Landscape" class="w-full h-full object-cover object-center filter brightness-95 contrast-105" onerror="this.onerror=null; this.src='ปก.png';">
       <!-- Clean uniform dark overlay for crisp typography -->
       <div class="absolute inset-0 bg-black/40"></div>
       <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent"></div>
@@ -456,15 +456,15 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
     </header>
 
     <!-- HERO CONTENT (Centered typography over landscape background) -->
-    <div class="relative z-20 w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 my-auto py-6 sm:py-10 text-center">
-      <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
-        <div class="text-base sm:text-lg md:text-[20px] font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow" data-i18n="ov_hero_tag">
-          🌲 WEB-GIS FOREST CONSERVATION & LAND BOUNDARIES
+    <div class="relative z-20 w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-14 my-auto py-6 sm:py-10 text-center">
+      <div class="max-w-5xl mx-auto space-y-2.5 sm:space-y-3.5 flex flex-col items-center">
+        <div class="text-xs sm:text-sm md:text-base font-bold text-mezenc-mint uppercase tracking-widest leading-relaxed drop-shadow" data-i18n="ov_hero_tag">
+          WEB-GIS FOREST CONSERVATION & LAND BOUNDARIES
         </div>
-        <h1 class="text-3xl sm:text-4xl md:text-[48px] font-extrabold text-white tracking-wide leading-[1.3] sm:leading-[1.35] drop-shadow-md" data-i18n="ov_hero_title">
+        <h1 class="text-xl sm:text-2xl md:text-3xl lg:text-[40px] xl:text-[44px] font-extrabold text-white tracking-tight leading-tight drop-shadow-md whitespace-nowrap text-center" data-i18n="ov_hero_title">
           แผนที่ภูมิสารสนเทศป่าสงวนแห่งชาติ 26 แห่ง
         </h1>
-        <p class="text-[14px] sm:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow" data-i18n="ov_hero_sub">
+        <p class="text-xs sm:text-sm md:text-base text-white/90 font-light leading-relaxed tracking-normal max-w-4xl mx-auto pt-1 drop-shadow" data-i18n="ov_hero_sub">
           ศูนย์กลางข้อมูลเชิงพื้นที่แสดงแนวเขตป่าสงวนแห่งชาติ จ.สุราษฎร์ธานี (Zone C) ระยะกันชน Buffer Zone 500 ม. และพิกัดแปลงปลูกยางพาราเพื่อการเฝ้าระวังอย่างยั่งยืน
         </p>
       </div>
@@ -475,65 +475,72 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
   <!-- =========================================================================
        [MOBILE / IPAD RESPONSIVE DRAWER OVERLAY]
        ========================================================================= -->
-  <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0 lg:hidden">
-    <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-mezenc-deepTeal text-white p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/10">
+  <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0 lg:hidden">
+    <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white/95 backdrop-blur-2xl text-slate-800 p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/60">
       
       <div>
         <!-- Drawer Header -->
-        <div class="flex items-center justify-between pb-4 border-b border-white/15">
+        <div class="flex items-center justify-between pb-4 border-b border-gray-200/70">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
-              🌲
-            </div>
-            <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
+            <img src="img/map_icon.png" alt="GeoRubber Logo" class="w-7 h-7 object-contain drop-shadow-sm" onerror="this.onerror=null; this.src='ปก.png';">
+            <span class="font-extrabold text-base text-mezenc-teal" data-i18n="nav_brand">GeoRubber Watch</span>
           </div>
-          <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+          <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer" aria-label="Close menu">
             ✕
           </button>
         </div>
 
         <!-- Mobile Language Toggle Switch -->
-        <div class="py-3 flex items-center justify-between border-b border-white/10">
-          <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+        <div class="py-3 flex items-center justify-between border-b border-gray-200/60">
+          <span class="text-xs text-slate-500 font-medium">Language / ภาษา:</span>
           <div 
             onclick="toggleLanguage()"
-            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0 bg-slate-200/80 border border-slate-300/80"
             id="lang-toggle-btn-mobile"
           >
-            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px] shadow-sm"></div>
             <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
-            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-slate-500 transition-colors duration-300 pointer-events-none">EN</div>
           </div>
         </div>
 
         <!-- Drawer Navigation Links -->
-        <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
-          <a href="index.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+        <nav class="flex flex-col gap-1.5 pt-4 text-sm font-medium">
+          <a href="index.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
           </a>
-          <a href="overview.php" class="px-4 py-3 rounded-xl bg-white/15 text-white font-bold transition-colors flex items-center gap-3">
+          <a href="overview.php" class="px-4 py-2.5 rounded-xl bg-mezenc-teal text-white font-bold transition-all shadow-xs flex items-center gap-3">
             <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
-          <a href="dashboard.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+          <a href="dashboard.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
-          <a href="map.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+          <a href="map.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
-          <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+          <a href="yields.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
-          <a href="contact.php" onclick="toggleMobileDrawer()" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+          <a href="contact.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
-          </a>
-          <a href="logout.php" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/40 transition-colors flex items-center gap-3 text-red-300 font-bold" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </nav>
       </div>
 
-      <div class="pt-4 border-t border-white/15 text-center text-xs text-white/60">
-        GeoRubber Watch • ม.อ. สุราษฎร์ธานี
+      <!-- Drawer Footer Action -->
+      <div class="pt-4 border-t border-gray-200/70 space-y-2.5">
+        <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600 flex items-center justify-between">
+          <div class="truncate">
+            ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($user_name) ?></strong>
+          </div>
+          <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full font-bold border border-mezenc-mint/40 shrink-0 ml-1"><?= htmlspecialchars($current_role) ?></span>
+        </div>
+        <a href="logout.php" class="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all flex items-center justify-center gap-2" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+          <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
+        </a>
+        <div class="text-center text-[11px] text-slate-400 pt-1 font-normal">
+          &copy; 2026 GeoRubber Watch &bull; ม.อ. สุราษฎร์ธานี
+        </div>
       </div>
 
     </div>
@@ -945,7 +952,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
             <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-xs font-bold text-white" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-xs font-bold text-white" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
             <div class="text-[10px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>

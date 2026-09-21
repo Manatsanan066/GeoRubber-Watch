@@ -153,50 +153,46 @@ $hasDrawn = isset($_GET["drawn"]) && $_GET["drawn"] === "1";
   <main class="w-full max-w-4xl mx-auto bg-white rounded-3xl shadow-[0_20px_50px_rgba(14,77,78,0.12)] border-2 border-[#bee6e1] overflow-hidden flex flex-col justify-between my-auto">
     
     <!-- Top Progress Step Indicators (4 Steps) -->
-    <div class="border-b border-gray-100 px-6 sm:px-12 pt-7 pb-6 relative bg-white">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 items-center relative">
+    <div class="border-b border-gray-100 px-5 sm:px-8 pt-5 pb-4 relative bg-white">
+      <div class="grid grid-cols-4 gap-2 sm:gap-4 items-center relative">
         
-        <!-- Step 1: Choose dates -> วาดแปลงปลูก -->
-        <button onclick="goToStep(1)" class="flex items-center gap-3 text-left group cursor-pointer" title="ขั้นตอนที่ 1: วาดขอบเขตแปลงปลูก">
-          <div id="step-badge-1" class="w-7 h-7 rounded-full bg-liberty-cyan text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xs">
+        <!-- Step 1: วาดแปลงปลูก -->
+        <button onclick="goToStep(1)" class="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 1: วาดขอบเขตแปลงปลูก">
+          <div id="step-badge-1" class="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-liberty-cyan text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xs sm:text-sm">
             1
           </div>
-          <div class="leading-tight">
-            <span id="step-label-1" class="text-xs font-bold text-liberty-cyan group-hover:underline block">1. วาดแปลงปลูก</span>
-            <span class="text-[10px] text-gray-400 font-normal">Choose dates</span>
+          <div class="leading-tight min-w-0">
+            <span id="step-label-1" class="text-xs sm:text-sm font-extrabold text-liberty-teal group-hover:text-liberty-cyan transition-colors block truncate">วาดแปลงปลูก</span>
           </div>
         </button>
 
-        <!-- Step 2: Pick up -> ข้อมูลเกษตรกร -->
-        <button onclick="goToStep(2)" class="flex items-center gap-3 text-left group cursor-pointer" title="ขั้นตอนที่ 2: กรอกข้อมูลเกษตรกรและแปลง">
-          <div id="step-badge-2" class="w-7 h-7 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0 font-bold text-xs shadow-xs">
+        <!-- Step 2: ข้อมูลเกษตรกร -->
+        <button onclick="goToStep(2)" class="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 2: กรอกข้อมูลเกษตรกรและแปลง">
+          <div id="step-badge-2" class="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-xs">
             2
           </div>
-          <div class="leading-tight">
-            <span id="step-label-2" class="text-xs font-semibold text-gray-400 group-hover:text-gray-600 block">2. ข้อมูลเกษตรกร</span>
-            <span class="text-[10px] text-gray-400 font-normal">Pick up</span>
+          <div class="leading-tight min-w-0">
+            <span id="step-label-2" class="text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-600 transition-colors block truncate">ข้อมูลเกษตรกร</span>
           </div>
         </button>
 
-        <!-- Step 3: Return -> ตรวจสอบ EUDR -->
-        <button onclick="goToStep(3)" class="flex items-center gap-3 text-left group cursor-pointer" title="ขั้นตอนที่ 3: ตรวจสอบความสอดคล้อง EUDR">
-          <div id="step-badge-3" class="w-7 h-7 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0 font-bold text-xs shadow-xs">
+        <!-- Step 3: ตรวจสอบ EUDR -->
+        <button onclick="goToStep(3)" class="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 3: ตรวจสอบความสอดคล้อง EUDR">
+          <div id="step-badge-3" class="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-xs">
             3
           </div>
-          <div class="leading-tight">
-            <span id="step-label-3" class="text-xs font-semibold text-gray-400 group-hover:text-gray-600 block">3. ตรวจสอบ</span>
-            <span class="text-[10px] text-gray-400 font-normal">EUDR Check</span>
+          <div class="leading-tight min-w-0">
+            <span id="step-label-3" class="text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-600 transition-colors block truncate">ตรวจสอบ</span>
           </div>
         </button>
 
-        <!-- Step 4: Review & Pay -> ออก QR Code & Passport -->
-        <button onclick="goToStep(4)" class="flex items-center gap-3 text-left group cursor-pointer" title="ขั้นตอนที่ 4: ออก QR Code และใบรับรอง">
-          <div id="step-badge-4" class="w-7 h-7 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0 font-bold text-xs shadow-xs">
+        <!-- Step 4: ออก QR Code -->
+        <button onclick="goToStep(4)" class="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer" title="ขั้นตอนที่ 4: ออก QR Code และใบรับรอง">
+          <div id="step-badge-4" class="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-xs">
             4
           </div>
-          <div class="leading-tight">
-            <span id="step-label-4" class="text-xs font-semibold text-gray-400 group-hover:text-gray-600 block">4. QR Code</span>
-            <span class="text-[10px] text-gray-400 font-normal">Review & Pay</span>
+          <div class="leading-tight min-w-0">
+            <span id="step-label-4" class="text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-600 transition-colors block truncate">QR Code</span>
           </div>
         </button>
 
@@ -641,23 +637,23 @@ $hasDrawn = isset($_GET["drawn"]) && $_GET["drawn"] === "1";
     <!-- =========================================================================
          BOTTOM FOOTER ACTION BAR (Dynamic Buttons depending on current step)
          ========================================================================= -->
-    <div class="bg-[#fcfdfd] border-t border-gray-100 px-6 sm:px-12 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="bg-[#fcfdfd] border-t border-gray-200 px-4 sm:px-8 py-3 flex items-center justify-between gap-2 shrink-0 flex-nowrap w-full select-none overflow-hidden">
       
       <!-- Left Tagline -->
-      <div class="text-xs font-semibold text-liberty-teal flex items-center gap-2">
-        <span>🌲 GeoRubber Watch</span>
-        <span class="text-gray-300">|</span>
-        <span class="text-gray-500 font-normal">ระบบมาตรฐานการตรวจสอบย้อนกลับ EUDR สุราษฎร์ธานี</span>
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 text-xs sm:text-sm font-semibold text-liberty-teal whitespace-nowrap overflow-hidden">
+        <span class="font-extrabold tracking-tight shrink-0">GeoRubber Watch</span>
+        <span class="text-gray-300 font-light shrink-0">|</span>
+        <span class="text-gray-500 font-normal truncate max-w-[140px] sm:max-w-none text-[11px] sm:text-xs">ระบบมาตรฐานการตรวจสอบย้อนกลับ EUDR สุราษฎร์ธานี</span>
       </div>
 
       <!-- Right Navigation Buttons -->
-      <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 whitespace-nowrap">
         
         <button 
           type="button" 
           id="btn-prev-step" 
           onclick="prevStep()" 
-          class="hidden px-5 py-2.5 rounded-full bg-white hover:bg-gray-100 text-gray-600 font-bold text-xs border border-gray-300 transition-all cursor-pointer"
+          class="hidden px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm border border-gray-300 transition-all cursor-pointer shadow-xs whitespace-nowrap inline-flex items-center gap-1"
         >
           ‹ ย้อนกลับ
         </button>
@@ -666,10 +662,10 @@ $hasDrawn = isset($_GET["drawn"]) && $_GET["drawn"] === "1";
           type="button" 
           id="btn-next-step" 
           onclick="nextStep()" 
-          class="px-6 sm:px-7 py-2.5 rounded-full bg-liberty-cyan hover:bg-liberty-cyanHover text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer uppercase"
+          class="px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-liberty-cyan hover:bg-liberty-cyanHover text-white font-bold text-xs sm:text-sm shadow-xs hover:shadow transition-all inline-flex items-center gap-1 cursor-pointer uppercase whitespace-nowrap"
         >
-          <span id="btn-next-label">ขั้นตอนถัดไป (Pick up)</span>
-          <span class="text-xs font-bold">›</span>
+          <span id="btn-next-label">ขั้นตอนถัดไป</span>
+          <span class="font-bold">›</span>
         </button>
 
       </div>
@@ -745,19 +741,31 @@ $hasDrawn = isset($_GET["drawn"]) && $_GET["drawn"] === "1";
 
         if (i < step) {
           // Done
-          badge.className = "w-7 h-7 rounded-full bg-liberty-cyan text-white flex items-center justify-center shrink-0 shadow-xs";
-          badge.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
-          label.className = "text-xs font-semibold text-liberty-cyan group-hover:underline block";
+          if (badge) {
+            badge.className = "w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs";
+            badge.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
+          }
+          if (label) {
+            label.className = "text-xs sm:text-sm font-bold text-emerald-700 group-hover:text-emerald-800 transition-colors block truncate";
+          }
         } else if (i === step) {
           // Active
-          badge.className = "w-7 h-7 rounded-full bg-liberty-cyan text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xs";
-          badge.innerHTML = i;
-          label.className = "text-xs font-bold text-liberty-cyan group-hover:underline block";
+          if (badge) {
+            badge.className = "w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-liberty-cyan text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xs sm:text-sm ring-2 ring-liberty-cyan/20";
+            badge.innerHTML = i;
+          }
+          if (label) {
+            label.className = "text-xs sm:text-sm font-extrabold text-liberty-teal group-hover:text-liberty-cyan transition-colors block truncate";
+          }
         } else {
           // Pending
-          badge.className = "w-7 h-7 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0 font-bold text-xs shadow-xs";
-          badge.innerHTML = i;
-          label.className = "text-xs font-semibold text-gray-400 group-hover:text-gray-600 block";
+          if (badge) {
+            badge.className = "w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-xs";
+            badge.innerHTML = i;
+          }
+          if (label) {
+            label.className = "text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-600 transition-colors block truncate";
+          }
         }
       }
 

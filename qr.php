@@ -3,6 +3,7 @@
  * GeoRubber Watch / Credential Verification Portal - Certificate of Achievement
  * Responsive Certificate Verification & EUDR Traceability Proof
  */
+define('ALLOW_PUBLIC_ACCESS', true);
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -49,32 +50,45 @@ if (file_exists(__DIR__ . '/config/database.php')) {
             $stmt->execute($params);
             $plot = $stmt->fetch();
         }
+
+        // If no specific plot searched, attempt to load the latest plot
+        if (!$plot && empty($token) && empty($plot_code) && $plot_id === 0 && $pdo) {
+            $stmt = $pdo->query("
+                SELECT p.*, f.farmer_code, f.prefix, f.first_name, f.last_name, f.phone as farmer_phone,
+                       f.id_card_num, f.address as farmer_address, f.subdistrict, f.district, f.province
+                FROM rubber_plots p
+                LEFT JOIN farmers f ON f.id = p.farmer_id
+                ORDER BY p.id DESC LIMIT 1
+            ");
+            $plot = $stmt ? $stmt->fetch() : null;
+        }
     } catch (Exception $e) {
         // Fallback gracefully without DB error breaking page
     }
 }
 
+require_once __DIR__ . '/includes/auth_check.php';
+$isLoggedIn = isLoggedIn();
+
 // Data Resolution with graceful defaults matching user template
-$recipientName = 'Alex Morgan';
-$companyName = 'VERISECURE';
-$issuerName = 'Global Institute of Excellence';
-$credentialId = 'ACH-2025-88419X';
-$issueDate = 'January 2, 2025';
-$issueDateUpper = 'JANUARY 2ND 2025';
-$signatoryName = 'J.ly Morgan';
-$ledgerHash = '0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069';
-$shortLedgerHash = '0x7f83...6d9069';
+$rawPrefix = 'นางสาว';
+$rawFirst = 'มนัสนันท์';
+$rawLast = 'อนันตณรงค์';
+$companyName = 'GeoRubber Watch';
+$issuerName = 'PSU Surat Thani & EUDR Registry';
+$credentialId = !empty($token) ? $token : 'EUDR-TH-ST-84000-021-7725BB';
+$issueDate = 'March 5, 2026';
+$issueDateUpper = 'MARCH 5TH 2026';
+$signatoryName = 'Assoc. Prof. Dr. Surat';
+$ledgerHash = '0x' . hash('sha256', $credentialId);
+$shortLedgerHash = substr($ledgerHash, 0, 6) . '...' . substr($ledgerHash, -6);
 $citationTitle = 'EUDR Zero Deforestation Compliance & Traceability Verified';
 $citationBody = 'This official credential certifies that the verified agricultural rubber plot and associated harvesting batches strictly adhere to EU Regulation (EU) 2023/1115 (EUDR) zero-deforestation mandates, lawful land tenure rights, and verifiable geolocation standards with full cryptographic chain of custody.';
 
 if ($plot) {
-    $farmerPrefix = $plot['prefix'] ?? '';
-    $farmerFirst = $plot['first_name'] ?? '';
-    $farmerLast = $plot['last_name'] ?? '';
-    $fullName = trim("{$farmerPrefix} {$farmerFirst} {$farmerLast}");
-    if (!empty($fullName)) {
-        $recipientName = $fullName;
-    }
+    $rawPrefix = $plot['prefix'] ?? '';
+    $rawFirst = $plot['first_name'] ?? '';
+    $rawLast = $plot['last_name'] ?? '';
     if (!empty($plot['traceability_token'])) {
         $credentialId = $plot['traceability_token'];
         $ledgerHash = '0x' . hash('sha256', $plot['traceability_token'] . ($plot['plot_code'] ?? ''));
@@ -85,21 +99,62 @@ if ($plot) {
         $issueDate = date('F j, Y', $ts);
         $issueDateUpper = strtoupper(date('F jS Y', $ts));
     }
-    $companyName = 'GEORUBBER WATCH';
+    $companyName = 'GeoRubber Watch';
     $issuerName = 'PSU Surat Thani & EUDR Registry';
     $signatoryName = 'Assoc. Prof. Dr. Surat';
 }
 
-// Active Ngrok / Public Verification URL
-$currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . "://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
-$ngrokBase = 'https://earthling-retype-aroma.ngrok-free.dev';
-$publicVerifyUrl = $ngrokBase . '/RB/qr.php' . (!empty($credentialId) ? '?token=' . urlencode($credentialId) : '');
+if ($isLoggedIn) {
+    $recipientName = trim("{$rawPrefix} {$rawFirst} {$rawLast}");
+} else {
+    $pfx = !empty($rawPrefix) ? $rawPrefix . ' ' : '';
+    $mFirst = !empty($rawFirst) ? (mb_substr($rawFirst, 0, 1) . '***') : '***';
+    $mLast = !empty($rawLast) ? (mb_substr($rawLast, 0, 1) . '***') : '';
+    $recipientName = trim("{$pfx}{$mFirst} {$mLast}") . ' (ข้อมูลคุ้มครองตาม พ.ร.บ. PDPA)';
+}
+
+// Active Ngrok Public Verification Base URL (Enables smartphone camera scanning over the internet)
+$publicBase = 'https://earthling-retype-aroma.ngrok-free.dev';
+
+$forwardedHost = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? '';
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$directHost = !empty($forwardedHost) ? $forwardedHost : $host;
+
+if (strpos($directHost, 'ngrok') !== false) {
+    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https' : 'http';
+    $publicBase = "{$proto}://{$directHost}";
+} else {
+    // Check ngrok local management API
+    if (function_exists('curl_init')) {
+        $ch = curl_init('http://127.0.0.1:4040/api/tunnels');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 150);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 300);
+        $resp = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpCode === 200 && !empty($resp)) {
+            $tunnelData = json_decode($resp, true);
+            if (!empty($tunnelData['tunnels'])) {
+                foreach ($tunnelData['tunnels'] as $t) {
+                    if (!empty($t['public_url']) && (!empty($t['proto']) && $t['proto'] === 'https')) {
+                        $publicBase = rtrim($t['public_url'], '/');
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+$dir = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+$publicVerifyUrl = $publicBase . $dir . '/trace.php?token=' . rawurlencode($credentialId);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Credential Verification Portal - Certificate of Achievement</title>
 
   <!-- Tailwind CSS v3 with Plugins -->
@@ -220,7 +275,7 @@ $publicVerifyUrl = $ngrokBase . '/RB/qr.php' . (!empty($credentialId) ? '?token=
           <div class="w-4 h-4 bg-blue-600 rotate-45 rounded-sm shadow-sm"></div>
         </div>
         <div>
-          <span class="text-xs font-black tracking-widest text-slate-900 block font-display leading-none uppercase"><?= htmlspecialchars($companyName) ?></span>
+          <span class="text-xs font-black tracking-widest text-slate-900 block font-display leading-none"><?= htmlspecialchars($companyName) ?></span>
           <span class="text-[10px] text-slate-500 font-medium tracking-tight leading-tight">Accreditation Registry</span>
         </div>
       </div>
@@ -301,7 +356,7 @@ $publicVerifyUrl = $ngrokBase . '/RB/qr.php' . (!empty($credentialId) ? '?token=
               <div class="w-4 h-4 bg-slate-900 rotate-45 rounded-[1px]"></div>
               <div class="w-4 h-4 bg-blue-600 rotate-45 rounded-[1px]"></div>
             </div>
-            <span class="text-xs md:text-sm font-bold tracking-wider text-slate-800 uppercase font-display"><?= htmlspecialchars($companyName) ?></span>
+            <span class="text-xs md:text-sm font-bold tracking-wider text-slate-800 font-display"><?= htmlspecialchars($companyName) ?></span>
           </div>
           <!-- Subtle Credential ID print reference -->
           <span class="text-[10px] tracking-wider text-slate-400 font-mono">ID: <?= htmlspecialchars($credentialId) ?></span>
@@ -480,16 +535,27 @@ $publicVerifyUrl = $ngrokBase . '/RB/qr.php' . (!empty($credentialId) ? '?token=
       </div>
 
       <!-- QR Code Proof Verification Container -->
-      <div class="mt-5 bg-slate-50 rounded-lg p-4 border border-slate-200/80 flex items-center gap-4" data-purpose="qr-proof-block">
-        <!-- Dynamic Live QR Code Container -->
-        <div id="live-qr-canvas" class="p-1.5 bg-white rounded border border-slate-200 shadow-sm shrink-0 flex items-center justify-center">
-          <!-- QR Canvas generated via JavaScript below -->
+      <div class="mt-5 bg-slate-50 rounded-lg p-4 border border-slate-200/80" data-purpose="qr-proof-block">
+        <div class="flex items-center gap-4">
+          <!-- Dynamic Live QR Code Container -->
+          <div id="live-qr-canvas" class="p-1.5 bg-white rounded border border-slate-200 shadow-sm shrink-0 flex items-center justify-center">
+            <!-- QR Canvas generated via JavaScript below -->
+          </div>
+          <div>
+            <span class="text-xs font-bold text-slate-800 block">Instant Verification</span>
+            <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
+              Point your smartphone camera at the code to inspect immutable issuing metadata.
+            </p>
+          </div>
         </div>
-        <div>
-          <span class="text-xs font-bold text-slate-800 block">Instant Verification</span>
-          <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
-            Point your smartphone camera at the code to inspect immutable issuing metadata.
-          </p>
+
+        <div class="mt-3.5 pt-3 border-t border-slate-200/60 space-y-2">
+          <a href="<?= htmlspecialchars($publicVerifyUrl) ?>" target="_blank" class="w-full inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold text-white bg-[#00a699] hover:bg-[#008779] rounded-lg transition shadow-xs">
+            <span>🌐 เปิดตรวจสอบหนังสือรับรอง EUDR (Public)</span>
+          </a>
+          <div class="text-[10px] text-slate-400 font-mono break-all text-center select-all bg-white p-1.5 rounded border border-slate-200">
+            <?= htmlspecialchars($publicVerifyUrl) ?>
+          </div>
         </div>
       </div>
     </div>

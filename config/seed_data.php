@@ -15,6 +15,7 @@ function seedDatabase($pdo) {
                 username VARCHAR(50) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
                 full_name VARCHAR(100) NOT NULL,
+                id_card_num VARCHAR(20),
                 email VARCHAR(100) UNIQUE,
                 phone VARCHAR(20),
                 role VARCHAR(20) DEFAULT 'farmer',
@@ -119,6 +120,7 @@ function seedDatabase($pdo) {
                 username VARCHAR(50) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
                 full_name VARCHAR(100) NOT NULL,
+                id_card_num VARCHAR(20),
                 email VARCHAR(100) UNIQUE,
                 phone VARCHAR(20),
                 role VARCHAR(20) DEFAULT 'farmer',
@@ -253,6 +255,12 @@ function seedDatabase($pdo) {
         
         // 6. ผู้ดูแลระบบ (RABBER_ADMIN)
         $stmt->execute(['rabber_admin', $password_rabber, 'ผู้ดูแลระบบ', 'georubber.admin@psu.ac.th', '077-278-888', 'RABBER_ADMIN']);
+
+        // 7. โรงงานแปรรูปและจุดรับซื้อยางพารา (Factory / Buyer)
+        $password_factory01 = password_hash('factory01', PASSWORD_DEFAULT);
+        $password_factory02 = password_hash('factory02', PASSWORD_DEFAULT);
+        $stmt->execute(['factory01', $password_factory01, 'โรงงานแปรรูปยางพาราสุราษฎร์ธานี 1 (Factory 01)', 'factory01@georubberwatch.com', '077-999-001', 'factory']);
+        $stmt->execute(['factory02', $password_factory02, 'จุดรับซื้อและแปรรูปยางพารา 2 (Factory 02)', 'factory02@georubberwatch.com', '077-999-002', 'factory']);
         
         // เกษตรกร (Farmers)
         $stmt->execute(['matinee', $password_farmer, 'นางสาวมาทินี โรยนรินทร์', '6640011044@psu.ac.th', '093-578-2399', 'farmer']);

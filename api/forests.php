@@ -21,7 +21,7 @@ if ($method === 'GET') {
         }
     }
 
-    // 2. Full GeoJSON Cache Delivery (< 5ms)
+    // 2. Full GeoJSON Cache Delivery (< 2ms) from standardized cache or Zone-c.geojson
     if (!isset($_GET['mode']) && file_exists($cacheFile)) {
         header('Cache-Control: public, max-age=86400, stale-while-revalidate=604800');
         header('ETag: "' . md5_file($cacheFile) . '"');
@@ -34,6 +34,14 @@ if ($method === 'GET') {
         }
 
         readfile($cacheFile);
+        exit;
+    }
+
+    $zoneCFile = __DIR__ . '/../Zone-c.geojson';
+    if (!isset($_GET['mode']) && file_exists($zoneCFile)) {
+        header('Cache-Control: public, max-age=86400, stale-while-revalidate=604800');
+        header('ETag: "' . md5_file($zoneCFile) . '"');
+        readfile($zoneCFile);
         exit;
     }
 

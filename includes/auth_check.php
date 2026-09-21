@@ -19,8 +19,16 @@ function isLoggedIn(): bool {
  */
 function isAdmin(): bool {
     $role = $_SESSION['role'] ?? '';
-    $adminRoles = ['admin', 'SUPER_ADMIN', 'FORESTRY_ADMIN', 'LAND_ADMIN', 'RAOT_ADMIN', 'COOP_ADMIN', 'RABBER_ADMIN'];
+    $adminRoles = ['admin', 'SUPER_ADMIN', 'FORESTRY_ADMIN', 'LAND_ADMIN', 'RAOT_ADMIN', 'COOP_ADMIN', 'RABBER_ADMIN', 'factory', 'buyer', 'trader'];
     return in_array($role, $adminRoles, true);
+}
+
+/**
+ * Check if the current user is a factory or buyer
+ */
+function isFactory(): bool {
+    $role = $_SESSION['role'] ?? '';
+    return in_array($role, ['factory', 'buyer', 'trader', 'COOP_ADMIN'], true);
 }
 
 /**
@@ -44,6 +52,7 @@ function getCurrentUser(): ?array {
         'full_name' => $_SESSION['full_name'] ?? 'ผู้ใช้งาน',
         'role' => $_SESSION['role'] ?? 'farmer',
         'farmer_id' => isset($_SESSION['farmer_id']) ? (int)$_SESSION['farmer_id'] : null,
+        'id_card_num' => $_SESSION['id_card_num'] ?? '',
         'email' => $_SESSION['email'] ?? '',
         'phone' => $_SESSION['phone'] ?? '',
         'is_admin' => isAdmin()
@@ -64,5 +73,10 @@ function requireAuth(?string $customRedirect = null): void {
     }
 }
 
-// Automatically enforce login guard on all files that include this file
-requireAuth();
+// Automatically enforce login guard on protected files
+$currentScriptName = basename($_SERVER['SCRIPT_NAME'] ?? ($_SERVER['PHP_SELF'] ?? ''));
+$publicAccessPages = ['trace.php', 'certificate.php', 'qr.php', 'verify.php', 'public_trace.php'];
+
+if (!defined('ALLOW_PUBLIC_ACCESS') && !in_array($currentScriptName, $publicAccessPages, true)) {
+    requireAuth();
+}

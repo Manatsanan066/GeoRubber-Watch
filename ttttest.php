@@ -2,7 +2,7 @@
 <html lang="th" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GeoRubber Watch - ระบบภูมิสารสนเทศอัจฉริยะติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี</title>
   
   <!-- Google Fonts: Google Sans, Open Sans & Sarabun -->
@@ -371,51 +371,55 @@
     <!-- =========================================================================
          [MOBILE / IPAD RESPONSIVE DRAWER OVERLAY]
          ========================================================================= -->
-    <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0 lg:hidden">
-      <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-mezenc-deepTeal text-white p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/10">
+    <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0 lg:hidden">
+      <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white/95 backdrop-blur-2xl text-slate-800 p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/60">
         
         <div>
           <!-- Drawer Header -->
-          <div class="flex items-center justify-between pb-6 border-b border-white/15">
+          <div class="flex items-center justify-between pb-4 border-b border-gray-200/70">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
-                🌲
-              </div>
-              <span class="font-extrabold text-base">GeoRubber Watch</span>
+              <img src="img/map_icon.png" alt="GeoRubber Logo" class="w-7 h-7 object-contain drop-shadow-sm" onerror="this.onerror=null; this.src='ปก.png';">
+              <span class="font-extrabold text-base text-mezenc-teal">GeoRubber Watch</span>
             </div>
-            <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+            <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer" aria-label="Close menu">
               ✕
             </button>
           </div>
 
           <!-- Drawer Navigation Links -->
-          <nav class="flex flex-col gap-2 pt-6 text-sm font-medium">
-            <a href="index.php" class="px-4 py-3 rounded-xl bg-white/15 text-white font-bold transition-colors flex items-center gap-3">
+          <nav class="flex flex-col gap-1.5 pt-4 text-sm font-medium">
+            <a href="index.php" class="px-4 py-2.5 rounded-xl bg-mezenc-teal text-white font-bold transition-all shadow-xs flex items-center gap-3">
               <span>🏠</span> <span>หน้าแรก</span>
             </a>
-            <a href="overview.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+            <a href="overview.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
               <span>🛰️</span> <span>แผนที่ GIS</span>
             </a>
-            <a href="dashboard.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+            <a href="dashboard.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
               <span>📊</span> <span>แดชบอร์ด</span>
             </a>
-            <a href="map.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+            <a href="map.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
               <span>📍</span> <span>แปลงปลูก</span>
             </a>
-            <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+            <a href="yields.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
               <span>🧪</span> <span>ผลผลิต</span>
             </a>
-            <a href="contact.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+            <a href="contact.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
               <span>📞</span> <span>ติดต่อเรา</span>
             </a>
           </nav>
         </div>
 
         <!-- Drawer Footer Action -->
-        <div class="pt-6 border-t border-white/15">
-          <a href="overview.php" class="w-full py-3 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-mint text-white font-bold text-center block shadow transition-all">
-            เปิดแผนที่ระบบภูมิสารสนเทศ ➔
+        <div class="pt-4 border-t border-gray-200/70 space-y-2.5">
+          <a href="overview.php" class="w-full py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center block shadow transition-all text-xs uppercase tracking-wider">
+            เปิดแผนที่ระบบภูมิสารสนเทศ (Full GIS Map) ➔
           </a>
+          <a href="logout.php" class="w-full py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+            <span>🚪</span> <span>ออกจากระบบ (Logout)</span>
+          </a>
+          <div class="text-center text-[11px] text-slate-400 pt-1 font-normal">
+            &copy; 2026 GeoRubber Watch &bull; ม.อ. สุราษฎร์ธานี
+          </div>
         </div>
 
       </div>
@@ -645,7 +649,7 @@
           <div class="grid grid-cols-3 gap-2.5 sm:gap-3 xl:gap-4">
             <div class="p-3 sm:p-3.5 xl:p-4 bg-white/95 rounded-2xl border border-gray-200/90 text-center shadow-xs">
               <div class="text-[10px] sm:text-xs text-mezenc-teal font-medium uppercase">พื้นที่คุ้มครองรวม</div>
-              <div class="text-xs sm:text-sm lg:text-base xl:text-lg font-black text-mezenc-teal mt-0.5">784,618 ไร่</div>
+              <div class="text-xs sm:text-sm lg:text-base xl:text-lg font-black text-mezenc-teal mt-0.5">3,643,595 ไร่</div>
             </div>
             <div class="p-3 sm:p-3.5 xl:p-4 bg-white/95 rounded-2xl border border-gray-200/90 text-center shadow-xs">
               <div class="text-[10px] sm:text-xs text-mezenc-teal font-medium uppercase">ป่าสงวนแห่งชาติ</div>
@@ -693,7 +697,7 @@
                 ฐานข้อมูลแนวเขตป่าสงวนแห่งชาติ 26 แห่ง (Zone-c) • ปลอดการตัดไม้ทำลายป่า 100%
               </div>
               <div id="district-forest" class="text-[10px] sm:text-[11px] text-emerald-700 font-semibold mt-0.5">
-                ครอบคลุมพื้นที่คุ้มครองรวมกว่า 784,618 ไร่
+                ครอบคลุมพื้นที่คุ้มครองรวมกว่า 3,643,595 ไร่
               </div>
             </div>
 
@@ -1011,7 +1015,7 @@
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
             <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-[14px] font-bold text-white leading-tight">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-[14px] font-bold text-white leading-tight">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
             <div class="text-[12px] text-white/70 mt-1 font-light">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>

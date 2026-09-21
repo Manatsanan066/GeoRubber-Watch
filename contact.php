@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <html lang="th" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ติดต่อเรา (Contact Us) • GeoRubber Watch</title>
   
   <!-- Google Fonts: Google Sans, Open Sans & Sarabun -->
@@ -75,9 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
   </script>
 
-  <!-- Core App Styles & Toast Notifications -->
-  <link rel="stylesheet" href="assets/css/style.css">
-  <script src="assets/js/i18n.js"></script>
+  <!-- Core Eco-GIS Styles & Centralized i18n Engine -->
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script src="assets/js/i18n.js?v=<?= time() ?>"></script>
 
   <style>
     body {
@@ -106,18 +106,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   <!-- =========================================================================
        1. HERO & TOP ATMOSPHERIC SECTION (Matching index.php & overview.php 100%)
        ========================================================================= -->
-  <div class="relative w-full bg-mezenc-teal overflow-hidden flex flex-col justify-between pb-28 sm:pb-36 lg:pb-44">
+  <div class="relative w-full text-white overflow-hidden bg-mezenc-darkNavy min-h-[480px] sm:min-h-[540px] lg:min-h-[580px] flex flex-col justify-between pb-28 sm:pb-36 lg:pb-44">
     
-    <!-- Hero Background Graphic & Gradient Overlay -->
-    <div class="absolute inset-0 z-0 bg-cover bg-center pointer-events-none hero-mask-bottom opacity-40 mix-blend-overlay"
-         style="background-image: url('img/hero_bg.png'), url('assets/img/rubber_hero.jpg'); background-size: cover; background-position: center;">
+    <!-- Hero Image Background with Clean Dark Overlay & Smooth Soft Fade -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+      <img src="img/contx.jpg?v=<?= file_exists(__DIR__ . '/img/contx.jpg') ? filemtime(__DIR__ . '/img/contx.jpg') : time() ?>" alt="GeoRubber Watch Contact Center" class="w-full h-full object-cover object-center filter brightness-95 contrast-105" onerror="this.onerror=null; this.src='ปก.png';">
+      <!-- Clean uniform dark overlay for crisp typography -->
+      <div class="absolute inset-0 bg-black/40"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent"></div>
+      
+      <!-- Smooth Feathered Blur & Gradient Transition -->
+      <div class="absolute bottom-0 left-0 right-0 h-32 sm:h-44 md:h-56 bg-gradient-to-t from-[#f0faf9] from-15% via-[#f0faf9]/80 via-55% to-transparent pointer-events-none z-[1]"></div>
     </div>
-    
-    <div class="absolute inset-0 z-0 bg-gradient-to-b from-[#024959]/95 via-[#024959]/85 to-[#0B2545]/90 pointer-events-none"></div>
-
-    <!-- Atmospheric subtle glow -->
-    <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-mezenc-mint/15 blur-3xl pointer-events-none"></div>
-    <div class="absolute top-1/2 -right-24 w-96 h-96 rounded-full bg-mezenc-brightCyan/15 blur-3xl pointer-events-none"></div>
 
     <!-- =====================================================================
          TOP NAVIGATION BAR (Matching index.php & overview.php)
@@ -126,12 +126,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       
       <!-- BRAND LOGO -->
       <a href="index.php" class="flex items-center gap-2.5 sm:gap-3 cursor-pointer group">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white flex items-center justify-center bg-white/10 shrink-0 p-1.5 transition-transform group-hover:scale-105">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/30 group-hover:scale-105 transition-transform shadow-md shrink-0 p-1.5">
           <svg class="w-full h-full text-white" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="12" d="M142.07 46.129c5.265-3.387 20.107-6.337 24.539 2.417 4.433 8.268-5.427 14.978-15.24 21.198-8.221 5.557-16.062 8.81-23.778 13.532-7.046-7.025-18.528-5.021-25.629.828-8.983 6.65-15.848 15.812-25.36 21.809 12.522 10.193 32.174 12.691 45.335 2.244 7.46-5.283 12.071-16.873 5.724-24.725m-81.55 27.92c-5.265 3.387-17.535 7.623-21.967-.81-3.79-8.91 4.462-14.334 13.632-20.876 8.221-5.558 16.062-8.81 23.778-13.532 7.045 7.024 18.528 5.02 25.629-.829 8.982-6.65 15.848-15.812 25.36-21.809-12.522-10.193-32.174-12.69-45.335-2.243-7.46 5.283-12.071 16.873-5.724 24.725M94.218 22.01c-25.433-.535-49.944 18.01-55.391 43.022-3.294 13.583-1.059 28.205 6.059 40.23C57.005 129.747 74.968 150.826 94.219 170c20.368-18.544 39.793-39.311 51.27-64.662 3.97-8.554 6.45-18.898 6.32-27.734.01-6.628-1.505-15.028-4.575-21.661-8.904-20.6-30.684-34.165-53.015-33.931z"></path>
           </svg>
         </div>
-        <span class="text-white font-sans font-black text-xl sm:text-2xl tracking-normal uppercase drop-shadow-md">
+        <span class="text-lg sm:text-xl md:text-2xl font-black tracking-wide text-white drop-shadow truncate">
           GeoRubber Watch
         </span>
       </a>
@@ -245,58 +245,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   <!-- =========================================================================
        [MOBILE / IPAD RESPONSIVE DRAWER OVERLAY]
        ========================================================================= -->
-  <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden transition-opacity duration-300 opacity-0 lg:hidden">
-    <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-mezenc-deepTeal text-white p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/10">
+  <!-- =========================================================================
+       [MOBILE / IPAD RESPONSIVE DRAWER OVERLAY]
+       ========================================================================= -->
+  <div id="mobile-drawer" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden transition-opacity duration-300 opacity-0 lg:hidden">
+    <div id="mobile-drawer-content" class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white/95 backdrop-blur-2xl text-slate-800 p-6 shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out border-l border-white/60">
       <div>
-        <div class="flex items-center justify-between pb-4 border-b border-white/15">
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-gray-200/70">
           <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">🌲</div>
-            <span class="font-extrabold text-base" data-i18n="nav_brand">GeoRubber Watch</span>
+            <img src="img/map_icon.png" alt="GeoRubber Logo" class="w-7 h-7 object-contain drop-shadow-sm" onerror="this.onerror=null; this.src='ปก.png';">
+            <span class="font-extrabold text-base text-mezenc-teal" data-i18n="nav_brand">GeoRubber Watch</span>
           </div>
-          <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">✕</button>
+          <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer" aria-label="Close menu">✕</button>
         </div>
 
         <!-- Mobile Language Toggle Switch -->
-        <div class="py-3 flex items-center justify-between border-b border-white/10">
-          <span class="text-xs text-white/70 font-medium">Language / ภาษา:</span>
+        <div class="py-3 flex items-center justify-between border-b border-gray-200/60">
+          <span class="text-xs text-slate-500 font-medium">Language / ภาษา:</span>
           <div 
             onclick="toggleLanguage()"
-            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0"
+            class="toggle-track-dark w-[82px] h-[34px] p-[3px] flex items-center relative cursor-pointer shrink-0 bg-slate-200/80 border border-slate-300/80"
             id="lang-toggle-btn-mobile"
           >
-            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px]"></div>
+            <div id="nav-thumb-mobile" class="toggle-thumb-dark w-[36px] h-[28px] transition-all duration-300 left-[3px] shadow-sm"></div>
             <div id="nav-label-th-mobile" class="relative z-10 w-1/2 text-center text-xs font-bold text-mezenc-deepTeal transition-colors duration-300 pointer-events-none">TH</div>
-            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-white/70 transition-colors duration-300 pointer-events-none">EN</div>
+            <div id="nav-label-en-mobile" class="relative z-10 w-1/2 text-center text-xs font-semibold text-slate-500 transition-colors duration-300 pointer-events-none">EN</div>
           </div>
         </div>
 
-        <nav class="flex flex-col gap-2 pt-4 text-sm font-medium">
-          <a href="index.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+        <!-- Drawer Navigation Links -->
+        <nav class="flex flex-col gap-1.5 pt-4 text-sm font-medium">
+          <a href="index.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
           </a>
-          <a href="overview.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+          <a href="overview.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
-          <a href="dashboard.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+          <a href="dashboard.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
-          <a href="map.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+          <a href="map.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
-          <a href="yields.php" class="px-4 py-3 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-3">
+          <a href="yields.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
             <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
-          <a href="contact.php" class="px-4 py-3 rounded-xl bg-white/15 text-mezenc-mint font-bold transition-colors flex items-center gap-3">
+          <a href="contact.php" class="px-4 py-2.5 rounded-xl bg-mezenc-teal text-white font-bold transition-all shadow-xs flex items-center gap-3">
             <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
-          </a>
-          <a href="logout.php" class="px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/40 transition-colors flex items-center gap-3 text-red-300 font-bold" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-            <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </nav>
       </div>
-      <div class="pt-4 border-t border-white/15 text-center text-xs text-white/60">
-        GeoRubber Watch • ม.อ. สุราษฎร์ธานี
+
+      <!-- Drawer Footer Action -->
+      <div class="pt-4 border-t border-gray-200/70 space-y-2.5">
+        <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600 flex items-center justify-between">
+          <div class="truncate">
+            ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($user_name ?? ($currentUser['full_name'] ?? 'ผู้ใช้งาน')) ?></strong>
+          </div>
+          <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full font-bold border border-mezenc-mint/40 shrink-0 ml-1"><?= htmlspecialchars($current_role ?? ($currentUser['role'] ?? '')) ?></span>
+        </div>
+        <a href="logout.php" class="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all flex items-center justify-center gap-2" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+          <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
+        </a>
+        <div class="text-center text-[11px] text-slate-400 pt-1 font-normal">
+          &copy; 2026 GeoRubber Watch &bull; ม.อ. สุราษฎร์ธานี
+        </div>
       </div>
+
     </div>
   </div>
 
@@ -555,7 +571,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
             <div class="text-[10px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-xs font-bold text-white" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-xs font-bold text-white" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
             <div class="text-[10px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>

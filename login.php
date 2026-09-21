@@ -11,6 +11,8 @@ if (!empty($redirect)) {
         $clean_redirect = $r;
     }
 }
+$initial_mode = (isset($_GET['mode']) && $_GET['mode'] === 'signup') ? 'signup' : 'signin';
+$logout_msg = (isset($_GET['msg']) && $_GET['msg'] === 'logged_out') ? 'ออกจากระบบเรียบร้อยแล้ว' : '';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -117,7 +119,7 @@ if (!empty($redirect)) {
 
                 <!-- 2. Form Title -->
                 <h2 id="formTitle" class="text-3xl sm:text-4xl font-extrabold text-white text-left w-full mb-7 tracking-tight">
-                    Sign In
+                    เข้าสู่ระบบ
                 </h2>
 
                 <form id="signupForm" onsubmit="handleSubmit(event)" class="w-full space-y-5">
@@ -125,7 +127,7 @@ if (!empty($redirect)) {
                     <!-- 3. Email Field (ซ่อนในโหมด Sign In) -->
                     <div id="emailFieldGroup" class="hidden space-y-1.5">
                         <label for="email" class="block text-sm sm:text-base font-semibold text-gray-200">
-                            Email
+                            อีเมล
                         </label>
                         <div class="line-input flex items-center justify-between pb-2">
                             <input type="email" 
@@ -143,7 +145,7 @@ if (!empty($redirect)) {
                     <!-- 4. Phone Number Field (อยู่บน Username, ซ่อนในโหมด Sign In) -->
                     <div id="phoneFieldGroup" class="hidden space-y-1.5 pt-1">
                         <label for="phone" class="block text-sm sm:text-base font-semibold text-gray-200">
-                            Phone Number
+                            เบอร์โทร
                         </label>
                         <div class="line-input flex items-center justify-between pb-2">
                             <input type="tel" 
@@ -157,10 +159,29 @@ if (!empty($redirect)) {
                         </div>
                     </div>
 
-                    <!-- 5. Username Field (เพิ่มขนาด Label & Input & Icon) -->
+                    <!-- 5. National ID Card Field (13 หลัก) (ซ่อนในโหมด Sign In) -->
+                    <div id="idCardFieldGroup" class="hidden space-y-1.5 pt-1">
+                        <label for="id_card_num" class="block text-sm sm:text-base font-semibold text-gray-200">
+                            เลขบัตรประชาชน
+                        </label>
+                        <div class="line-input flex items-center justify-between pb-2">
+                            <input type="text" 
+                                   id="id_card_num" 
+                                   name="id_card_num" 
+                                   maxlength="17"
+                                   oninput="formatIdCardInput(this)"
+                                   class="w-full bg-transparent border-none outline-none text-white text-base sm:text-lg font-mono tracking-wide pr-3 placeholder-transparent">
+                            <!-- ID Card Icon -->
+                            <svg class="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 6. Username Field (เพิ่มขนาด Label & Input & Icon) -->
                     <div class="space-y-1.5 pt-1">
                         <label id="usernameLabel" for="username" class="block text-sm sm:text-base font-semibold text-gray-200">
-                            Username / Email / Phone
+                            ชื่อผู้ใช้ / อีเมล / เบอร์โทร / เลขบัตรประชาชน
                         </label>
                         <div class="line-input flex items-center justify-between pb-2">
                             <input type="text" 
@@ -175,10 +196,10 @@ if (!empty($redirect)) {
                         </div>
                     </div>
 
-                    <!-- 6. Password Field (เพิ่มขนาด Label & Input & Icon) -->
+                    <!-- 7. Password Field (เพิ่มขนาด Label & Input & Icon พร้อมปุ่ม Toggle แสดง/ซ่อนรหัสผ่าน) -->
                     <div class="space-y-1.5 pt-1">
                         <label for="password" class="block text-sm sm:text-base font-semibold text-gray-200">
-                            Password
+                            รหัสผ่าน
                         </label>
                         <div class="line-input flex items-center justify-between pb-2">
                             <input type="password" 
@@ -186,10 +207,20 @@ if (!empty($redirect)) {
                                    name="password" 
                                    required 
                                    class="w-full bg-transparent border-none outline-none text-white text-base sm:text-lg font-normal pr-3 placeholder-transparent">
-                            <!-- Lock Icon -->
-                            <svg class="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                            </svg>
+                            <!-- Toggle Password Visibility Button -->
+                            <button type="button" 
+                                     id="togglePwdBtn"
+                                     onclick="togglePasswordVisibility()" 
+                                     class="text-gray-300 hover:text-white transition focus:outline-none shrink-0 p-0.5 cursor-pointer" 
+                                     title="แสดง/ซ่อนรหัสผ่าน">
+                                <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <svg id="eyeSlashIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -200,7 +231,7 @@ if (!empty($redirect)) {
                                    id="agreeTerms" 
                                    class="w-4 h-4 rounded bg-transparent border border-white/50 accent-white cursor-pointer">
                             <span>
-                                I Agree To <b class="text-white font-bold">Terms</b> And <b class="text-white font-bold">Conditions</b> Of Service
+                                ยอมรับข้อกำหนดและเงื่อนไขของ <b class="text-white font-bold">GeoRubber Watch</b>
                             </span>
                         </label>
                     </div>
@@ -208,13 +239,13 @@ if (!empty($redirect)) {
                     <!-- Feedback Banner -->
                     <div id="signupFeedback" class="hidden text-xs sm:text-sm rounded-xl p-3 text-center font-medium"></div>
 
-                    <!-- Action Row: Sign In > & Don't Have An Account? Sign Up -->
+                    <!-- Action Row: เข้าสู่ระบบ > & ยังไม่มีบัญชีใช่ไหม? สมัครสมาชิก -->
                     <div class="flex items-center justify-between pt-6 px-1">
                         <!-- Submit Button -->
                         <button type="submit" 
                                 id="btnSignup"
                                 class="btn-outline-pill rounded-full px-8 sm:px-10 py-2.5 sm:py-3 text-sm sm:text-base font-semibold tracking-wide text-white shadow-md flex items-center gap-2.5 cursor-pointer">
-                            <span id="btnText">Sign In</span>
+                            <span id="btnText">เข้าสู่ระบบ</span>
                             <span class="font-extrabold text-sm sm:text-base">&gt;</span>
                         </button>
 
@@ -223,7 +254,7 @@ if (!empty($redirect)) {
                                 id="toggleModeBtn"
                                 onclick="toggleAuthMode()"
                                 class="text-sm sm:text-base text-gray-200 hover:text-white underline font-semibold transition cursor-pointer">
-                            Don't Have An Account? Sign Up
+                            ยังไม่มีบัญชีใช่ไหม? สมัครสมาชิก
                         </button>
                     </div>
 
@@ -244,15 +275,50 @@ if (!empty($redirect)) {
     <script>
         const API_BASE = window.location.pathname.includes('/pages/') ? '../api' : 'api';
         const REDIRECT_URL = <?= json_encode($clean_redirect) ?>;
+        const INITIAL_MODE = <?= json_encode($initial_mode) ?>;
+        const LOGOUT_MSG = <?= json_encode($logout_msg) ?>;
         let isSignupMode = false;
 
-        function toggleAuthMode() {
-            isSignupMode = !isSignupMode;
+        function formatIdCardInput(input) {
+            if (!input) return;
+            const clean = input.value.replace(/\D/g, '').substring(0, 13);
+            let formatted = '';
+            if (clean.length > 0) formatted += clean.substring(0, 1);
+            if (clean.length > 1) formatted += '-' + clean.substring(1, 5);
+            if (clean.length > 5) formatted += '-' + clean.substring(5, 10);
+            if (clean.length > 10) formatted += '-' + clean.substring(10, 12);
+            if (clean.length > 12) formatted += '-' + clean.substring(12, 13);
+            input.value = formatted;
+        }
+
+        function togglePasswordVisibility() {
+            const pwd = document.getElementById('password');
+            const eye = document.getElementById('eyeIcon');
+            const eyeSlash = document.getElementById('eyeSlashIcon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                eye.classList.add('hidden');
+                eyeSlash.classList.remove('hidden');
+            } else {
+                pwd.type = 'password';
+                eye.classList.remove('hidden');
+                eyeSlash.classList.add('hidden');
+            }
+        }
+
+        function toggleAuthMode(targetMode = null) {
+            if (typeof targetMode === 'boolean') {
+                isSignupMode = targetMode;
+            } else {
+                isSignupMode = !isSignupMode;
+            }
             const formTitle = document.getElementById('formTitle');
             const emailGroup = document.getElementById('emailFieldGroup');
             const emailInput = document.getElementById('email');
             const phoneGroup = document.getElementById('phoneFieldGroup');
             const phoneInput = document.getElementById('phone');
+            const idCardGroup = document.getElementById('idCardFieldGroup');
+            const idCardInput = document.getElementById('id_card_num');
             const usernameLabel = document.getElementById('usernameLabel');
             const termsGroup = document.getElementById('termsGroup');
             const agreeTerms = document.getElementById('agreeTerms');
@@ -260,33 +326,39 @@ if (!empty($redirect)) {
             const toggleBtn = document.getElementById('toggleModeBtn');
             const feedback = document.getElementById('signupFeedback');
 
-            feedback.classList.add('hidden');
+            // Hide feedback only if user manually toggles
+            if (typeof targetMode !== 'boolean') {
+                feedback.classList.add('hidden');
+            }
 
             if (isSignupMode) {
-                formTitle.textContent = 'Sign Up';
-                document.title = 'Sign Up - GeoRubber Watch';
+                formTitle.textContent = 'ลงทะเบียน';
+                document.title = 'ลงทะเบียน - GeoRubber Watch';
                 emailGroup.classList.remove('hidden');
                 emailInput.required = true;
                 phoneGroup.classList.remove('hidden');
                 phoneInput.required = true;
-                usernameLabel.textContent = 'Username';
+                if (idCardGroup) idCardGroup.classList.remove('hidden');
+                usernameLabel.textContent = 'ชื่อผู้ใช้';
                 termsGroup.classList.remove('hidden');
                 agreeTerms.required = true;
-                btnText.textContent = 'Sign Up';
-                toggleBtn.textContent = 'Have An Account? Sign In';
+                btnText.textContent = 'ลงทะเบียน';
+                toggleBtn.textContent = 'มีบัญชีผู้ใช้แล้ว? เข้าสู่ระบบ';
             } else {
-                formTitle.textContent = 'Sign In';
-                document.title = 'Sign In - GeoRubber Watch';
+                formTitle.textContent = 'เข้าสู่ระบบ';
+                document.title = 'เข้าสู่ระบบ - GeoRubber Watch';
                 emailGroup.classList.add('hidden');
                 emailInput.required = false;
                 phoneGroup.classList.add('hidden');
                 phoneInput.required = false;
-                usernameLabel.textContent = 'Username / Email / Phone';
+                if (idCardGroup) idCardGroup.classList.add('hidden');
+                usernameLabel.textContent = 'ชื่อผู้ใช้ / อีเมล / เบอร์โทร / เลขบัตรประชาชน';
                 termsGroup.classList.add('hidden');
                 agreeTerms.required = false;
-                btnText.textContent = 'Sign In';
-                toggleBtn.textContent = "Don't Have An Account? Sign Up";
+                btnText.textContent = 'เข้าสู่ระบบ';
+                toggleBtn.textContent = "ยังไม่มีบัญชีใช่ไหม? สมัครสมาชิก";
             }
+            resetBtn(isSignupMode ? 'ลงทะเบียน' : 'เข้าสู่ระบบ');
         }
 
         const SUCCESS_ICON_SVG = `<svg fill="#ffffff" class="w-5 h-5 shrink-0 inline-block text-white" viewBox="0 0 200 200" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><title></title><path fill="#ffffff" d="M177.6,80.43a10,10,0,1,0-19.5,4.5,60.76,60.76,0,0,1-6,44.5c-16.5,28.5-53.5,38.5-82,22-28.5-16-38.5-53-22-81.5s53.5-38.5,82-22a9.86,9.86,0,1,0,10-17c-38.5-22.5-87-9.5-109.5,29a80.19,80.19,0,1,0,147,20.5Zm-109.5,11a10.12,10.12,0,0,0-11,17l40,25a10.08,10.08,0,0,0,5.5,1.5,10.44,10.44,0,0,0,8-4l52.5-67.5c3.5-4.5,2.5-10.5-2-14s-10.5-2.5-14,2l-47,60Z"></path></g></svg>`;
@@ -303,6 +375,7 @@ if (!empty($redirect)) {
                 // Sign Up Action
                 const email = document.getElementById('email').value.trim();
                 const phone = document.getElementById('phone').value.trim();
+                const idCardNum = document.getElementById('id_card_num')?.value.trim() || '';
                 const agree = document.getElementById('agreeTerms').checked;
 
                 if (!agree) {
@@ -313,7 +386,7 @@ if (!empty($redirect)) {
                 }
 
                 btn.disabled = true;
-                btn.innerHTML = `<span>Signing Up...</span>`;
+                btn.innerHTML = `<span>กำลังลงทะเบียน...</span>`;
 
                 try {
                     const res = await fetch(`${API_BASE}/auth.php?action=register`, {
@@ -322,6 +395,7 @@ if (!empty($redirect)) {
                         body: JSON.stringify({
                             email: email,
                             phone: phone,
+                            id_card_num: idCardNum,
                             username: username,
                             full_name: username,
                             password: password
@@ -331,30 +405,62 @@ if (!empty($redirect)) {
                     const data = await res.json();
 
                     if (data.status === 'success' || data.success === true) {
-                        feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2.5 font-medium bg-white/15 backdrop-blur-md text-white border border-white/30 shadow-lg';
-                        feedback.innerHTML = `${SUCCESS_ICON_SVG} <span>ลงทะเบียนสำเร็จ กำลังเข้าสู่ระบบ</span>`;
+                        const registeredUsername = data.registered_username || username || email;
+
+                        // 1. สลับกลับมาโหมด Sign In ทันทีตามที่ผู้ใช้ต้องการ เพื่อให้ทวนรหัสผ่านอีกครั้ง
+                        toggleAuthMode(false);
+
+                        // 2. คง Username ที่สมัครไว้ในช่อง Input
+                        const usernameField = document.getElementById('username');
+                        if (usernameField) {
+                            usernameField.value = registeredUsername;
+                        }
+
+                        // 3. เคลียร์รหัสผ่าน และโฟกัสที่ช่องรหัสผ่านเพื่อให้ผู้ใช้พิมพ์ทบทวนรหัสผ่าน
+                        const passwordField = document.getElementById('password');
+                        if (passwordField) {
+                            passwordField.value = '';
+                            passwordField.type = 'password';
+                            const eye = document.getElementById('eyeIcon');
+                            const eyeSlash = document.getElementById('eyeSlashIcon');
+                            if (eye) eye.classList.remove('hidden');
+                            if (eyeSlash) eyeSlash.classList.add('hidden');
+                            passwordField.focus();
+                        }
+
+                        // 4. ล้างค่าช่องข้อมูลของโหมดสมัครสมาชิก
+                        const emailField = document.getElementById('email');
+                        if (emailField) emailField.value = '';
+                        const phoneField = document.getElementById('phone');
+                        if (phoneField) phoneField.value = '';
+                        const idCardField = document.getElementById('id_card_num');
+                        if (idCardField) idCardField.value = '';
+                        const agreeBox = document.getElementById('agreeTerms');
+                        if (agreeBox) agreeBox.checked = false;
+
+                        // 5. แสดงข้อความแจ้งเตือนสีเขียวชัดเจน
+                        feedback.className = 'text-xs sm:text-sm rounded-2xl py-3.5 px-4 flex items-center justify-center gap-2.5 font-medium bg-emerald-500/30 backdrop-blur-md text-white border border-emerald-300/50 shadow-lg';
+                        feedback.innerHTML = `${SUCCESS_ICON_SVG} <span>สมัครสมาชิกสำเร็จ! กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบ เป็นการทวนรหัสผ่านอีกครั้ง</span>`;
                         feedback.classList.remove('hidden');
 
-                        setTimeout(() => {
-                            window.location.href = REDIRECT_URL;
-                        }, 1000);
+                        resetBtn('เข้าสู่ระบบ');
                     } else {
                         feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
                         feedback.innerHTML = `${ERROR_ICON_SVG} <span>${data.message || 'ไม่สามารถลงทะเบียนได้'}</span>`;
                         feedback.classList.remove('hidden');
-                        resetBtn('Sign Up');
+                        resetBtn('ลงทะเบียน');
                     }
                 } catch (err) {
                     feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
                     feedback.innerHTML = `${ERROR_ICON_SVG} <span>เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</span>`;
                     feedback.classList.remove('hidden');
-                    resetBtn('Sign Up');
+                    resetBtn('ลงทะเบียน');
                 }
 
             } else {
                 // Sign In Action
                 btn.disabled = true;
-                btn.innerHTML = `<span>Signing In...</span>`;
+                btn.innerHTML = `<span>กำลังเข้าสู่ระบบ...</span>`;
 
                 try {
                     const res = await fetch(`${API_BASE}/auth.php?action=login`, {
@@ -370,23 +476,41 @@ if (!empty($redirect)) {
 
                     if (data.status === 'success' || data.success === true) {
                         feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2.5 font-medium bg-white/15 backdrop-blur-md text-white border border-white/30 shadow-lg';
-                        feedback.innerHTML = `${SUCCESS_ICON_SVG} <span>เข้าสู่ระบบสำเร็จ กำลังเข้าสู่ระบบ</span>`;
+                        feedback.innerHTML = `${SUCCESS_ICON_SVG} <span>เข้าสู่ระบบสำเร็จ กำลังเข้าสู่ระบบ...</span>`;
                         feedback.classList.remove('hidden');
 
                         setTimeout(() => {
-                            window.location.href = REDIRECT_URL;
-                        }, 800);
+                            let dest = REDIRECT_URL;
+                            // Smart role routing if no explicit page or default index.php was requested
+                            if (!dest || dest === 'index.php' || dest === 'login.php') {
+                                if (data.redirect) {
+                                    dest = data.redirect;
+                                } else if (data.user && (data.user.role === 'factory' || data.user.role === 'buyer' || data.user.role === 'trader')) {
+                                    dest = 'yields.php?mode=factory';
+                                } else if (data.user && data.user.role === 'farmer') {
+                                    dest = 'map.php';
+                                } else {
+                                    dest = 'index.php';
+                                }
+                            }
+                            window.location.href = dest;
+                        }, 700);
                     } else {
                         feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
                         feedback.innerHTML = `${ERROR_ICON_SVG} <span>${data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'}</span>`;
                         feedback.classList.remove('hidden');
-                        resetBtn('Sign In');
+                        resetBtn('เข้าสู่ระบบ');
+                        const passwordField = document.getElementById('password');
+                        if (passwordField) {
+                            passwordField.focus();
+                            passwordField.select();
+                        }
                     }
                 } catch (err) {
                     feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
                     feedback.innerHTML = `${ERROR_ICON_SVG} <span>เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</span>`;
                     feedback.classList.remove('hidden');
-                    resetBtn('Sign In');
+                    resetBtn('เข้าสู่ระบบ');
                 }
             }
         }
@@ -396,6 +520,21 @@ if (!empty($redirect)) {
             btn.disabled = false;
             btn.innerHTML = `<span>${label}</span> <span class="font-extrabold text-sm sm:text-base">&gt;</span>`;
         }
+
+        // Initialize state based on query params (e.g. ?mode=signup or ?msg=logged_out)
+        window.addEventListener('DOMContentLoaded', () => {
+            if (INITIAL_MODE === 'signup') {
+                toggleAuthMode(true);
+            }
+            if (LOGOUT_MSG) {
+                const feedback = document.getElementById('signupFeedback');
+                if (feedback) {
+                    feedback.className = 'text-xs sm:text-sm rounded-2xl py-2.5 px-4 flex items-center justify-center gap-2 font-medium bg-white/10 backdrop-blur-md text-gray-200 border border-white/20 shadow-md';
+                    feedback.innerHTML = `<span>${LOGOUT_MSG}</span>`;
+                    feedback.classList.remove('hidden');
+                }
+            }
+        });
     </script>
 </body>
 </html>

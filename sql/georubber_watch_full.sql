@@ -22,6 +22,7 @@ CREATE TABLE `users` (
     `username` VARCHAR(50) UNIQUE NOT NULL,
     `password_hash` VARCHAR(255) NOT NULL,
     `full_name` VARCHAR(100) NOT NULL,
+    `id_card_num` VARCHAR(20),
     `email` VARCHAR(100) UNIQUE,
     `phone` VARCHAR(20),
     `role` ENUM('admin', 'farmer') DEFAULT 'farmer',

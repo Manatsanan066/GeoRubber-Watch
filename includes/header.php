@@ -103,6 +103,3 @@ $user_name = $user['full_name'] ?? 'ผู้ใช้งานระบบ';
 
     </div>
   </header>
-
-    </div>
-  </header>

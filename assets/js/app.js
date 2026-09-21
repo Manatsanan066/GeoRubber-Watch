@@ -15,7 +15,7 @@ const App = {
   // Initialize App
   init() {
     this.checkSession();
-    this.detectNgrokUrl(false); // Background auto-detect
+    this.detectNgrokUrl(false);
   },
 
   // Check logged-in user session
@@ -84,12 +84,12 @@ const App = {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     
-    let icon = 'ℹ️';
-    if (type === 'success') icon = '✅';
-    if (type === 'error') icon = '⚠️';
-    if (type === 'warning') icon = '🔔';
+    let icon = '<i class="fa-solid fa-circle-info"></i>';
+    if (type === 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
+    if (type === 'error') icon = '<i class="fa-solid fa-circle-exclamation"></i>';
+    if (type === 'warning') icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
 
-    toast.innerHTML = `<span>${icon}</span> <div>${message}</div>`;
+    toast.innerHTML = `<span class="toast-icon">${icon}</span> <div>${message}</div>`;
     container.appendChild(toast);
 
     setTimeout(() => {
@@ -125,10 +125,19 @@ const App = {
 
   // Synchronous Quick Base URL Resolver (0ms instant response)
   getInstantBaseUrl() {
+    const custom = localStorage.getItem('georubber_public_url');
+    if (custom && custom.includes('http')) {
+      return {
+        url: custom,
+        isNgrok: custom.includes('ngrok'),
+        source: 'custom_url'
+      };
+    }
+    const ngrokUrl = window.NGROK_PUBLIC_URL || this.detectedNgrokUrl || this.defaultNgrokUrl || 'https://earthling-retype-aroma.ngrok-free.dev';
     return {
-      url: 'https://earthling-retype-aroma.ngrok-free.dev',
+      url: ngrokUrl,
       isNgrok: true,
-      source: 'default_ngrok'
+      source: 'ngrok'
     };
   },
 
@@ -169,11 +178,10 @@ const App = {
     if (!basePath.startsWith('/')) basePath = '/' + basePath;
     if (basePath === '/') basePath = '';
 
-    // Enforce ngrok public URL directly
-    let cleanBase = 'https://earthling-retype-aroma.ngrok-free.dev';
-    if (baseUrl && !baseUrl.includes('localhost') && !baseUrl.includes('127.0.0.1')) {
-      cleanBase = baseUrl.replace(/\/+$/, '');
-    }
+    // Prioritize ngrok public URL so smartphones can scan across the internet
+    let cleanBase = (baseUrl && baseUrl.includes('http'))
+      ? baseUrl.trim().replace(/\/+$/, '')
+      : (window.NGROK_PUBLIC_URL || this.detectedNgrokUrl || 'https://earthling-retype-aroma.ngrok-free.dev');
     
     // Prevent duplicate subpath
     let fullUrl;
@@ -227,14 +235,14 @@ const App = {
   // Auto-detect running ngrok tunnel
   async detectNgrokUrl(interactive = false) {
     if (interactive) {
-      this.showToast('🔍 กำลังค้นหา ngrok tunnel บนพอร์ต 4040...', 'info');
+      this.showToast('กำลังค้นหา ngrok tunnel บนพอร์ต 4040...', 'info');
     }
 
     try {
       const res = await fetch('api/get_public_url.php');
       const data = await res.json();
 
-      if (data.success && data.public_url) {
+      if (data.success && data.public_url && data.is_ngrok && data.source === 'ngrok_api') {
         this.detectedNgrokUrl = data.public_url;
         localStorage.setItem('georubber_public_url', data.public_url);
         const inputEl = document.getElementById('qr-custom-url-input');
@@ -246,16 +254,16 @@ const App = {
         }
 
         if (interactive) {
-          this.showToast(`✅ เชื่อมต่อ ngrok สำเร็จ: ${data.public_url}`, 'success');
+          this.showToast(`เชื่อมต่อ ngrok สำเร็จ: ${data.public_url}`, 'success');
         }
       } else {
         if (interactive) {
-          this.showToast('⚠️ ไม่พบ ngrok ที่กำลังทำงานอยู่ กรุณารันคำสั่ง ngrok http 80 หรือกรอก URL ด้วยตนเอง', 'warning');
+          this.showToast('ไม่พบ ngrok ที่กำลังทำงานอยู่ กรุณารันคำสั่ง ngrok http 80 หรือกรอก URL ด้วยตนเอง', 'warning');
         }
       }
     } catch (e) {
       if (interactive) {
-        this.showToast('⚠️ ไม่สามารถเชื่อมต่อ API ตรวจจับ ngrok ได้', 'error');
+        this.showToast('ไม่สามารถเชื่อมต่อ API ตรวจจับ ngrok ได้', 'error');
       }
     }
   },
@@ -294,7 +302,7 @@ const App = {
 
     const isNgrok = customUrl.includes('ngrok');
     this.buildAndRenderQR(customUrl, isNgrok);
-    this.showToast('✅ อัปเดตและสร้าง QR Code ด้วยลิงก์ใหม่เรียบร้อยแล้ว!', 'success');
+    this.showToast('อัปเดตและสร้าง QR Code ด้วยลิงก์ใหม่เรียบร้อยแล้ว!', 'success');
   },
 
   // Copy current QR URL to clipboard helper
@@ -309,7 +317,7 @@ const App = {
   copyToClipboard(text) {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
-      this.showToast('📋 คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว', 'success');
+      this.showToast('คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว', 'success');
     }).catch(() => {
       this.showToast('คัดลอก: ' + text, 'info');
     });

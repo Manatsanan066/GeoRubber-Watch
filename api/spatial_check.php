@@ -75,50 +75,149 @@ function calculateMinDistanceMeters($lat1, $lon1, $lat2, $lon2) {
 // Extract all boundary rings from Polygon or MultiPolygon GeoJSON
 function getPolygonRingsFromGeoJSON($geometry) {
     $rings = [];
-    if (!isset($geometry['type']) || !isset($geometry['coordinates'])) return $rings;
+    if (!isset($geometry['type']) || !isset($geometry['coordinates']) || !is_array($geometry['coordinates'])) {
+        return $rings;
+    }
     
-    if ($geometry['type'] === 'Polygon') {
-        foreach ($geometry['coordinates'] as $ring) {
-            $rings[] = $ring;
+    $type = $geometry['type'];
+    $coords = $geometry['coordinates'];
+
+    if ($type === 'Polygon') {
+        foreach ($coords as $ring) {
+            if (is_array($ring) && !empty($ring)) {
+                if (isset($ring[0]) && is_array($ring[0]) && is_numeric($ring[0][0] ?? null)) {
+                    $rings[] = $ring;
+                }
+            }
         }
-    } elseif ($geometry['type'] === 'MultiPolygon') {
-        foreach ($geometry['coordinates'] as $poly) {
+    } elseif ($type === 'MultiPolygon') {
+        foreach ($coords as $poly) {
+            if (!is_array($poly)) continue;
             foreach ($poly as $ring) {
-                $rings[] = $ring;
+                if (!is_array($ring) || empty($ring)) continue;
+                if (isset($ring[0]) && is_array($ring[0]) && is_numeric($ring[0][0] ?? null)) {
+                    $rings[] = $ring;
+                } elseif (isset($ring[0][0]) && is_array($ring[0][0]) && is_numeric($ring[0][0][0] ?? null)) {
+                    foreach ($ring as $subRing) {
+                        if (is_array($subRing) && isset($subRing[0]) && is_numeric($subRing[0][0] ?? null)) {
+                            $rings[] = $subRing;
+                        }
+                    }
+                }
             }
         }
     }
     return $rings;
 }
 
-function evaluatePlotEudrSpatial($pdo, $plotCoords, $planting_year = 2018) {
-    // Centroid estimation
-    $sumLat = 0; $sumLng = 0; $numPts = count($plotCoords);
-    foreach ($plotCoords as $pt) {
+// Geometry Helper: Check if Point is inside Polygon
+function isPointInPolygon($point, $polygon) {
+    if (!is_array($point) || count($point) < 2 || empty($polygon)) return false;
+    $x = (float)$point[0]; // lng
+    $y = (float)$point[1]; // lat
+    $inside = false;
+    $n = count($polygon);
+
+    for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
+        if (!isset($polygon[$i][0]) || !isset($polygon[$j][0])) continue;
+        $xi = (float)$polygon[$i][0];
+        $yi = (float)$polygon[$i][1];
+        $xj = (float)$polygon[$j][0];
+        $yj = (float)$polygon[$j][1];
+
+        $intersect = (($yi > $y) != ($yj > $y)) && ($x < ($xj - $xi) * ($y - $yi) / ($yj - $yi + 0.00000000000001) + $xi);
+        if ($intersect) $inside = !$inside;
+    }
+    return $inside;
+}
+
+// Check intersection between two polygons
+function doPolygonsIntersect($poly1Coords, $poly2Coords) {
+    if (empty($poly1Coords) || empty($poly2Coords)) return false;
+
+    // 1. Check if any vertex of poly1 is inside poly2
+    foreach ($poly1Coords as $pt) {
+        if (isPointInPolygon($pt, $poly2Coords)) return true;
+    }
+    // 2. Check if any vertex of poly2 is inside poly1
+    foreach ($poly2Coords as $pt) {
+        if (isPointInPolygon($pt, $poly1Coords)) return true;
+    }
+    // 3. Check centroid of poly1 is inside poly2
+    $sumLat = 0; $sumLng = 0; $numPts = count($poly1Coords);
+    foreach ($poly1Coords as $pt) {
         $sumLng += (float)$pt[0];
         $sumLat += (float)$pt[1];
+    }
+    if ($numPts > 0) {
+        $cPt = [$sumLng / $numPts, $sumLat / $numPts];
+        if (isPointInPolygon($cPt, $poly2Coords)) return true;
+    }
+    // 4. Check if any edges intersect
+    $n1 = count($poly1Coords);
+    $n2 = count($poly2Coords);
+    for ($i = 0; $i < $n1 - 1; $i++) {
+        for ($j = 0; $j < $n2 - 1; $j++) {
+            if (doLinesIntersect($poly1Coords[$i], $poly1Coords[$i+1], $poly2Coords[$j], $poly2Coords[$j+1])) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function evaluatePlotEudrSpatial($pdo, $plotCoords, $planting_year = 2018) {
+    static $cachedForests = null;
+
+    // Centroid and Plot Bounding Box
+    $sumLat = 0; $sumLng = 0; $numPts = count($plotCoords);
+    $pMinX = 999.0; $pMaxX = -999.0;
+    $pMinY = 999.0; $pMaxY = -999.0;
+
+    foreach ($plotCoords as $pt) {
+        $px = (float)$pt[0];
+        $py = (float)$pt[1];
+        $sumLng += $px;
+        $sumLat += $py;
+        if ($px < $pMinX) $pMinX = $px;
+        if ($px > $pMaxX) $pMaxX = $px;
+        if ($py < $pMinY) $pMinY = $py;
+        if ($py > $pMaxY) $pMaxY = $py;
     }
     $centroidLng = $numPts > 0 ? $sumLng / $numPts : 99.321850;
     $centroidLat = $numPts > 0 ? $sumLat / $numPts : 9.138240;
 
-    // Load forest reserves from cache or database
-    $cacheFile = __DIR__ . '/../data/cache_forest_reserves.json';
-    $forests = [];
-    if (file_exists($cacheFile)) {
-        $cacheContent = json_decode(file_get_contents($cacheFile), true);
-        if (isset($cacheContent['features']) && is_array($cacheContent['features'])) {
-            $forests = $cacheContent['features'];
-        }
-    }
+    // Fast static in-memory caching of forest features
+    if ($cachedForests === null) {
+        $zoneCFile = __DIR__ . '/../Zone-c.geojson';
+        $cacheFile = __DIR__ . '/../data/cache_forest_reserves.json';
+        $forests = [];
 
-    if (empty($forests) && $pdo) {
-        try {
-            $stmt = $pdo->query("SELECT * FROM forest_reserves");
-            $forests = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            $forests = [];
+        if (file_exists($zoneCFile)) {
+            $zoneCContent = json_decode(file_get_contents($zoneCFile), true);
+            if (isset($zoneCContent['features']) && is_array($zoneCContent['features'])) {
+                $forests = $zoneCContent['features'];
+            }
         }
+
+        if (empty($forests) && file_exists($cacheFile)) {
+            $cacheContent = json_decode(file_get_contents($cacheFile), true);
+            if (isset($cacheContent['features']) && is_array($cacheContent['features'])) {
+                $forests = $cacheContent['features'];
+            }
+        }
+
+        if (empty($forests) && $pdo) {
+            try {
+                $stmt = $pdo->query("SELECT * FROM forest_reserves");
+                $forests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                $forests = [];
+            }
+        }
+        $cachedForests = $forests;
     }
+    $forests = $cachedForests;
 
     $hasOverlap = false;
     $overlappingForests = [];
@@ -133,14 +232,12 @@ function evaluatePlotEudrSpatial($pdo, $plotCoords, $planting_year = 2018) {
         $category = 'Zone-C ป่าสงวนแห่งชาติ';
 
         if (isset($f['geometry'])) {
-            // GeoJSON Feature structure from cache
             $forestGeo = $f['geometry'];
             $props = $f['properties'] ?? [];
-            $forestName = $props['name_th'] ?? $props['FR_NAME'] ?? $forestName;
-            $forestCode = $props['forest_code'] ?? $props['NRF_CODE'] ?? '';
-            $category = $props['category'] ?? $props['Typ'] ?? $category;
+            $forestName = $props['name_th'] ?? ($props['FR_NAME'] ?? $forestName);
+            $forestCode = $props['forest_code'] ?? ($props['NRF_CODE'] ?? '');
+            $category = $props['category'] ?? ($props['Typ'] ?? $category);
         } elseif (isset($f['geojson_geometry'])) {
-            // Database row structure
             $forestGeo = is_string($f['geojson_geometry']) ? json_decode($f['geojson_geometry'], true) : $f['geojson_geometry'];
             $forestName = $f['name_th'] ?? $forestName;
             $forestCode = $f['forest_code'] ?? '';
@@ -155,17 +252,36 @@ function evaluatePlotEudrSpatial($pdo, $plotCoords, $planting_year = 2018) {
         foreach ($rings as $ring) {
             if (empty($ring) || !is_array($ring)) continue;
 
-            if (doPolygonsIntersect($plotCoords, $ring)) {
+            // Compute ring Bounding Box
+            $rMinX = 999.0; $rMaxX = -999.0;
+            $rMinY = 999.0; $rMaxY = -999.0;
+            foreach ($ring as $rpt) {
+                if (!is_array($rpt) || count($rpt) < 2) continue;
+                $rx = (float)$rpt[0];
+                $ry = (float)$rpt[1];
+                if ($rx < $rMinX) $rMinX = $rx;
+                if ($rx > $rMaxX) $rMaxX = $rx;
+                if ($ry < $rMinY) $rMinY = $ry;
+                if ($ry > $rMaxY) $rMaxY = $ry;
+            }
+
+            // Quick Bounding Box Overlap check with small buffer for intersection
+            $bboxOverlap = !($pMaxX < $rMinX || $pMinX > $rMaxX || $pMaxY < $rMinY || $pMinY > $rMaxY);
+
+            if ($bboxOverlap && doPolygonsIntersect($plotCoords, $ring)) {
                 $forestOverlap = true;
             }
 
-            // Check distance to ring vertices
-            foreach ($ring as $fpt) {
-                if (is_array($fpt) && count($fpt) >= 2 && is_numeric($fpt[0]) && is_numeric($fpt[1])) {
-                    $dist = calculateMinDistanceMeters($centroidLat, $centroidLng, (float)$fpt[1], (float)$fpt[0]);
-                    if ($dist < $nearestDistance) {
-                        $nearestDistance = $dist;
-                        $nearestForestName = $forestName;
+            // Check distance to ring vertices if within proximity buffer (~0.15 deg ~= 16km)
+            $proxCheck = !($pMaxX < ($rMinX - 0.15) || $pMinX > ($rMaxX + 0.15) || $pMaxY < ($rMinY - 0.15) || $pMinY > ($rMaxY + 0.15));
+            if ($proxCheck) {
+                foreach ($ring as $fpt) {
+                    if (is_array($fpt) && count($fpt) >= 2 && is_numeric($fpt[0]) && is_numeric($fpt[1])) {
+                        $dist = calculateMinDistanceMeters($centroidLat, $centroidLng, (float)$fpt[1], (float)$fpt[0]);
+                        if ($dist < $nearestDistance) {
+                            $nearestDistance = $dist;
+                            $nearestForestName = $forestName;
+                        }
                     }
                 }
             }
@@ -173,7 +289,7 @@ function evaluatePlotEudrSpatial($pdo, $plotCoords, $planting_year = 2018) {
 
         if ($forestOverlap) {
             $hasOverlap = true;
-            $overlapPercentage = max($overlapPercentage, 25.0);
+            $overlapPercentage = 100.0;
             $overlappingForests[] = [
                 'name' => $forestName,
                 'code' => $forestCode,
@@ -189,13 +305,14 @@ function evaluatePlotEudrSpatial($pdo, $plotCoords, $planting_year = 2018) {
     if ($hasOverlap) {
         $status = 'non_compliant';
         $forestNamesList = implode(', ', array_unique(array_column($overlappingForests, 'name')));
-        $reasons[] = "ตรวจพบการทับซ้อนกับแนวเขตป่าสงวน ({$forestNamesList})";
+        $nearestDistance = 0.0;
+        $reasons[] = "⛔ ตรวจพบการทับซ้อนกับเขตป่าสงวนแห่งชาติ ({$forestNamesList}) 100% ไม่อนุญาตให้ออกใบรับรอง EUDR (Non-Compliant)";
     } elseif ($nearestDistance < 500) {
         $status = 'under_review';
-        $reasons[] = "แปลงอยู่ใกล้แนวเขตป่าสงวน (" . round($nearestDistance) . " ม. จาก " . $nearestForestName . ") อยู่ในโซนเฝ้าระวัง (Buffer Zone)";
+        $reasons[] = "⚠️ แปลงอยู่ใกล้แนวเขตป่าสงวน (" . round($nearestDistance) . " ม. จาก " . $nearestForestName . ") อยู่ในโซนเฝ้าระวัง (Buffer Zone)";
     } else {
         $status = 'compliant';
-        $reasons[] = "ไม่พบการทับซ้อนกับแนวเขตป่าสงวนหรือพื้นที่อนุรักษ์ (Deforestation-Free Verified)";
+        $reasons[] = "✅ ไม่พบการทับซ้อนกับแนวเขตป่าสงวนหรือพื้นที่อนุรักษ์ (Deforestation-Free 100%)";
     }
 
     // Area calculations

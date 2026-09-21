@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/auth_check.php';
 <html lang="th" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GeoRubber Watch - ระบบภูมิสารสนเทศอัจฉริยะติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา จ.สุราษฎร์ธานี</title>
   
   <!-- Google Fonts: Plus Jakarta Sans & Sarabun -->
@@ -226,7 +226,7 @@ require_once __DIR__ . '/includes/auth_check.php';
                 </span>
               </div>
               <strong class="text-sm sm:text-base font-extrabold block text-white leading-snug">
-                26 ผืนป่าสงวนแห่งชาติ • 784,618 ไร่
+                26 ผืนป่าสงวนแห่งชาติ • 3,643,595 ไร่
               </strong>
               <p class="text-[11px] text-white/80 font-light leading-tight">
                 ฐานข้อมูลแนวเขตป่าสงวนและการตรวจสอบย้อนกลับ (Traceability) กรมป่าไม้
@@ -608,7 +608,7 @@ require_once __DIR__ . '/includes/auth_check.php';
         <div class="lg:col-span-4 space-y-6">
           
           <div class="space-y-1 pb-4 border-b border-gray-100">
-            <h3 class="text-3xl sm:text-4xl font-black text-mezenc-teal tracking-tight">784,618 ไร่</h3>
+            <h3 class="text-3xl sm:text-4xl font-black text-mezenc-teal tracking-tight">3,643,595 ไร่</h3>
             <p class="text-xs text-gray-600 font-light leading-relaxed">
               พื้นที่แนวเขตป่าสงวนแห่งชาติ 26 แห่ง จ.สุราษฎร์ธานี ในระบบฐานข้อมูลเฝ้าระวัง
             </p>
@@ -891,7 +891,7 @@ require_once __DIR__ . '/includes/auth_check.php';
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
             <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1">SURAT THANI FOREST COVERAGE</div>
             <div class="text-2xl my-1">🗺️</div>
-            <div class="text-[14px] font-bold text-white leading-tight">26 ผืนป่าสงวน (Zone C) • 784,618 ไร่</div>
+            <div class="text-[14px] font-bold text-white leading-tight">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
             <div class="text-[12px] text-white/70 mt-1 font-light">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
