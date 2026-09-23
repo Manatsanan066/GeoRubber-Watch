@@ -1801,8 +1801,8 @@ $currentUser = getCurrentUser();
         icon: '🟠',
         title_th: 'แนวกันชนประชิดแนวป่าสงวน (เฝ้าระวัง 500 ม.)',
         title_en: '500m Forest Buffer Zone (Watchlist)',
-        text_th: 'แปลงยางพาราที่มีเอกสารสิทธิ์ถูกต้อง แต่ตั้งอยู่ห่างจากแนวเขตป่าสงวนไม่เกิน 500 เมตร ต้องเฝ้าระวังและวิเคราะห์พิกัดไม่ให้ขยายขอบเขตล่วงล้ำแนวป่า พร้อมตรวจสอบข้อมูลย้อนกลับเชิงพื้นที่ผ่านระบบ GIS',
-        text_en: 'Titled rubber farms located within 500 meters of national forest reserve borders, requiring strict perimeter monitoring and spatial verification via GIS.',
+        text_th: 'การกำหนดแนวกันชนระยะ 500 เมตร ประชิดแนวเขตป่าสงวนแห่งชาติ ทำหน้าที่เป็นเขตเฝ้าระวังเชิงพื้นที่ (Buffer Zone) เพื่อติดตามและควบคุมความเสี่ยงของการขยายแปลงเกษตรกรรมรุกล้ำพื้นที่ป่าสมบูรณ์ แม้แปลงดังกล่าวจะมีเอกสารสิทธิ์การถือครองที่ถูกต้องตามกฎหมาย การใช้ระบบ GIS ร่วมกับการเปรียบเทียบพิกัดแปลงกับภาพถ่ายดาวเทียมย้อนหลังอย่างสม่ำเสมอ จึงเป็นขั้นตอนสำคัญในการพิสูจน์ความโปร่งใส ยืนยันสถานะขอบเขตแปลงที่ดินว่าไม่มีการรุกล้ำเพิ่ม และช่วยป้องกันข้อพิพาทด้านแนวเขตตามกฎหมาย พร้อมทั้งเสริมความพร้อมด้านการตรวจสอบย้อนกลับ (Traceability) ตามมาตรฐานการค้าสากลได้อย่างมีประสิทธิภาพ',
+        text_en: 'Establishing a 500-meter buffer zone adjacent to national forest reserves acts as a critical spatial monitoring zone to prevent agricultural encroachment into primary forests. Even for legally titled plots, using GIS combined with historical satellite imagery comparison proves boundary compliance, prevents land disputes, and ensures rigorous traceability under international trade standards.',
         link: 'login.php?redirect=map.php'
       },
       3: {
