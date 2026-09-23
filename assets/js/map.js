@@ -386,14 +386,14 @@ const GeoMap = {
                 <button type="button" onclick="event.stopPropagation(); (window.App && App.showToast) ? App.showToast('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออกใบรับรองและ QR Code (Non-Compliant)', 'warning') : alert('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออก QR Code');" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: not-allowed; border-radius: 6px; color: #dc2626; border-color: #fca5a5; background: #fef2f2;" title="ไม่อนุญาตให้ออก QR Code สำหรับแปลงทับซ้อนป่าสงวน">
                   ไม่ผ่านเกณฑ์
                 </button>
-                <a href="trace.php?token=${tokenParam}" target="_blank" onclick="event.stopPropagation(); window.open('trace.php?token=' + encodeURIComponent('${safeToken}'), '_blank'); return false;" class="btn btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #dc2626; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; cursor: pointer;">
+                <a href="trace.php?token=${tokenParam}" target="_blank" rel="noopener noreferrer" data-action="open-passport" data-token="${safeToken}" data-url="trace.php?token=${tokenParam}" class="btn-open-trace-popup btn btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #dc2626; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; cursor: pointer;">
                   ตรวจสอบย้อนกลับ
                 </a>
                 ` : `
                 <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).showPlotQR(${p.id});" data-action="qr-plot" data-plot-id="${p.id}" class="btn-qr-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: pointer; border-radius: 6px;">
                   QR Code
                 </button>
-                <a href="trace.php?token=${tokenParam}" target="_blank" onclick="event.stopPropagation(); window.open('trace.php?token=' + encodeURIComponent('${safeToken}'), '_blank'); return false;" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 600;">
+                <a href="trace.php?token=${tokenParam}" target="_blank" rel="noopener noreferrer" data-action="open-passport" data-token="${safeToken}" data-url="trace.php?token=${tokenParam}" class="btn-open-trace-popup btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 600;">
                   Passport
                 </a>
                 `}
@@ -1200,9 +1200,30 @@ const GeoMap = {
 window.GeoMap = GeoMap;
 window.openEditPlotModal = function(id) { GeoMap.openEditPlotModal(id); };
 window.showPlotQR = function(id) { GeoMap.showPlotQR(id); };
+window.openPlotPassport = function(tokenOrUrl) {
+  const url = tokenOrUrl.includes('trace.php') ? tokenOrUrl : ('trace.php?token=' + encodeURIComponent(tokenOrUrl));
+  const win = window.open(url, '_blank');
+  if (!win || win.closed || typeof win.closed === 'undefined') {
+    window.location.href = url;
+  }
+};
 
 // Global document click delegation for popup action buttons
 document.addEventListener('click', function(e) {
+  const btnPassport = e.target.closest('.btn-open-trace-popup, [data-action="open-passport"]');
+  if (btnPassport) {
+    e.stopPropagation();
+    const token = btnPassport.getAttribute('data-token');
+    const directUrl = btnPassport.getAttribute('data-url') || btnPassport.getAttribute('href') || ('trace.php?token=' + encodeURIComponent(token));
+    if (directUrl && directUrl !== '#') {
+      const win = window.open(directUrl, '_blank');
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        window.location.href = directUrl;
+      }
+    }
+    return;
+  }
+
   const btnEdit = e.target.closest('.btn-edit-plot-popup, [data-action="edit-plot"]');
   if (btnEdit) {
     e.preventDefault();
@@ -1211,6 +1232,7 @@ document.addEventListener('click', function(e) {
     if (plotId) {
       GeoMap.openEditPlotModal(plotId);
     }
+    return;
   }
 
   const btnQr = e.target.closest('.btn-qr-plot-popup, [data-action="qr-plot"]');
@@ -1221,6 +1243,7 @@ document.addEventListener('click', function(e) {
     if (plotId) {
       GeoMap.showPlotQR(plotId);
     }
+    return;
   }
 });
 

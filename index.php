@@ -406,7 +406,6 @@ $currentUser = getCurrentUser();
             href="logout.php"
             class="text-white/80 hover:text-red-300 flex items-center justify-center w-7 h-7 rounded-full bg-white/10 hover:bg-red-500/30 transition-all cursor-pointer ml-1"
             title="ออกจากระบบ (Logout)"
-            onclick="if(confirm('ต้องการออกจากระบบหรือไม่?')){ window.location.href='logout.php'; } return false;"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -505,7 +504,7 @@ $currentUser = getCurrentUser();
           <a href="overview.php" class="w-full py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center block shadow transition-all text-xs uppercase tracking-wider" data-i18n="idx_sec3_btn">
             เปิดแผนที่ระบบภูมิสารสนเทศ (Full GIS Map) ➔
           </a>
-          <a href="logout.php" class="w-full py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all" onclick="if(confirm('ต้องการออกจากระบบหรือไม่?')){ window.location.href='logout.php'; } return false;">
+          <a href="logout.php" class="w-full py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all">
             <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
           </a>
         </div>
