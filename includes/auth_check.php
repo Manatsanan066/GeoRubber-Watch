@@ -93,7 +93,20 @@ function requireAuth(?string $customRedirect = null): void {
 
 // Automatically enforce login guard on protected files
 $currentScriptName = basename($_SERVER['SCRIPT_NAME'] ?? ($_SERVER['PHP_SELF'] ?? ''));
-$publicAccessPages = ['trace.php', 'certificate.php', 'qr.php', 'verify.php', 'public_trace.php'];
+$publicAccessPages = [
+    'index.php',
+    'overview.php',
+    'contact.php',
+    'login.php',
+    'register.php',
+    'trace.php',
+    'certificate.php',
+    'qr.php',
+    'verify.php',
+    'public_trace.php',
+    'forests.php',
+    'plots.php'
+];
 
 if (!defined('ALLOW_PUBLIC_ACCESS') && !in_array($currentScriptName, $publicAccessPages, true)) {
     requireAuth();

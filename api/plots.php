@@ -453,9 +453,10 @@ if ($method === 'GET') {
 }
 
 // -----------------------------------------------------------------------------
-// POST: Create New Plot (or Update if action=update)
+// POST: Create New Plot (or Update/Delete if action specified)
 // -----------------------------------------------------------------------------
 if ($method === 'POST') {
+    requireAuth();
     try {
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data) {
@@ -1044,6 +1045,7 @@ if ($method === 'PUT') {
 // DELETE: Remove Plot from Database
 // -----------------------------------------------------------------------------
 if ($method === 'DELETE') {
+    requireAuth();
     $id = (int)($_GET['id'] ?? 0);
     if ($id <= 0) {
         $rawInput = json_decode(file_get_contents('php://input'), true);

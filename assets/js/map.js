@@ -515,9 +515,11 @@ const GeoMap = {
       const safeToken = (p.traceability_token || p.plot_code || '').replace(/'/g, "\\'");
       const safeName = (p.plot_name || '').replace(/'/g, "\\'");
       const safeCode = (p.plot_code || '').replace(/'/g, "\\'");
+      const cLat = parseFloat(p.centroid?.lat ?? p.centroid_lat ?? 0);
+      const cLng = parseFloat(p.centroid?.lng ?? p.centroid_lng ?? 0);
 
       html += `
-        <tr id="plot-row-${p.id}" class="${rowClass}" onclick="GeoMap.zoomToPlot(${p.centroid.lat}, ${p.centroid.lng}, ${p.id})">
+        <tr id="plot-row-${p.id}" class="${rowClass}" onclick="GeoMap.zoomToPlot(${cLat}, ${cLng}, ${p.id})">
           <!-- 1. Selection Circle -->
           <td class="py-4 pl-5 pr-2 text-center select-none">
             <div class="w-4 h-4 rounded-full border-2 border-gray-300 mx-auto group-hover:border-mezenc-brightCyan group-hover:bg-mezenc-brightCyan/20 transition-all"></div>
@@ -605,10 +607,10 @@ const GeoMap = {
               ${((window.IS_ADMIN === true) || (p.can_delete !== false)) ? `
               <button 
                 type="button" 
-                onclick="GeoMap.deletePlot(${p.id}, '${safePlotName}')" 
+                onclick="GeoMap.deletePlot(${p.id}, '${safeName}')" 
                 data-action="delete-plot"
                 data-plot-id="${p.id}"
-                data-plot-name="${safePlotName}"
+                data-plot-name="${safeName}"
                 title="ลบแปลงปลูก" 
                 class="btn-delete-plot-row w-9 h-9 rounded-full text-gray-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
               >
