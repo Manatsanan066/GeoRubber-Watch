@@ -145,10 +145,10 @@ const I18N_DICTIONARY = {
     idx_risk_c1_btn: "อ่านเพิ่มเติม",
     idx_risk_c2_title: "แนวกันชนประชิดแนวป่าสงวน",
     idx_risk_c2_desc: "แปลงยางพาราที่มีเอกสารสิทธิ์ถูกต้อง แต่ตั้งอยู่ห่างจากแนวเขตป่าสงวนไม่เกิน 500 เมตร ต้องเฝ้าระวังและวิเคราะห์พิกัดไม่ให้ขยายขอบเขตล่วงล้ำแนวป่า",
-    idx_risk_c2_btn: "ตรวจสอบระยะห่าง Buffer ➔",
+    idx_risk_c2_btn: "อ่านเพิ่มเติม",
     idx_risk_c3_title: "แปลงผ่านเกณฑ์มาตรฐานสากล",
     idx_risk_c3_desc: "แปลงยางพาราที่มีเอกสารสิทธิ์ถูกต้อง (โฉนด, น.ส.3ก, ส.ป.ก.4-01 ฯลฯ) อยู่นอกแนวป่าสงวน 100% และปลูกก่อนปี 2020 สามารถออกหนังสือรับรอง EUDR ได้ทันที",
-    idx_risk_c3_btn: "ออกเอกสาร EUDR Passport ➔",
+    idx_risk_c3_btn: "อ่านเพิ่มเติม",
 
     // Deed Modal
     deed_lbl_farmer: "เจ้าของแปลง / เกษตรกร:",
@@ -574,10 +574,10 @@ const I18N_DICTIONARY = {
     idx_risk_c1_btn: "Read More",
     idx_risk_c2_title: "500m Forest Buffer Zone",
     idx_risk_c2_desc: "Titled rubber farms located within 500 meters of national forest reserve borders, requiring strict perimeter monitoring.",
-    idx_risk_c2_btn: "Check Buffer Distance ➔",
+    idx_risk_c2_btn: "Read More",
     idx_risk_c3_title: "EUDR Compliant & Deforestation-Free",
     idx_risk_c3_desc: "Fully titled rubber farms situated outside forest reserves planted prior to Dec 31, 2020, eligible for immediate EUDR digital certification.",
-    idx_risk_c3_btn: "Issue EUDR Passport ➔",
+    idx_risk_c3_btn: "Read More",
 
     // Deed Modal
     deed_lbl_farmer: "Farm Owner / Farmer:",

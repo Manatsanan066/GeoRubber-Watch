@@ -1027,7 +1027,7 @@ $currentUser = getCurrentUser();
           <!-- Bottom Action Pill Button -->
           <div class="px-1 sm:px-2 pt-2">
             <button type="button" onclick="openRiskModal(2)" class="inline-flex items-center justify-center gap-2.5 bg-mezenc-brightCyan hover:bg-mezenc-teal text-white px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
-              <span data-i18n="risk_c2_btn">ตรวจสอบระยะห่าง Buffer ➔</span>
+              <span data-i18n="risk_c2_btn">อ่านเพิ่มเติม</span>
             </button>
           </div>
         </div>
@@ -1054,7 +1054,7 @@ $currentUser = getCurrentUser();
           <!-- Bottom Action Pill Button -->
           <div class="px-1 sm:px-2 pt-2">
             <button type="button" onclick="openRiskModal(3)" class="inline-flex items-center justify-center gap-2.5 bg-mezenc-brightCyan hover:bg-mezenc-teal text-white px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer">
-              <span data-i18n="risk_c3_btn">ออกเอกสาร EUDR Passport ➔</span>
+              <span data-i18n="risk_c3_btn">อ่านเพิ่มเติม</span>
             </button>
           </div>
         </div>
