@@ -400,15 +400,15 @@ const GeoMap = {
               </div>
               ${(window.IS_ADMIN === true || p.can_delete !== false) ? `
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px;">
+                <button type="button" onclick="event.stopPropagation(); window.openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px;">
                   แก้ไข
                 </button>
-                <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).deletePlot(${p.id}, '${safeName}');" data-action="delete-plot" data-plot-id="${p.id}" data-plot-name="${safeName}" class="btn-delete-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #e11d48; border-color: #fecdd3; background-color: #fff1f2; cursor: pointer; border-radius: 6px;">
+                <button type="button" onclick="event.stopPropagation(); window.deletePlotById(${p.id});" data-action="delete-plot" data-plot-id="${p.id}" class="btn-delete-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #e11d48; border-color: #fecdd3; background-color: #fff1f2; cursor: pointer; border-radius: 6px;">
                   ลบแปลง
                 </button>
               </div>` : `
               <div style="display: grid; grid-template-columns: 1fr; gap: 6px;">
-                <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 6px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px; font-weight: 600; text-align: center;">
+                <button type="button" onclick="event.stopPropagation(); window.openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 6px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px; font-weight: 600; text-align: center;">
                   แก้ไขข้อมูลแปลง
                 </button>
               </div>`}
@@ -633,39 +633,75 @@ const GeoMap = {
 
   // Delete Plot from Database
   async deletePlot(plotId, plotName) {
-    const targetName = plotName || 'แปลงนี้';
-    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบแปลงปลูก "${targetName}" ออกจากฐานข้อมูลจริง?`)) return;
+    const targetId = Number(plotId);
+    if (!targetId || targetId <= 0) return;
+
+    let targetName = plotName;
+    if (!targetName || targetName === 'แปลงนี้') {
+      if (this.plotsData && Array.isArray(this.plotsData)) {
+        const found = this.plotsData.find(f => Number(f.properties?.id || f.id) === targetId);
+        if (found && found.properties && found.properties.plot_name) {
+          targetName = found.properties.plot_name;
+        }
+      }
+    }
+    targetName = targetName || 'แปลงนี้';
+
+    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบแปลงปลูก "${targetName}" ออกจากฐานข้อมูลจริง?`)) {
+      return;
+    }
     
     try {
       if (window.App && typeof window.App.showToast === 'function') {
         App.showToast('กำลังลบข้อมูลแปลงปลูกจากฐานข้อมูล...', 'info');
       }
       
-      let res = await fetch(`api/plots.php?id=${plotId}`, { 
+      if (this.map) {
+        this.map.closePopup();
+      }
+      
+      let res = await fetch(`api/plots.php?id=${targetId}`, { 
         method: 'DELETE',
+        credentials: 'same-origin',
         headers: { 'Accept': 'application/json' }
       });
       
       // Fallback to POST with action=delete if DELETE is rejected/blocked
-      if (!res.ok && res.status !== 404 && res.status !== 401) {
+      if (!res.ok && res.status !== 401 && res.status !== 403 && res.status !== 404) {
         res = await fetch('api/plots.php', {
           method: 'POST',
+          credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ action: 'delete', id: plotId })
+          body: JSON.stringify({ action: 'delete', id: targetId })
         });
       }
 
-      const data = await res.json().catch(() => ({}));
+      let data = {};
+      try {
+        data = await res.json();
+      } catch(eJson) {
+        data = {};
+      }
+
+      if (res.status === 401 || data.error === 'Unauthorized') {
+        alert('กรุณาเข้าสู่ระบบก่อนทำการลบแปลงปลูก');
+        window.location.href = 'login.php?redirect=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
       
       if (data.success || res.ok) {
-        if (this.map) {
-          this.map.closePopup();
-        }
         if (window.App && typeof window.App.showToast === 'function') {
           App.showToast(`ลบแปลง "${targetName}" เรียบร้อยแล้ว`, 'success');
         } else {
           alert(`ลบแปลง "${targetName}" เรียบร้อยแล้ว`);
         }
+        
+        // Remove locally immediately for instant feedback
+        if (this.plotsData && Array.isArray(this.plotsData)) {
+          this.plotsData = this.plotsData.filter(f => Number(f.properties?.id || f.id) !== targetId);
+          this.renderSidebarPlotsList(this.plotsData);
+        }
+
         await this.loadRubberPlots();
         if (typeof GeoOverview !== 'undefined' && typeof GeoOverview.loadPlots === 'function') {
           GeoOverview.loadPlots();
@@ -738,6 +774,12 @@ const GeoMap = {
     try {
       const targetId = Number(plotId);
       if (!targetId) return;
+
+      const modalEl = document.getElementById('addPlotModal');
+      if (!modalEl) {
+        window.location.href = `map.php?plot_id=${targetId}&mode=edit`;
+        return;
+      }
 
       let p = null;
 
@@ -1227,6 +1269,18 @@ const GeoMap = {
 window.GeoMap = GeoMap;
 window.openEditPlotModal = function(id) { GeoMap.openEditPlotModal(id); };
 window.showPlotQR = function(id) { GeoMap.showPlotQR(id); };
+window.deletePlot = function(id, name) { GeoMap.deletePlot(id, name); };
+window.deletePlotById = function(id) {
+  const targetId = Number(id);
+  let plotName = 'แปลงนี้';
+  if (GeoMap && GeoMap.plotsData) {
+    const found = GeoMap.plotsData.find(f => Number(f.properties?.id || f.id) === targetId);
+    if (found && found.properties && found.properties.plot_name) {
+      plotName = found.properties.plot_name;
+    }
+  }
+  GeoMap.deletePlot(targetId, plotName);
+};
 window.openPlotPassport = function(tokenOrUrl) {
   const url = tokenOrUrl.includes('trace.php') ? tokenOrUrl : ('trace.php?token=' + encodeURIComponent(tokenOrUrl));
   const win = window.open(url, '_blank');

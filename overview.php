@@ -31,6 +31,10 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
   <!-- Core Eco-GIS Styles & Centralized i18n Engine -->
   <link rel="stylesheet" href="assets/css/style.css" />
   <script src="assets/js/i18n.js?v=<?= time() ?>"></script>
+  <script>
+    window.CURRENT_USER = <?= json_encode($currentUser, JSON_UNESCAPED_UNICODE) ?>;
+    window.IS_ADMIN = <?= (!empty($currentUser['is_admin'])) ? 'true' : 'false' ?>;
+  </script>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
