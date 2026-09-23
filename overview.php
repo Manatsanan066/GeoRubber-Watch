@@ -928,7 +928,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
             </div>
           </div>
           <p class="text-xs text-white/75 leading-relaxed font-light" data-i18n="foot_title">
-            ระบบบริการสารสนเทศภูมิศาสตร์เพื่อการตรวจสอบย้อนกลับและประเมินความสอดคล้องตามกฎหมายว่าด้วยสินค้าที่ปลอดจากการตัดไม้ทำลายป่าของสหภาพยุโรป (EUDR)
+            แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา
           </p>
           <div class="text-[11px] text-white/60 pt-1" data-i18n="foot_dept">
             สาขาเทคโนโลยีสารสนเทศ คณะวิทยาศาสตร์และเทคโนโลยีอุตสาหกรรม<br>
@@ -939,11 +939,10 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
         <!-- คอลัมน์ที่ 2: ข้อมูลผู้พัฒนาและอาจารย์ที่ปรึกษา -->
         <div class="md:col-span-5 space-y-1.5 text-xs text-white/85 leading-relaxed">
           <div class="font-bold text-mezenc-mint uppercase" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
-          <div class="text-[11px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[11px] text-white/90 space-y-0.5">
             <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
             <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
+            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
           </div>
         </div>
 

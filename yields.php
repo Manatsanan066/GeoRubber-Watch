@@ -1545,7 +1545,7 @@ try {
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
             <div data-i18n="foot_authors"><i class="fa-solid fa-user-pen mr-1 text-mezenc-mint"></i> <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
             <div data-i18n="foot_advisor"><i class="fa-solid fa-graduation-cap mr-1 text-mezenc-mint"></i> <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div data-i18n="foot_email"><i class="fa-solid fa-envelope mr-1 text-mezenc-mint"></i> <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a>, <a href="mailto:6640011066@psu.ac.th" class="hover:text-mezenc-mint underline">6640011066@psu.ac.th</a></div>
+            <div data-i18n="foot_email"><i class="fa-solid fa-envelope mr-1 text-mezenc-mint"></i> <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
           </div>
         </div>
 
