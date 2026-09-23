@@ -214,6 +214,10 @@ const App = {
       linkEl.href = localVerifyUrl;
     }
 
+    qrContainer.style.cursor = 'pointer';
+    qrContainer.title = 'คลิกเพื่อเปิดตรวจสอบหนังสือรับรอง (EUDR Passport) ในแท็บใหม่';
+    qrContainer.onclick = () => window.open(localVerifyUrl, '_blank');
+
     const tokenEl = document.getElementById('qr-token-display');
     if (tokenEl) {
       tokenEl.textContent = this.currentQRToken;

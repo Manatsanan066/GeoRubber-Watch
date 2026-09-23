@@ -398,7 +398,7 @@ const GeoMap = {
                 </a>
                 `}
               </div>
-              ${(window.IS_ADMIN === true || p.can_delete === true) ? `
+              ${(window.IS_ADMIN === true || p.can_delete !== false) ? `
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                 <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px;">
                   แก้ไข
@@ -601,8 +601,8 @@ const GeoMap = {
                 </svg>
               </button>
 
-              <!-- Delete Button (Trash Icon - Only available for Admin / SUPER_ADMIN) -->
-              ${((window.IS_ADMIN === true) || (p.can_delete === true)) ? `
+              <!-- Delete Button (Trash Icon) -->
+              ${((window.IS_ADMIN === true) || (p.can_delete !== false)) ? `
               <button 
                 type="button" 
                 onclick="GeoMap.deletePlot(${p.id}, '${p.plot_name}')" 

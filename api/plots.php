@@ -426,7 +426,7 @@ if ($method === 'GET') {
                     'centroid' => ['lat' => (float)$p['centroid_lat'], 'lng' => (float)$p['centroid_lng']],
                     'nearest_forest_name' => $p['nearest_forest_name'] ?? 'เขตป่าสงวนแห่งชาติเขาท่าเพชร',
                     'traceability_token' => $p['traceability_token'],
-                    'can_delete' => $isUserAdmin,
+                    'can_delete' => true,
                     'created_at' => $p['created_at']
                 ],
                 'geometry' => $geometry
@@ -436,7 +436,7 @@ if ($method === 'GET') {
         header('Cache-Control: private, max-age=5, stale-while-revalidate=30');
         echo json_encode([
             'type' => 'FeatureCollection',
-            'can_delete' => $isUserAdmin,
+            'can_delete' => true,
             'features' => $features
         ], JSON_UNESCAPED_UNICODE);
         exit;
@@ -446,7 +446,7 @@ if ($method === 'GET') {
     echo json_encode([
         'success' => true,
         'count' => count($plots),
-        'can_delete' => $isUserAdmin,
+        'can_delete' => true,
         'plots' => $plots
     ], JSON_UNESCAPED_UNICODE);
     exit;
@@ -1002,26 +1002,27 @@ if ($method === 'PUT') {
 }
 
 // -----------------------------------------------------------------------------
-// DELETE: Remove Plot (Only Admin & SUPER_ADMIN allowed)
+// DELETE: Remove Plot from Database
 // -----------------------------------------------------------------------------
 if ($method === 'DELETE') {
-    if (!$isUserAdmin) {
-        http_response_code(403);
-        echo json_encode([
-            'success' => false,
-            'message' => 'ไม่อนุญาต: เกษตรกรไม่มีสิทธิ์ลบข้อมูลแปลงปลูก กรุณาติดต่อผู้ดูแลระบบ'
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
     $id = (int)($_GET['id'] ?? 0);
     if ($id <= 0) {
         http_response_code(400);
-        echo json_encode(['error' => 'Missing plot ID']);
+        echo json_encode(['error' => 'Missing plot ID'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    // Delete associated yield logs first if any
+    // Verify plot exists
+    $chkPlot = $pdo->prepare("SELECT id, farmer_id FROM rubber_plots WHERE id = ?");
+    $chkPlot->execute([$id]);
+    $currentPlot = $chkPlot->fetch(PDO::FETCH_ASSOC);
+    if (!$currentPlot) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลแปลงปลูกที่ต้องการลบ'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // Delete associated yield logs and traceability batches first
     $pdo->prepare("DELETE FROM yield_logs WHERE plot_id = ?")->execute([$id]);
     $pdo->prepare("DELETE FROM traceability_batches WHERE plot_id = ?")->execute([$id]);
 

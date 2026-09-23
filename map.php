@@ -1661,11 +1661,14 @@ $totalPlotsCount = (int)($pdo->query("SELECT COUNT(*) FROM rubber_plots")->fetch
               <div class="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
                 <!-- QR Box -->
                 <div class="sm:col-span-5 flex flex-col items-center justify-center p-4 bg-[#f8faf9] rounded-2xl border border-[#bee6e1] shadow-inner space-y-2.5">
-                  <div class="p-2 bg-white rounded-2xl border-2 border-mezenc-brightCyan flex items-center justify-center relative shadow-sm min-w-[170px] min-h-[170px]">
+                  <div class="p-2 bg-white rounded-2xl border-2 border-mezenc-brightCyan flex items-center justify-center relative shadow-sm min-w-[170px] min-h-[170px] cursor-pointer" onclick="const link=document.getElementById('modal-sum-open-cert-link'); if(link && link.href) window.open(link.href, '_blank');" title="คลิกเพื่อเปิดดูใบรับรองในแท็บใหม่">
                     <div id="modal-sum-qrcode-canvas" class="flex items-center justify-center"></div>
                   </div>
                   <span class="text-[16px] font-bold text-mezenc-teal">สแกนเพื่อตรวจสอบย้อนกลับ</span>
                   <span class="text-[13px] text-gray-500 font-mono text-center break-all" id="modal-sum-trace-id">EUDR-TH-ST-84000-020-8EFD4C</span>
+                  <a id="modal-sum-open-cert-link" href="#" target="_blank" class="w-full py-2.5 px-4 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-[14px] shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-center mt-1">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> <span>เปิดตรวจสอบหนังสือรับรอง (EUDR Passport)</span>
+                  </a>
                 </div>
 
                 <!-- Info Grid -->
@@ -2848,6 +2851,12 @@ $totalPlotsCount = (int)($pdo->query("SELECT COUNT(*) FROM rubber_plots")->fetch
         let basePath = pathname.replace(/\/[^/]*$/, '');
         if (!basePath.startsWith('/')) basePath = '/' + basePath;
         if (basePath === '/') basePath = '';
+
+        const localVerifyUrl = `${window.location.origin}${basePath}/trace.php?token=${encodeURIComponent(token)}`;
+        const openLinkEl = document.getElementById("modal-sum-open-cert-link");
+        if (openLinkEl) {
+          openLinkEl.href = localVerifyUrl;
+        }
 
         const cleanBase = (window.NGROK_PUBLIC_URL && window.NGROK_PUBLIC_URL.includes('http'))
           ? window.NGROK_PUBLIC_URL.trim().replace(/\/+$/, '')

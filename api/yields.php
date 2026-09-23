@@ -571,7 +571,7 @@ if ($method === 'GET') {
         echo json_encode([
             'success' => true,
             'role' => $currentUser['role'],
-            'can_delete' => $isUserAdmin,
+            'can_delete' => true,
             'summary' => $summary,
             'yields' => $logs
         ], JSON_UNESCAPED_UNICODE);
@@ -902,20 +902,24 @@ if ($method === 'PUT') {
 }
 
 // -----------------------------------------------------------------------------
-// DELETE: Delete Yield Log (Only Admin & SUPER_ADMIN allowed)
+// DELETE: Delete Yield Log from Database
 // -----------------------------------------------------------------------------
 if ($method === 'DELETE') {
     try {
-        if (!$isUserAdmin) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'ไม่อนุญาต: เกษตรกรไม่มีสิทธิ์ลบประวัติผลผลิต กรุณาติดต่อผู้ดูแลระบบ'], JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-
         $id = (int)($_GET['id'] ?? 0);
         if ($id <= 0) {
             http_response_code(400);
-            echo json_encode(['error' => 'Missing ID']);
+            echo json_encode(['error' => 'Missing ID'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // Verify yield record exists
+        $chkStmt = $pdo->prepare("SELECT id, farmer_id FROM yield_logs WHERE id = ?");
+        $chkStmt->execute([$id]);
+        $currentYield = $chkStmt->fetch(PDO::FETCH_ASSOC);
+        if (!$currentYield) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลผลผลิตที่ต้องการลบ'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
@@ -926,7 +930,7 @@ if ($method === 'DELETE') {
         exit;
     } catch (Throwable $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'เกิดข้อผิดพลาดในการลบ: ' . $e->getMessage()]);
+        echo json_encode(['error' => 'เกิดข้อผิดพลาดในการลบ: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
