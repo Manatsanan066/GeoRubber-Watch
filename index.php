@@ -1037,7 +1037,7 @@ $currentUser = getCurrentUser();
           <div>
             <!-- Top Nature Image with Smooth Rounded Corners -->
             <div class="h-56 sm:h-60 lg:h-64 rounded-[1.5rem] sm:rounded-[1.75rem] overflow-hidden relative mb-5 shadow-xs">
-              <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80" alt="Safe Rubber Farm Surat Thani" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out">
+              <img src="img/safe_rubber_farm.jpg?v=<?= file_exists(__DIR__ . '/img/safe_rubber_farm.jpg') ? filemtime(__DIR__ . '/img/safe_rubber_farm.jpg') : time() ?>" alt="Safe Rubber Farm Surat Thani EUDR Compliant" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out" onerror="this.onerror=null; this.src='img/safe_rubber_farm.png';">
             </div>
 
             <!-- Content Area -->
