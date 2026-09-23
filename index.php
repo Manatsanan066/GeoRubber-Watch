@@ -1809,8 +1809,8 @@ $currentUser = getCurrentUser();
         icon: '🟢',
         title_th: 'แปลงผ่านเกณฑ์มาตรฐานสากล (ปลอดการทำลายป่า)',
         title_en: 'EUDR Compliant & Deforestation-Free',
-        text_th: 'แปลงยางพาราที่มีเอกสารสิทธิ์ถูกต้อง อยู่นอกแนวป่าสงวน 100% และปลูกก่อนวันที่ 31 ธ.ค. 2020 ผ่านเกณฑ์การประเมิน EUDR และพร้อมออกหนังสือรับรองและ QR Code ตรวจสอบย้อนกลับได้ทันที',
-        text_en: 'Fully titled rubber farms situated outside forest reserves planted prior to Dec 31, 2020, 100% compliant with EUDR Zero Deforestation criteria and eligible for instant digital passport issuance.',
+        text_th: 'การรับรองสถานะแปลงปลอดการตัดไม้ทำลายป่า ถือเป็นหัวใจสำคัญของการยกระดับห่วงโซ่อุปทานยางพาราสู่มาตรฐานสากล โดยแปลงที่ตั้งอยู่นอกแนวเขตป่าสงวนแห่งชาติอย่างชัดเจน และมีประวัติการเพาะปลูกก่อนเส้นตายวันที่ 31 ธันวาคม 2020 จะได้รับการยืนยันความถูกต้องผ่านการซ้อนทับชั้นข้อมูลเชิงพื้นที่ (GIS) และหลักฐานเอกสารสิทธิ์ตามกฎหมาย การเชื่อมโยงข้อมูลแปลงเข้ากับระบบหนังสือรับรองดิจิทัลและ QR Code สำหรับการตรวจสอบย้อนกลับ (Traceability) จึงช่วยสร้างความโปร่งใสแบบเรียลไทม์ ทำให้ผู้ซื้อในตลาดยุโรปสามารถสแกนตรวจดูพิกัดขอบเขตแปลงและประวัติย้อนหลังได้ทันที สร้างความเชื่อมั่น ป้องกันการปฏิเสธสินค้า และเพิ่มขีดความสามารถในการแข่งขันทางการค้าตามกฎระเบียบ EUDR ได้อย่างสมบูรณ์',
+        text_en: 'Certifying deforestation-free status is key to elevating the rubber supply chain to international standards. Farms situated clearly outside national forest reserves with documented cultivation before Dec 31, 2020 are verified via GIS layer overlay and official land deeds. Linking plot data to digital certificates and QR Code passports enables real-time supply chain transparency, allowing EU buyers to instantly inspect farm coordinates and audit histories, ensuring complete EUDR compliance and trade competitiveness.',
         link: 'login.php?redirect=trace.php'
       }
     };
