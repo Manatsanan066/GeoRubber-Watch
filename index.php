@@ -1083,7 +1083,7 @@ $currentUser = getCurrentUser();
             </div>
             <div class="space-y-0.5">
               <div class="font-extrabold text-[15px] sm:text-[16px] leading-snug text-white" data-i18n="foot_title">แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา</div>
-              <div class="font-semibold text-[13px] sm:text-[14px] leading-snug text-white/95" data-i18n="foot_title_en">GeoRubber Watch: ระบบภูมิสารสนเทศติดตามพื้นที่ปลูกยางพารายั่งยืน</div>
+              <div class="font-semibold text-[13px] sm:text-[14px] leading-snug text-white/95" data-i18n="foot_title_en">GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations</div>
             </div>
           </div>
           <p class="text-[14px] text-white/85 leading-relaxed font-light" data-i18n="foot_dept">

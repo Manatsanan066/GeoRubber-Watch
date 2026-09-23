@@ -1543,9 +1543,9 @@ try {
           <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
           <div class="text-[14px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
-            <div data-i18n="foot_authors"><i class="fa-solid fa-user-pen mr-1 text-mezenc-mint"></i> <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div data-i18n="foot_advisor"><i class="fa-solid fa-graduation-cap mr-1 text-mezenc-mint"></i> <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div data-i18n="foot_email"><i class="fa-solid fa-envelope mr-1 text-mezenc-mint"></i> <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
+            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
           </div>
         </div>
 
@@ -1553,8 +1553,7 @@ try {
         <div class="md:col-span-3 flex justify-start md:justify-end">
           <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
             <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
-            <div class="text-2xl my-1"><i class="fa-solid fa-map-location-dot text-mezenc-mint"></i></div>
-            <div class="text-[14px] font-bold text-white leading-tight" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
+            <div class="text-[14px] font-bold text-white leading-tight mt-2" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
             <div class="text-[12px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>

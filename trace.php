@@ -1644,61 +1644,60 @@ for ($i = 0; $i < $totalPts; $i++) {
 
   </main>
 
-  <!-- ==========================================================================
-       3. Footer (Identical to dashboard.php, map.php, overview.php)
-       ========================================================================== -->
-  <footer class="bg-mezenc-deepTeal text-white pt-10 pb-6 border-t border-white/10 mt-12 no-print">
-    <div class="max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 md:px-12 xl:px-14">
+  <!-- =========================================================================
+       3. FOOTER (ข้อมูลโครงการ / ผู้พัฒนา / สถิติพื้นที่ - ข้อมูลทางการ ม.อ. สุราษฎร์ธานี)
+       ========================================================================= -->
+  <footer id="footer-section" class="bg-mezenc-teal text-white pt-12 sm:pt-14 pb-10 border-t border-white/10 mt-12 sm:mt-16 relative z-20 no-print">
+    <div class="w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14">
       
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 pb-6 border-b border-white/15">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 pb-10 border-b border-white/15 items-start md:items-center">
         
-        <!-- คอลัมน์ที่ 1: ตราสัญลักษณ์และชื่อโครงการ -->
+        <!-- คอลัมน์ที่ 1: ข้อมูลโครงการและสถาบัน -->
         <div class="md:col-span-5 space-y-2.5">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-full border-2 border-white flex items-center justify-center bg-white/10 shrink-0 p-1.5 mt-0.5">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center bg-white/10 shrink-0 p-1.5 mt-0.5">
               <svg class="w-full h-full text-white" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="12" d="M142.07 46.129c5.265-3.387 20.107-6.337 24.539 2.417 4.433 8.268-5.427 14.978-15.24 21.198-8.221 5.557-16.062 8.81-23.778 13.532-7.046-7.025-18.528-5.021-25.629.828-8.983 6.65-15.848 15.812-25.36 21.809 12.522 10.193 32.174 12.691 45.335 2.244 7.46-5.283 12.071-16.873 5.724-24.725m-81.55 27.92c-5.265 3.387-17.535 7.623-21.967-.81-3.79-8.91 4.462-14.334 13.632-20.876 8.221-5.558 16.062-8.81 23.778-13.532 7.045 7.024 18.528 5.02 25.629-.829 8.982-6.65 15.848-15.812 25.36-21.809-12.522-10.193-32.174-12.69-45.335-2.243-7.46 5.283-12.071 16.873-5.724 24.725M94.218 22.01c-25.433-.535-49.944 18.01-55.391 43.022-3.294 13.583-1.059 28.205 6.059 40.23C57.005 129.747 74.968 150.826 94.219 170c20.368-18.544 39.793-39.311 51.27-64.662 3.97-8.554 6.45-18.898 6.32-27.734.01-6.628-1.505-15.028-4.575-21.661-8.904-20.6-30.684-34.165-53.015-33.931z"></path>
               </svg>
             </div>
             <div class="space-y-0.5">
-              <div class="font-bold text-[15px] leading-snug text-white">แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา</div>
-              <div class="text-[12px] text-white/90">GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations</div>
+              <div class="font-extrabold text-[15px] sm:text-[16px] leading-snug text-white" data-i18n="foot_title">แพลตฟอร์มภูมิสารสนเทศอัจฉริยะสำหรับติดตามและเฝ้าระวังพื้นที่ปลูกยางพารา</div>
+              <div class="font-semibold text-[13px] sm:text-[14px] leading-snug text-white/95" data-i18n="foot_title_en">GeoRubber Watch: Intelligent Monitoring Platform for Sustainable Rubber Plantations</div>
             </div>
           </div>
-          <p class="text-[13px] text-white/80 leading-relaxed font-light">
+          <p class="text-[14px] text-white/85 leading-relaxed font-light" data-i18n="foot_dept">
             สาขาเทคโนโลยีสารสนเทศ คณะวิทยาศาสตร์และเทคโนโลยีอุตสาหกรรม<br>
             มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี<br>
-            <span class="text-white/70 text-[12px]">31 หมู่ 6 ต.มะขามเตี้ย อ.เมือง จ.สุราษฎร์ธานี 84000</span>
+            <span class="text-white/75 text-[14px]">31 หมู่ 6 ต.มะขามเตี้ย อ.เมือง จ.สุราษฎร์ธานี 84000</span>
           </p>
         </div>
 
         <!-- คอลัมน์ที่ 2: ข้อมูลผู้จัดทำและช่องทางติดต่อ -->
-        <div class="md:col-span-4 space-y-1.5 text-[13px] text-white/80 leading-relaxed">
-          <div class="font-bold text-[14px] text-mezenc-mint">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
-          <div class="text-[12px] text-white/70">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
-          <div class="pt-1 text-[13px] text-white/90 space-y-0.5">
-            <div>👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div>🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div>✉️ <strong>อีเมล:</strong> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
+        <div class="md:col-span-4 space-y-1.5 text-[14px] text-white/85 leading-relaxed">
+          <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
+          <div class="text-[14px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
+          <div class="pt-1 text-[14px] text-white/90 space-y-1">
+            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
           </div>
         </div>
 
         <!-- คอลัมน์ที่ 3: กล่องสถิติพื้นที่ (Surat Thani Territory Card) -->
         <div class="md:col-span-3 flex justify-start md:justify-end">
-          <div class="w-full sm:w-52 p-3.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 text-center shadow-lg">
-            <div class="text-[10px] font-bold uppercase text-mezenc-mint tracking-wider mb-0.5">SURAT THANI FOREST COVERAGE</div>
-            <div class="text-xl my-0.5">🗺️</div>
-            <div class="text-[13px] font-bold text-white leading-tight">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
-            <div class="text-[11px] text-white/70 mt-0.5 font-light">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
+          <div class="w-full sm:w-56 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
+            <div class="text-[11px] font-extrabold uppercase text-mezenc-mint tracking-wider mb-1" data-i18n="foot_card_hdr">SURAT THANI FOREST COVERAGE</div>
+            <div class="text-[14px] font-bold text-white leading-tight mt-2" data-i18n="foot_card_stat">26 ผืนป่าสงวน (Zone C) • 3,643,595 ไร่</div>
+            <div class="text-[12px] text-white/70 mt-1 font-light" data-i18n="foot_card_source">ฐานข้อมูลแนวเขตป่าเพื่อการอนุรักษ์ กรมป่าไม้</div>
           </div>
         </div>
 
       </div>
 
       <!-- แถบล่างสุด (Copyright Bar) -->
-      <div class="pt-4 flex flex-col sm:flex-row justify-between items-center text-[12px] text-white/70 gap-2">
-        <div>&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
-        <div class="text-mezenc-mint text-center sm:text-right">Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
+      <div class="pt-6 flex flex-col sm:flex-row justify-between items-center text-[14px] text-white/75 gap-4">
+        <div data-i18n="foot_copy">&copy; 2026 GeoRubber Watch • มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
+        <div class="text-mezenc-mint text-center sm:text-right" data-i18n="foot_eudr_cert">EU Regulation (EU) 2023/1115 Zero Deforestation Compliant (EUDR)</div>
       </div>
 
     </div>
