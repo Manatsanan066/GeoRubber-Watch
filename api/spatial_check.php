@@ -12,18 +12,20 @@ $pdo = getDatabaseConnection();
 
 // Geometry Helper: Check if Point is inside Polygon
 function isPointInPolygon($point, $polygon) {
-    $x = $point[0]; // lng
-    $y = $point[1]; // lat
+    if (!is_array($point) || count($point) < 2 || empty($polygon)) return false;
+    $x = (float)$point[0]; // lng
+    $y = (float)$point[1]; // lat
     $inside = false;
     $n = count($polygon);
 
     for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
-        $xi = $polygon[$i][0];
-        $yi = $polygon[$i][1];
-        $xj = $polygon[$j][0];
-        $yj = $polygon[$j][1];
+        if (!isset($polygon[$i][0]) || !isset($polygon[$j][0])) continue;
+        $xi = (float)$polygon[$i][0];
+        $yi = (float)$polygon[$i][1];
+        $xj = (float)$polygon[$j][0];
+        $yj = (float)$polygon[$j][1];
 
-        $intersect = (($yi > $y) != ($yj > $y)) && ($x < ($xj - $xi) * ($y - $yi) / ($yj - $yi + 0.0000000001) + $xi);
+        $intersect = (($yi > $y) != ($yj > $y)) && ($x < ($xj - $xi) * ($y - $yi) / ($yj - $yi + 0.00000000000001) + $xi);
         if ($intersect) $inside = !$inside;
     }
     return $inside;
@@ -35,29 +37,6 @@ function doLinesIntersect($p1, $p2, $p3, $p4) {
         return ($C[1] - $A[1]) * ($B[0] - $A[0]) > ($B[1] - $A[1]) * ($C[0] - $A[0]);
     };
     return ($ccw($p1, $p3, $p4) != $ccw($p2, $p3, $p4)) && ($ccw($p1, $p2, $p3) != $ccw($p1, $p2, $p4));
-}
-
-// Check intersection between two polygons
-function doPolygonsIntersect($poly1Coords, $poly2Coords) {
-    // 1. Check if any vertex of poly1 is inside poly2
-    foreach ($poly1Coords as $pt) {
-        if (isPointInPolygon($pt, $poly2Coords)) return true;
-    }
-    // 2. Check if any vertex of poly2 is inside poly1
-    foreach ($poly2Coords as $pt) {
-        if (isPointInPolygon($pt, $poly1Coords)) return true;
-    }
-    // 3. Check if any edges intersect
-    $n1 = count($poly1Coords);
-    $n2 = count($poly2Coords);
-    for ($i = 0; $i < $n1 - 1; $i++) {
-        for ($j = 0; $j < $n2 - 1; $j++) {
-            if (doLinesIntersect($poly1Coords[$i], $poly1Coords[$i+1], $poly2Coords[$j], $poly2Coords[$j+1])) {
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 // Minimum distance approximation between centroid and forest polygon
@@ -79,10 +58,10 @@ function getPolygonRingsFromGeoJSON($geometry) {
         return $rings;
     }
     
-    $type = $geometry['type'];
+    $type = strtolower($geometry['type']);
     $coords = $geometry['coordinates'];
 
-    if ($type === 'Polygon') {
+    if ($type === 'polygon') {
         foreach ($coords as $ring) {
             if (is_array($ring) && !empty($ring)) {
                 if (isset($ring[0]) && is_array($ring[0]) && is_numeric($ring[0][0] ?? null)) {
@@ -90,7 +69,7 @@ function getPolygonRingsFromGeoJSON($geometry) {
                 }
             }
         }
-    } elseif ($type === 'MultiPolygon') {
+    } elseif ($type === 'multipolygon') {
         foreach ($coords as $poly) {
             if (!is_array($poly)) continue;
             foreach ($poly as $ring) {
@@ -108,27 +87,6 @@ function getPolygonRingsFromGeoJSON($geometry) {
         }
     }
     return $rings;
-}
-
-// Geometry Helper: Check if Point is inside Polygon
-function isPointInPolygon($point, $polygon) {
-    if (!is_array($point) || count($point) < 2 || empty($polygon)) return false;
-    $x = (float)$point[0]; // lng
-    $y = (float)$point[1]; // lat
-    $inside = false;
-    $n = count($polygon);
-
-    for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
-        if (!isset($polygon[$i][0]) || !isset($polygon[$j][0])) continue;
-        $xi = (float)$polygon[$i][0];
-        $yi = (float)$polygon[$i][1];
-        $xj = (float)$polygon[$j][0];
-        $yj = (float)$polygon[$j][1];
-
-        $intersect = (($yi > $y) != ($yj > $y)) && ($x < ($xj - $xi) * ($y - $yi) / ($yj - $yi + 0.00000000000001) + $xi);
-        if ($intersect) $inside = !$inside;
-    }
-    return $inside;
 }
 
 // Check intersection between two polygons
@@ -272,15 +230,29 @@ function evaluatePlotEudrSpatial($pdo, $plotCoords, $planting_year = 2018) {
                 $forestOverlap = true;
             }
 
-            // Check distance to ring vertices if within proximity buffer (~0.15 deg ~= 16km)
-            $proxCheck = !($pMaxX < ($rMinX - 0.15) || $pMinX > ($rMaxX + 0.15) || $pMaxY < ($rMinY - 0.15) || $pMinY > ($rMaxY + 0.15));
+            // Check distance to ring vertices if within proximity buffer (~0.25 deg ~= 27km)
+            $proxCheck = !($pMaxX < ($rMinX - 0.25) || $pMinX > ($rMaxX + 0.25) || $pMaxY < ($rMinY - 0.25) || $pMinY > ($rMaxY + 0.25));
             if ($proxCheck) {
-                foreach ($ring as $fpt) {
+                $ringCount = count($ring);
+                $step = ($ringCount > 500) ? 2 : 1;
+                for ($idx = 0; $idx < $ringCount; $idx += $step) {
+                    $fpt = $ring[$idx];
                     if (is_array($fpt) && count($fpt) >= 2 && is_numeric($fpt[0]) && is_numeric($fpt[1])) {
-                        $dist = calculateMinDistanceMeters($centroidLat, $centroidLng, (float)$fpt[1], (float)$fpt[0]);
-                        if ($dist < $nearestDistance) {
-                            $nearestDistance = $dist;
+                        // Centroid distance
+                        $distC = calculateMinDistanceMeters($centroidLat, $centroidLng, (float)$fpt[1], (float)$fpt[0]);
+                        if ($distC < $nearestDistance) {
+                            $nearestDistance = $distC;
                             $nearestForestName = $forestName;
+                        }
+                        // Boundary vertex distance
+                        foreach ($plotCoords as $ppt) {
+                            if (is_array($ppt) && count($ppt) >= 2) {
+                                $distV = calculateMinDistanceMeters((float)$ppt[1], (float)$ppt[0], (float)$fpt[1], (float)$fpt[0]);
+                                if ($distV < $nearestDistance) {
+                                    $nearestDistance = $distV;
+                                    $nearestForestName = $forestName;
+                                }
+                            }
                         }
                     }
                 }

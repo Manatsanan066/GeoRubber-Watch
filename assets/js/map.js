@@ -386,14 +386,14 @@ const GeoMap = {
                 <button type="button" onclick="event.stopPropagation(); (window.App && App.showToast) ? App.showToast('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออกใบรับรองและ QR Code (Non-Compliant)', 'warning') : alert('แปลงนี้ทับซ้อนเขตป่าสงวน ไม่อนุญาตให้ออก QR Code');" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: not-allowed; border-radius: 6px; color: #dc2626; border-color: #fca5a5; background: #fef2f2;" title="ไม่อนุญาตให้ออก QR Code สำหรับแปลงทับซ้อนป่าสงวน">
                   ไม่ผ่านเกณฑ์
                 </button>
-                <a href="trace.php?token=${tokenParam}" target="_blank" onclick="event.stopPropagation();" class="btn btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #dc2626; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600;">
+                <a href="trace.php?token=${tokenParam}" target="_blank" onclick="event.stopPropagation(); window.open('trace.php?token=' + encodeURIComponent('${safeToken}'), '_blank'); return false;" class="btn btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #dc2626; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; cursor: pointer;">
                   ตรวจสอบย้อนกลับ
                 </a>
                 ` : `
                 <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).showPlotQR(${p.id});" data-action="qr-plot" data-plot-id="${p.id}" class="btn-qr-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; cursor: pointer; border-radius: 6px;">
                   QR Code
                 </button>
-                <a href="trace.php?token=${tokenParam}" target="_blank" onclick="event.stopPropagation();" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">
+                <a href="trace.php?token=${tokenParam}" target="_blank" onclick="event.stopPropagation(); window.open('trace.php?token=' + encodeURIComponent('${safeToken}'), '_blank'); return false;" class="btn btn-primary btn-sm" style="font-size: 13px; padding: 5px 8px; background-color: #00a699; color: white; text-align: center; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 600;">
                   Passport
                 </a>
                 `}
@@ -980,33 +980,63 @@ const GeoMap = {
 
         let hasOverlap = false;
         let nearestForestDist = 999999;
-        let forestName = 'ป่าสงวนแห่งชาติ';
+        let forestName = 'ป่าสงวนแห่งชาติ จ.สุราษฎร์ธานี';
 
         if (this.forestsData && Array.isArray(this.forestsData)) {
           for (const f of this.forestsData) {
             const fName = f.properties?.name_th || f.properties?.FR_NAME || 'ป่าสงวนแห่งชาติ';
             try {
-              const isOver = turf.booleanOverlap(geojson, f) || turf.booleanIntersects(geojson, f) || turf.booleanPointInPolygon(centroid, f);
+              let isOver = false;
+              try {
+                isOver = turf.booleanIntersects(geojson, f) || turf.booleanOverlap(geojson, f) || turf.booleanPointInPolygon(centroid, f);
+              } catch (eOver) {
+                isOver = false;
+              }
               if (isOver) {
                 hasOverlap = true;
                 forestName = fName;
                 nearestForestDist = 0;
                 break;
               }
-              const d = turf.pointToLineDistance(centroid, turf.polygonToLine(f), { units: 'meters' });
-              if (d < nearestForestDist) {
-                nearestForestDist = d;
-                forestName = fName;
+
+              // Distance calculation resilient to MultiPolygon and Polygon features
+              const fCoords = turf.coordAll(f);
+              if (Array.isArray(fCoords) && fCoords.length > 0) {
+                const step = (fCoords.length > 400) ? 2 : 1;
+                for (let i = 0; i < fCoords.length; i += step) {
+                  const fpt = fCoords[i];
+                  const distM = turf.distance(centroid, turf.point(fpt), { units: 'meters' });
+                  if (distM < nearestForestDist) {
+                    nearestForestDist = distM;
+                    forestName = fName;
+                  }
+                }
+
+                const plotCoords = turf.coordAll(geojson);
+                for (const ppt of plotCoords) {
+                  for (let i = 0; i < fCoords.length; i += 3) {
+                    const distM = turf.distance(turf.point(ppt), turf.point(fCoords[i]), { units: 'meters' });
+                    if (distM < nearestForestDist) {
+                      nearestForestDist = distM;
+                      forestName = fName;
+                    }
+                  }
+                }
               }
-            } catch(tfErr) {}
+            } catch(tfErr) {
+              console.warn('Turf feature check error:', tfErr);
+            }
           }
         }
 
         let status = 'compliant';
         if (hasOverlap) {
           status = 'non_compliant';
+          nearestForestDist = 0;
         } else if (nearestForestDist < 500) {
           status = 'under_review';
+        } else {
+          status = 'compliant';
         }
 
         checkResult = {
@@ -1014,7 +1044,7 @@ const GeoMap = {
           has_overlap: hasOverlap,
           overlap_percentage: hasOverlap ? 100.0 : 0.0,
           overlapping_forests: hasOverlap ? [{ name: forestName }] : [],
-          nearest_forest_distance_m: hasOverlap ? 0 : nearestForestDist,
+          nearest_forest_distance_m: hasOverlap ? 0 : Math.round(nearestForestDist),
           nearest_forest_name: forestName,
           eudr_status: status,
           eudr_deforestation_free: !hasOverlap,
@@ -1161,7 +1191,7 @@ const GeoMap = {
       } else if (check.eudr_status === 'under_review' || (check.nearest_forest_distance_m && check.nearest_forest_distance_m < 500 && !check.has_overlap)) {
         setModalPresetMode('under_review');
       } else {
-        setModalPresetMode('overlap');
+        setModalPresetMode('non_compliant');
       }
     }
   }

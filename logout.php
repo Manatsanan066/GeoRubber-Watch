@@ -1,9 +1,12 @@
 <?php
 /**
- * GeoRubber Watch • Logout Endpoint
- * ทำลาย Session และนำกลับไปหน้า Login
+ * GeoRubber Watch - Logout Endpoint
+ * ทำลาย Session และ Cookie ทั้งหมด แล้วนำกลับไปหน้า Login
  */
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $_SESSION = [];
 
 if (ini_get("session.use_cookies")) {
@@ -19,6 +22,14 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
+session_unset();
 session_destroy();
+
+if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['success' => true, 'redirect' => 'login.php?msg=logged_out']);
+    exit;
+}
+
 header("Location: login.php?msg=logged_out");
 exit;

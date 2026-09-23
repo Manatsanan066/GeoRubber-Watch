@@ -81,7 +81,7 @@ $user_name = $user['full_name'] ?? 'ผู้ใช้งานระบบ';
             </a>
           </li>
           <li>
-            <a href="logout.php" class="nav-item" title="ออกจากระบบ" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+            <a href="logout.php" class="nav-item" title="ออกจากระบบ" onclick="if(confirm('ต้องการออกจากระบบหรือไม่?')){ window.location.href='logout.php'; } return false;">
               ออกจากระบบ
             </a>
           </li>
@@ -96,7 +96,7 @@ $user_name = $user['full_name'] ?? 'ผู้ใช้งานระบบ';
             <?= htmlspecialchars($current_role) ?>
           </span>
         </div>
-        <a href="logout.php" class="btn btn-sm btn-outline" style="padding: 3px 8px; font-size: 11px; height: 26px; border-color: #ef4444; color: #ef4444;" title="ออกจากระบบ">
+        <a href="logout.php" class="btn btn-sm btn-outline" style="padding: 3px 8px; font-size: 11px; height: 26px; border-color: #ef4444; color: #ef4444;" title="ออกจากระบบ" onclick="if(confirm('ต้องการออกจากระบบหรือไม่?')){ window.location.href='logout.php'; } return false;">
           Logout
         </a>
       </div>
