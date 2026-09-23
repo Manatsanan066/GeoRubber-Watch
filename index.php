@@ -983,7 +983,7 @@ $currentUser = getCurrentUser();
           <div>
             <!-- Top Nature Image with Smooth Rounded Corners -->
             <div class="h-56 sm:h-60 lg:h-64 rounded-[1.5rem] sm:rounded-[1.75rem] overflow-hidden relative mb-5 shadow-xs">
-              <img src="img/forest_reserve_hero.jpg" alt="พื้นที่อนุรักษ์ 26 ป่าสงวนแห่งชาติ สุราษฎร์ธานี" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out">
+              <img src="img/zc.jpg?v=<?= file_exists(__DIR__ . '/img/zc.jpg') ? filemtime(__DIR__ . '/img/zc.jpg') : time() ?>" alt="พื้นที่อนุรักษ์ 26 ป่าสงวนแห่งชาติ สุราษฎร์ธานี (Zone C)" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out" onerror="this.onerror=null; this.src='img/zc.png';">
             </div>
 
             <!-- Content Area -->
