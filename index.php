@@ -1010,7 +1010,7 @@ $currentUser = getCurrentUser();
           <div>
             <!-- Top Nature Image with Smooth Rounded Corners -->
             <div class="h-56 sm:h-60 lg:h-64 rounded-[1.5rem] sm:rounded-[1.75rem] overflow-hidden relative mb-5 shadow-xs">
-              <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80" alt="Buffer Zone 500m Satellite Monitoring" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out">
+              <img src="img/za.jpg?v=<?= file_exists(__DIR__ . '/img/za.jpg') ? filemtime(__DIR__ . '/img/za.jpg') : time() ?>" alt="แนวกันชนประชิดแนวป่าสงวน 500m Buffer Zone" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out" onerror="this.onerror=null; this.src='img/za.png';">
             </div>
 
             <!-- Content Area -->
