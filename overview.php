@@ -506,41 +506,39 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
 
         <!-- Drawer Navigation Links -->
         <nav class="flex flex-col gap-1.5 pt-4 text-sm font-medium">
-          <a href="index.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
+          <a href="index.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_home">หน้าแรก</span>
           </a>
-          <a href="overview.php" class="px-4 py-2.5 rounded-xl bg-mezenc-teal text-white font-bold transition-all shadow-xs flex items-center gap-3">
-            <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
+          <a href="overview.php" class="px-4 py-2.5 rounded-xl bg-mezenc-teal text-white font-bold transition-all shadow-xs flex items-center">
+            <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
-          <a href="dashboard.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
+          <a href="dashboard.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
-          <a href="map.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
+          <a href="map.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
-          <a href="yields.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
+          <a href="yields.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
-          <a href="contact.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
+          <a href="contact.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_contact">ติดต่อเรา</span>
           </a>
         </nav>
       </div>
 
       <!-- Drawer Footer Action -->
-      <div class="pt-4 border-t border-gray-200/70 space-y-2.5">
-        <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600 flex items-center justify-between">
-          <div class="truncate">
-            ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($user_name) ?></strong>
-          </div>
-          <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full font-bold border border-mezenc-mint/40 shrink-0 ml-1"><?= htmlspecialchars($current_role) ?></span>
+      <div class="pt-5 border-t border-gray-200/70 space-y-2.5">
+        <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600">
+          ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($user_name ?? ($currentUser['full_name'] ?? 'ผู้ใช้งาน')) ?></strong> 
+          <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full ml-1 font-bold border border-mezenc-mint/40"><?= htmlspecialchars($current_role ?? ($currentUser['role'] ?? '')) ?></span>
         </div>
-        <a href="logout.php" class="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all flex items-center justify-center gap-2" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-          <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
+        <a href="overview.php" class="w-full py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center block shadow transition-all text-xs uppercase tracking-wider" data-i18n="idx_sec3_btn">
+          เปิดแผนที่ระบบภูมิสารสนเทศ (FULL GIS MAP) ➔
         </a>
-        <div class="text-center text-[11px] text-slate-400 pt-1 font-normal">
-          &copy; 2026 GeoRubber Watch &bull; ม.อ. สุราษฎร์ธานี
-        </div>
+        <a href="logout.php" class="w-full py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+          <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
+        </a>
       </div>
 
     </div>
@@ -763,9 +761,9 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
                 class="w-full bg-[#f8faf9] text-gray-800 font-medium text-[15px] rounded-xl px-3 py-2.5 outline-none border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white transition-all cursor-pointer shadow-xs leading-relaxed"
                 onchange="GeoMap.setBaseMap(this.value)"
               >
-                <option value="satellite" data-i18n="ov_layer_satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
-                <option value="osm" data-i18n="ov_layer_osm">🗺️ แผนที่ถนน (OpenStreetMap)</option>
-                <option value="topo">⛰️ ภูมิประเทศ (Topographic)</option>
+                <option value="satellite" data-i18n="ov_layer_satellite">ภาพถ่ายดาวเทียม (Satellite)</option>
+                <option value="osm" data-i18n="ov_layer_osm">แผนที่ถนน (OpenStreetMap)</option>
+                <option value="topo">ภูมิประเทศ (Topographic)</option>
               </select>
             </div>
           </div>
@@ -939,9 +937,9 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
           <div class="text-[14px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
-            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
+            <div data-i18n="foot_authors"><strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor"><strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div><span data-i18n="foot_email"><strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
           </div>
         </div>
 
@@ -1082,7 +1080,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           }
 
           if (btnToolbar) {
-            btnToolbar.innerHTML = '<span class="text-sm">🗗</span> <span>ย่อขนาดปกติ</span>';
+            btnToolbar.innerHTML = '<svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"></path></svg> <span>ย่อขนาดปกติ</span>';
             btnToolbar.classList.add('bg-mezenc-brightCyan', 'text-white', 'border-mezenc-brightCyan');
             btnToolbar.classList.remove('bg-white', 'text-mezenc-teal');
           }
@@ -1114,7 +1112,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           }
 
           if (btnToolbar) {
-            btnToolbar.innerHTML = '<span class="text-sm">⛶</span> <span>ขยายเต็มจอ</span>';
+            btnToolbar.innerHTML = '<svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg> <span>ขยายเต็มจอ</span>';
             btnToolbar.classList.remove('bg-mezenc-brightCyan', 'text-white', 'border-mezenc-brightCyan');
             btnToolbar.classList.add('bg-white', 'text-mezenc-teal');
           }
@@ -1267,7 +1265,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
               onclick="GeoOverview.selectForestFromSearch('${targetCode}')"
             >
               <div class="flex items-center gap-2 min-w-0">
-                <span class="text-base shrink-0">🌲</span>
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 12h3v8h10v-8h3L12 2z"/></svg>
                 <div class="truncate">
                   <div class="font-extrabold text-gray-800 text-[13px] group-hover:text-mezenc-brightCyan truncate">
                     ${p.name_th}
@@ -1420,8 +1418,9 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
                     <span><strong>พิกัดศูนย์กลาง:</strong> ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}</span>
                   </div>
                 </div>
-                <div style="font-size: 16px; background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; padding: 6px 10px; border-radius: 8px; font-weight: 700; line-height: 1.4;">
-                  ⚠️ เขตป่าเพื่อการอนุรักษ์ (Zone C) - ห้ามบุกรุกตามเกณฑ์ EUDR
+                <div style="font-size: 15px; background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; padding: 6px 10px; border-radius: 8px; font-weight: 700; line-height: 1.4; display: flex; align-items: center; gap: 6px;">
+                  <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                  <span>เขตป่าเพื่อการอนุรักษ์ (Zone C) - ห้ามบุกรุกตามเกณฑ์ EUDR</span>
                 </div>
               </div>
             `)
@@ -1471,7 +1470,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           gpsStatusBox.className = 'p-3.5 rounded-2xl border text-[14px] shadow-xs transition-all bg-[#f0fdfa] border-mezenc-brightCyan text-mezenc-teal';
           gpsStatusBox.classList.remove('hidden');
           if (gpsStatusText) {
-            gpsStatusText.innerHTML = '<div class="flex items-center gap-2 text-[14px]"><span class="animate-spin inline-block text-base">⏳</span> <span>กำลังเชื่อมต่อดาวเทียมและค้นหาพิกัด GPS...</span></div>';
+            gpsStatusText.innerHTML = '<div class="flex items-center gap-2 text-[14px]"><span class="inline-block animate-spin mr-1">◐</span> <span>กำลังเชื่อมต่อดาวเทียมและค้นหาพิกัด GPS...</span></div>';
           }
         }
 
@@ -1526,7 +1525,7 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
 
             if (gpsStatusBox && gpsStatusText) {
               gpsStatusBox.className = 'p-3.5 rounded-2xl border text-[13px] shadow-xs transition-all bg-rose-50 border-rose-200 text-rose-800';
-              gpsStatusText.innerHTML = `<div><strong>⚠️ เกิดข้อผิดพลาด:</strong> ${msg}</div>`;
+              gpsStatusText.innerHTML = `<div><strong>เกิดข้อผิดพลาด:</strong> ${msg}</div>`;
             } else {
               alert(msg);
             }
@@ -1666,19 +1665,19 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
         let adviceText = '';
 
         if (status === 'non_compliant') {
-          statusTitle = `🔴 อยู่ในเขต ${insideForest.name_th}`;
+          statusTitle = `อยู่ในเขต ${insideForest.name_th}`;
           statusClass = 'bg-rose-50 border-rose-300 text-rose-800';
-          statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-rose-600 text-white font-bold text-[15px]">⛔ ทับซ้อนป่าสงวน</span>';
+          statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-rose-600 text-white font-bold text-[15px]">ทับซ้อนป่าสงวน</span>';
           adviceText = `จุดพิกัดปัจจุบันของคุณตกอยู่ในแนวเขตป่าสงวนแห่งชาติ <strong>${insideForest.name_th}</strong> (รหัส: ${insideForest.forest_code}) ซึ่งเป็นพื้นที่คุ้มครอง (ห้ามบุกรุก/ตัดไม้)`;
         } else if (status === 'buffer_zone') {
-          statusTitle = `🟡 โซนเฝ้าระวัง Buffer (${distMeters} ม.)`;
+          statusTitle = `โซนเฝ้าระวัง Buffer (${distMeters} ม.)`;
           statusClass = 'bg-amber-50 border-amber-300 text-amber-900';
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-lg bg-amber-500 text-white font-bold text-[15px]">⚠️ โซนเฝ้าระวัง Buffer (${distMeters} ม.)</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-lg bg-amber-500 text-white font-bold text-[15px]">โซนเฝ้าระวัง Buffer (${distMeters} ม.)</span>`;
           adviceText = `อยู่นอกแนวเขตป่า แต่อยู่ในระยะกันชนใกล้กับ <strong>${nearestForest ? nearestForest.name_th : 'ป่าสงวน'}</strong> เพียง ${distMeters} เมตร (ไม่เกินระยะเฝ้าระวัง 500 ม.)`;
         } else {
-          statusTitle = `🟢 ปลอดภัย ผ่านเกณฑ์ EUDR`;
+          statusTitle = `ปลอดภัย ผ่านเกณฑ์ EUDR`;
           statusClass = 'bg-emerald-50 border-emerald-300 text-emerald-900';
-          statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-[15px]">✅ ผ่านเกณฑ์ EUDR</span>';
+          statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-[15px]">ผ่านเกณฑ์ EUDR</span>';
           adviceText = `จุดพิกัดปัจจุบันอยู่นอกแนวเขตป่าสงวนแห่งชาติ โดยห่างจาก <strong>${nearestForest ? nearestForest.name_th : 'แนวเขตป่า'}</strong> ประมาณ ${distMeters >= 1000 ? (distMeters/1000).toFixed(2) + ' กม.' : distMeters + ' ม.'}`;
         }
 
@@ -1827,29 +1826,29 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
         let statusClass = '';
         let statusBadge = '';
         let adviceText = '';
-        let circleColor = '#059669'; // 🟢 ปลอดภัย (Green)
+        let circleColor = '#059669'; // ปลอดภัย (Green)
         let circleFill = '#10b981';
 
         if (status === 'non_compliant') {
-          statusTitle = `🔴 ซ้อนทับเขต ${insideForest.name_th}`;
+          statusTitle = `ซ้อนทับเขต ${insideForest.name_th}`;
           statusClass = 'bg-red-50 border-red-300 text-red-900';
-          statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-red-600 text-white font-bold text-xs inline-block">🔴 ซ้อนทับเขตป่าสงวน (ไม่ผ่านเกณฑ์)</span>';
+          statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-red-600 text-white font-bold text-xs inline-block">ซ้อนทับเขตป่าสงวน (ไม่ผ่านเกณฑ์)</span>';
           adviceText = `จุดพิกัดนี้ตั้งอยู่ในแนวเขตป่าสงวนแห่งชาติ <strong>${insideForest.name_th}</strong> (รหัส: ${insideForest.forest_code}) ซึ่งเป็นเขตป่าเพื่อการอนุรักษ์ (Zone C)`;
-          circleColor = '#dc2626'; // 🔴 ซ้อนทับ (Red)
+          circleColor = '#dc2626'; // ซ้อนทับ (Red)
           circleFill = '#ef4444';
         } else if (status === 'buffer_zone') {
-          statusTitle = `🟠 มีความเสี่ยง (โซนเฝ้าระวัง Buffer ${distMeters} ม.)`;
+          statusTitle = `มีความเสี่ยง (โซนเฝ้าระวัง Buffer ${distMeters} ม.)`;
           statusClass = 'bg-orange-50 border-orange-300 text-orange-900';
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-lg bg-orange-500 text-white font-bold text-xs inline-block">🟠 มีความเสี่ยง (โซนเฝ้าระวัง ${distMeters} ม.)</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-lg bg-orange-500 text-white font-bold text-xs inline-block">มีความเสี่ยง (โซนเฝ้าระวัง ${distMeters} ม.)</span>`;
           adviceText = `อยู่นอกแนวเขตป่า แต่อยู่ในระยะกันชนใกล้กับ <strong>${nearestForest ? nearestForest.name_th : 'ป่าสงวน'}</strong> เพียง ${distMeters} เมตร (อยู่ในระยะเฝ้าระวังไม่เกิน 500 ม.)`;
-          circleColor = '#ea580c'; // 🟠 มีความเสี่ยง (Orange)
+          circleColor = '#ea580c'; // มีความเสี่ยง (Orange)
           circleFill = '#f97316';
         } else {
-          statusTitle = `🟢 ปลอดภัย ผ่านเกณฑ์ EUDR`;
+          statusTitle = `ปลอดภัย ผ่านเกณฑ์ EUDR`;
           statusClass = 'bg-emerald-50 border-emerald-300 text-emerald-900';
-          statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-xs inline-block">🟢 ปลอดภัย (ผ่านเกณฑ์ EUDR)</span>';
+          statusBadge = '<span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-xs inline-block">ปลอดภัย (ผ่านเกณฑ์ EUDR)</span>';
           adviceText = `อยู่นอกแนวเขตป่าสงวนแห่งชาติ โดยห่างจาก <strong>${nearestForest ? nearestForest.name_th : 'แนวเขตป่า'}</strong> ประมาณ ${distMeters >= 1000 ? (distMeters/1000).toFixed(2) + ' กม.' : distMeters + ' ม.'}`;
-          circleColor = '#059669'; // 🟢 ปลอดภัย (Green)
+          circleColor = '#059669'; // ปลอดภัย (Green)
           circleFill = '#10b981';
         }
 
@@ -1883,22 +1882,22 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
           this.userPinMarker.bindPopup(`
             <div style="min-width: 270px; padding: 4px; font-family: 'Google Sans', 'Open Sans', 'Sarabun', sans-serif;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                <div style="font-weight: 800; color: #024959; font-size: 16px;">📍 ผลการตรวจพิกัดที่ปักหมุด</div>
+                <div style="font-weight: 800; color: #024959; font-size: 16px;">ผลการตรวจพิกัดที่ปักหมุด</div>
               </div>
               <div style="margin-bottom: 6px;">${statusBadge}</div>
               <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 8px 10px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin-bottom: 8px;">
                 ${adviceText}
               </div>
               <div style="font-size: 12px; color: #64748b; font-family: monospace; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; background: #fff; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                <span>🌐 ${lat.toFixed(5)}, ${lng.toFixed(5)}</span>
+                <span>พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}</span>
                 <span style="color: ${circleColor}; font-weight: bold;">วง Buffer 500 ม.</span>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                 <a href="map.php?lat=${lat.toFixed(5)}&lng=${lng.toFixed(5)}" style="padding: 6px 10px; border-radius: 8px; background: #00A896; color: #fff; font-weight: bold; font-size: 12px; text-align: center; text-decoration: none; display: block;">
-                  ✏️ วาดแปลงต่อ
+                  วาดแปลงต่อ
                 </a>
                 <button type="button" onclick="GeoOverview.clearPin()" style="padding: 6px 10px; border-radius: 8px; background: #fee2e2; color: #b91c1c; font-weight: bold; font-size: 12px; text-align: center; border: 1px solid #fca5a5; cursor: pointer;">
-                  🗑️ ลบหมุดนี้
+                  ลบหมุดนี้
                 </button>
               </div>
             </div>

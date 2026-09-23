@@ -306,13 +306,13 @@ function evaluatePlotEudrSpatial($pdo, $plotCoords, $planting_year = 2018) {
         $status = 'non_compliant';
         $forestNamesList = implode(', ', array_unique(array_column($overlappingForests, 'name')));
         $nearestDistance = 0.0;
-        $reasons[] = "⛔ ตรวจพบการทับซ้อนกับเขตป่าสงวนแห่งชาติ ({$forestNamesList}) 100% ไม่อนุญาตให้ออกใบรับรอง EUDR (Non-Compliant)";
+        $reasons[] = "ตรวจพบการทับซ้อนกับเขตป่าสงวนแห่งชาติ ({$forestNamesList}) 100% ไม่อนุญาตให้ออกใบรับรอง EUDR (Non-Compliant)";
     } elseif ($nearestDistance < 500) {
         $status = 'under_review';
-        $reasons[] = "⚠️ แปลงอยู่ใกล้แนวเขตป่าสงวน (" . round($nearestDistance) . " ม. จาก " . $nearestForestName . ") อยู่ในโซนเฝ้าระวัง (Buffer Zone)";
+        $reasons[] = "แปลงอยู่ใกล้แนวเขตป่าสงวน (" . round($nearestDistance) . " ม. จาก " . $nearestForestName . ") อยู่ในโซนเฝ้าระวัง (Buffer Zone)";
     } else {
         $status = 'compliant';
-        $reasons[] = "✅ ไม่พบการทับซ้อนกับแนวเขตป่าสงวนหรือพื้นที่อนุรักษ์ (Deforestation-Free 100%)";
+        $reasons[] = "ไม่พบการทับซ้อนกับแนวเขตป่าสงวนหรือพื้นที่อนุรักษ์ (Deforestation-Free 100%)";
     }
 
     // Area calculations

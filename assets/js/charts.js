@@ -230,14 +230,14 @@ const DSSCharts = {
     if (!tbody) return;
 
     if (atRiskPlots.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--success); padding:1.5rem; font-weight:700;">✅ ไม่พบแปลงที่เสี่ยงต่อการบุกรุกป่าสงวน ทุกแปลงสอดคล้องตามมาตรฐาน EUDR</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--success); padding:1.5rem; font-weight:700;">ไม่พบแปลงที่เสี่ยงต่อการบุกรุกป่าสงวน ทุกแปลงสอดคล้องตามมาตรฐาน EUDR</td></tr>';
       return;
     }
 
     let html = '';
     atRiskPlots.forEach(p => {
-      let badge = '<span class="badge badge-non_compliant">⛔ บุกรุก/ทับซ้อน</span>';
-      if (p.eudr_status === 'under_review') badge = '<span class="badge badge-under_review">⚠️ โซนเฝ้าระวัง</span>';
+      let badge = '<span class="badge badge-non_compliant">บุกรุก/ทับซ้อน</span>';
+      if (p.eudr_status === 'under_review') badge = '<span class="badge badge-under_review">โซนเฝ้าระวัง</span>';
 
       html += `
         <tr style="border-bottom: 1px solid var(--border-subtle); transition: background 0.2s;" onmouseover="this.style.background='var(--sage-50)'" onmouseout="this.style.background='transparent'">
@@ -249,7 +249,7 @@ const DSSCharts = {
           <td style="padding: 12px 16px;">${badge}</td>
           <td style="padding: 12px 16px; text-align: center;">
             <a href="trace.php?token=${encodeURIComponent(p.traceability_token || p.plot_code || p.id)}" target="_blank" class="btn btn-outline btn-sm">
-              🛡️ ตรวจสอบ
+              ตรวจสอบ
             </a>
           </td>
         </tr>

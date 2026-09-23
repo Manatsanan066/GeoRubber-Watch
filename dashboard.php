@@ -663,7 +663,7 @@ if ($isFactory) {
       transform: translateY(-6px);
     }
 
-    /* 🟢 Green Risk Card Hover: Transforms background to Vibrant Deep Forest Emerald */
+    /* Green Risk Card Hover: Transforms background to Vibrant Deep Forest Emerald */
     .kpi-card-green {
       transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
@@ -1078,19 +1078,17 @@ if ($isFactory) {
       </div>
 
       <!-- Drawer Footer Action -->
-      <div class="pt-4 border-t border-gray-200/70 space-y-2.5">
-        <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600 flex items-center justify-between">
-          <div class="truncate">
-            ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($user_name ?? ($currentUser['full_name'] ?? 'ผู้ใช้งาน')) ?></strong>
-          </div>
-          <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full font-bold border border-mezenc-mint/40 shrink-0 ml-1"><?= htmlspecialchars($current_role ?? ($currentUser['role'] ?? '')) ?></span>
+      <div class="pt-5 border-t border-gray-200/70 space-y-2.5">
+        <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600">
+          ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($user_name ?? ($currentUser['full_name'] ?? 'ผู้ใช้งาน')) ?></strong> 
+          <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full ml-1 font-bold border border-mezenc-mint/40"><?= htmlspecialchars($current_role ?? ($currentUser['role'] ?? '')) ?></span>
         </div>
-        <a href="logout.php" class="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all flex items-center justify-center" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+        <a href="overview.php" class="w-full py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center block shadow transition-all text-xs uppercase tracking-wider" data-i18n="idx_sec3_btn">
+          เปิดแผนที่ระบบภูมิสารสนเทศ (FULL GIS MAP) ➔
+        </a>
+        <a href="logout.php" class="w-full py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
           <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
         </a>
-        <div class="text-center text-[11px] text-slate-400 pt-1 font-normal">
-          &copy; 2026 GeoRubber Watch &bull; ม.อ. สุราษฎร์ธานี
-        </div>
       </div>
 
     </div>
@@ -2329,7 +2327,7 @@ if ($isFactory) {
         <!-- Right: Progress Breakdown Rows (Matching Mockup Category Rows) -->
         <div class="md:col-span-8 space-y-3.5 text-xs sm:text-sm">
           
-          <!-- 🟢 Green Row -->
+          <!-- Green Row -->
           <div 
             onclick="window.location.href='dashboard.php?status=compliant'"
             class="status-row-green p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-white shadow-2xs space-y-2 cursor-pointer transition-all"
@@ -2360,7 +2358,7 @@ if ($isFactory) {
             </div>
           </div>
 
-          <!-- 🟡 Yellow Row -->
+          <!-- Yellow Row -->
           <div 
             onclick="window.location.href='dashboard.php?status=under_review'"
             class="status-row-yellow p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-white shadow-2xs space-y-2 cursor-pointer transition-all"
@@ -2391,7 +2389,7 @@ if ($isFactory) {
             </div>
           </div>
 
-          <!-- 🔴 Red Row -->
+          <!-- Red Row -->
           <div 
             onclick="window.location.href='dashboard.php?status=non_compliant'"
             class="status-row-red p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-white shadow-2xs space-y-2 cursor-pointer transition-all"
@@ -2503,8 +2501,8 @@ if ($isFactory) {
               data-i18n-placeholder="db_search_ph"
               class="w-full bg-[#f8faf9] text-gray-800 text-xs rounded-full pl-3.5 pr-8 py-2 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs"
             >
-            <button type="submit" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-mezenc-teal text-xs">
-              🔍
+            <button type="submit" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-mezenc-teal text-xs" aria-label="ค้นหา">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </button>
           </div>
           <?php if ($searchQuery !== '' || $statusFilter !== ''): ?>
@@ -2657,9 +2655,9 @@ if ($isFactory) {
           <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
           <div class="text-[14px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
-            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
+            <div data-i18n="foot_authors"><strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor"><strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div><span data-i18n="foot_email"><strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
           </div>
         </div>
 

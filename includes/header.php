@@ -52,37 +52,37 @@ $user_name = $user['full_name'] ?? 'ผู้ใช้งานระบบ';
         <ul class="nav-links">
           <li>
             <a href="index.php" class="nav-item <?= ($current_page === 'index.php') ? 'active' : '' ?>">
-              🏠 หน้าแรก
+              หน้าแรก
             </a>
           </li>
           <li>
             <a href="overview.php" class="nav-item <?= ($current_page === 'overview.php') ? 'active' : '' ?>">
-              🛰️ แผนที่ GIS
+              แผนที่ GIS
             </a>
           </li>
           <li>
             <a href="dashboard.php" class="nav-item <?= ($current_page === 'dashboard.php') ? 'active' : '' ?>">
-              📊 แดชบอร์ด
+              แดชบอร์ด
             </a>
           </li>
           <li>
             <a href="map.php" class="nav-item <?= ($current_page === 'map.php') ? 'active' : '' ?>">
-              📍 แปลงปลูก
+              แปลงปลูก
             </a>
           </li>
           <li>
             <a href="yields.php" class="nav-item <?= ($current_page === 'yields.php') ? 'active' : '' ?>">
-              🧪 ผลผลิต
+              ผลผลิต
             </a>
           </li>
           <li>
             <a href="contact.php" class="nav-item <?= ($current_page === 'contact.php') ? 'active' : '' ?>">
-              📞 ติดต่อเรา
+              ติดต่อเรา
             </a>
           </li>
           <li>
             <a href="logout.php" class="nav-item" title="ออกจากระบบ" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-              🚪 ออกจากระบบ
+              ออกจากระบบ
             </a>
           </li>
         </ul>

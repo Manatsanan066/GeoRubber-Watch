@@ -1098,9 +1098,9 @@ $currentUser = getCurrentUser();
           <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
           <div class="text-[14px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
-            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
+            <div data-i18n="foot_authors"><strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor"><strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div><span data-i18n="foot_email"><strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
           </div>
         </div>
 
@@ -1148,7 +1148,7 @@ $currentUser = getCurrentUser();
         
         <!-- Status Banner -->
         <div id="modal-status-badge" class="p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3">
-          <div class="text-2xl" id="modal-status-icon">🟢</div>
+          <div id="modal-status-icon" class="w-6 h-6 rounded-full flex items-center justify-center shrink-0"></div>
           <div>
             <div class="font-bold text-sm" id="modal-status-text">พื้นที่ปลอดภัย (ผ่านเกณฑ์รับรอง 100%)</div>
             <div class="text-gray-500 font-light mt-0.5" id="modal-status-desc">อยู่นอกแนวเขตป่าสงวนแห่งชาติ 26 แห่ง ปลอดการตัดไม้ทำลายป่า</div>
@@ -1204,8 +1204,10 @@ $currentUser = getCurrentUser();
 
       <!-- Modal Body: NOT FOUND -->
       <div id="modal-body-notfound" class="p-6 space-y-4 text-center hidden">
-        <div class="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-3xl mx-auto shadow-inner">
-          ⚠️
+        <div class="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
         </div>
         <div class="space-y-1.5">
           <h4 class="font-extrabold text-gray-900 text-base" id="modal-notfound-title" data-i18n="deed_notfound_title">
@@ -1216,7 +1218,7 @@ $currentUser = getCurrentUser();
           </p>
         </div>
         <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 text-left space-y-1 font-medium">
-          <div data-i18n="deed_hint_hdr">💡 <strong>คำแนะนำในการค้นหา:</strong></div>
+          <div data-i18n="deed_hint_hdr"><strong>คำแนะนำในการค้นหา:</strong></div>
           <ul class="list-disc list-inside space-y-0.5 text-amber-800">
             <li data-i18n="deed_hint_1">ตรวจสอบตัวสะกดหรือขีดคั่น เช่น <code class="bg-amber-100 px-1 rounded">RB-ST-2026-006</code> หรือ <code class="bg-amber-100 px-1 rounded">1234-5678</code></li>
             <li data-i18n="deed_hint_2">ลองค้นหาด้วย <strong>ชื่อแปลง</strong> หรือ <strong>ชื่อเกษตรกร</strong></li>
@@ -1307,7 +1309,7 @@ $currentUser = getCurrentUser();
       if (submitBtn) {
         submitBtn.disabled = true;
         const loadingText = isEn ? 'Verifying...' : 'กำลังตรวจสอบ...';
-        submitBtn.innerHTML = `<span>⏳</span> <span class="hidden sm:inline">${loadingText}</span>`;
+        submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1">◐</span> <span class="hidden sm:inline">${loadingText}</span>`;
       }
 
       try {
@@ -1371,10 +1373,12 @@ $currentUser = getCurrentUser();
       const badge = document.getElementById('modal-status-badge');
       const header = document.getElementById('modal-header-bg');
       const actionBtn = document.getElementById('modal-action-btn');
+      const iconEl = document.getElementById('modal-status-icon');
 
       if (plot.eudr_status === 'compliant') {
         badge.className = 'p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3 bg-emerald-50 border-emerald-200 text-emerald-900';
-        document.getElementById('modal-status-icon').textContent = '🟢';
+        iconEl.className = 'w-6 h-6 rounded-full bg-emerald-500 shrink-0 shadow-xs flex items-center justify-center text-white';
+        iconEl.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
         document.getElementById('modal-status-text').textContent = isEn ? 'Safe Zone (100% EUDR Compliant)' : 'พื้นที่ปลอดภัย (ผ่านเกณฑ์รับรอง 100%)';
         document.getElementById('modal-status-desc').textContent = isEn 
           ? 'Located completely outside National Forest Reserves. Deforestation-Free verified.' 
@@ -1384,7 +1388,8 @@ $currentUser = getCurrentUser();
         actionBtn.textContent = isEn ? 'View on GIS Map ➔' : 'เปิดดูบนแผนที่ GIS ➔';
       } else if (plot.eudr_status === 'under_review') {
         badge.className = 'p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3 bg-amber-50 border-amber-200 text-amber-900';
-        document.getElementById('modal-status-icon').textContent = '🟠';
+        iconEl.className = 'w-6 h-6 rounded-full bg-amber-500 shrink-0 shadow-xs flex items-center justify-center text-white';
+        iconEl.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01"></path></svg>';
         document.getElementById('modal-status-text').textContent = isEn ? 'Caution Area (Under Review)' : 'เขตเฝ้าระวัง (อยู่ระหว่างตรวจสอบ)';
         document.getElementById('modal-status-desc').textContent = isEn 
           ? 'Near forest reserve boundary buffer. Verification required.' 
@@ -1394,7 +1399,8 @@ $currentUser = getCurrentUser();
         actionBtn.textContent = isEn ? 'Inspect Buffer Zone ➔' : 'ตรวจสอบแนวเขตบนแผนที่ ➔';
       } else {
         badge.className = 'p-3.5 sm:p-4 rounded-2xl border flex items-center gap-3 bg-rose-50 border-rose-200 text-rose-900';
-        document.getElementById('modal-status-icon').textContent = '🔴';
+        iconEl.className = 'w-6 h-6 rounded-full bg-rose-600 shrink-0 shadow-xs flex items-center justify-center text-white';
+        iconEl.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>';
         document.getElementById('modal-status-text').textContent = isEn ? 'Prohibited (Forest Overlap Risk)' : `ทับซ้อนแนวเขตป่าสงวน (${plot.eudr_overlap_pct}%)`;
         document.getElementById('modal-status-desc').textContent = isEn 
           ? 'Direct overlap with Protected Forest. Violates EUDR regulation.' 
@@ -1790,7 +1796,7 @@ $currentUser = getCurrentUser();
 
     const riskModalData = {
       1: {
-        icon: '🔴',
+        icon: `<svg class="w-7 h-7 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"></circle><line x1="15" y1="9" x2="9" y2="15" stroke-width="2"></line><line x1="9" y1="9" x2="15" y2="15" stroke-width="2"></line></svg>`,
         title_th: 'ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)',
         title_en: 'Forest Reserve Overlap (Non-Compliant)',
         text_th: 'การนำชั้นข้อมูลสารสนเทศภูมิศาสตร์ (GIS) มาประยุกต์ใช้เพื่อตรวจสอบพิกัดแนวเขตป่าสงวนแห่งชาติทั้ง 26 แห่งในจังหวัดสุราษฎร์ธานี มีบทบาทสำคัญในการช่วยระบุพื้นที่เปราะบางทางระบบนิเวศ (Zone C) ที่ต้องได้รับการคุ้มครองอย่างเข้มงวด พร้อมทั้งเป็นเครื่องมือวิเคราะห์การเปลี่ยนแปลงสภาพพื้นที่ป่าไม้ผ่านข้อมูลภาพถ่ายดาวเทียมย้อนหลัง เพื่อพิสูจน์ยืนยันความถูกต้องว่าไม่มีการบุกรุกแผ้วถางหลังเส้นตายวันที่ 31 ธันวาคม 2020 ซึ่งไม่เพียงช่วยป้องกันข้อพิพาททางกฎหมายและการรุกล้ำพื้นที่ป่าอนุรักษ์เท่านั้น แต่ยังเป็นการสร้างมาตรฐานการตรวจสอบย้อนกลับ (Traceability) ของผลผลิตทางการเกษตร ให้มีความโปร่งใสและสอดรับกับข้อกำหนดสากลว่าด้วยสินค้าปลอดการทำลายป่า (EUDR) อย่างยั่งยืน',
@@ -1798,7 +1804,7 @@ $currentUser = getCurrentUser();
         link: 'login.php?redirect=overview.php'
       },
       2: {
-        icon: '🟠',
+        icon: `<svg class="w-7 h-7 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`,
         title_th: 'แนวกันชนประชิดแนวป่าสงวน (เฝ้าระวัง 500 ม.)',
         title_en: '500m Forest Buffer Zone (Watchlist)',
         text_th: 'การกำหนดแนวกันชนระยะ 500 เมตร ประชิดแนวเขตป่าสงวนแห่งชาติ ทำหน้าที่เป็นเขตเฝ้าระวังเชิงพื้นที่ (Buffer Zone) เพื่อติดตามและควบคุมความเสี่ยงของการขยายแปลงเกษตรกรรมรุกล้ำพื้นที่ป่าสมบูรณ์ แม้แปลงดังกล่าวจะมีเอกสารสิทธิ์การถือครองที่ถูกต้องตามกฎหมาย การใช้ระบบ GIS ร่วมกับการเปรียบเทียบพิกัดแปลงกับภาพถ่ายดาวเทียมย้อนหลังอย่างสม่ำเสมอ จึงเป็นขั้นตอนสำคัญในการพิสูจน์ความโปร่งใส ยืนยันสถานะขอบเขตแปลงที่ดินว่าไม่มีการรุกล้ำเพิ่ม และช่วยป้องกันข้อพิพาทด้านแนวเขตตามกฎหมาย พร้อมทั้งเสริมความพร้อมด้านการตรวจสอบย้อนกลับ (Traceability) ตามมาตรฐานการค้าสากลได้อย่างมีประสิทธิภาพ',
@@ -1806,7 +1812,7 @@ $currentUser = getCurrentUser();
         link: 'login.php?redirect=map.php'
       },
       3: {
-        icon: '🟢',
+        icon: `<svg class="w-7 h-7 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
         title_th: 'แปลงผ่านเกณฑ์มาตรฐานสากล (ปลอดการทำลายป่า)',
         title_en: 'EUDR Compliant & Deforestation-Free',
         text_th: 'การรับรองสถานะแปลงปลอดการตัดไม้ทำลายป่า ถือเป็นหัวใจสำคัญของการยกระดับห่วงโซ่อุปทานยางพาราสู่มาตรฐานสากล โดยแปลงที่ตั้งอยู่นอกแนวเขตป่าสงวนแห่งชาติอย่างชัดเจน และมีประวัติการเพาะปลูกก่อนเส้นตายวันที่ 31 ธันวาคม 2020 จะได้รับการยืนยันความถูกต้องผ่านการซ้อนทับชั้นข้อมูลเชิงพื้นที่ (GIS) และหลักฐานเอกสารสิทธิ์ตามกฎหมาย การเชื่อมโยงข้อมูลแปลงเข้ากับระบบหนังสือรับรองดิจิทัลและ QR Code สำหรับการตรวจสอบย้อนกลับ (Traceability) จึงช่วยสร้างความโปร่งใสแบบเรียลไทม์ ทำให้ผู้ซื้อในตลาดยุโรปสามารถสแกนตรวจดูพิกัดขอบเขตแปลงและประวัติย้อนหลังได้ทันที สร้างความเชื่อมั่น ป้องกันการปฏิเสธสินค้า และเพิ่มขีดความสามารถในการแข่งขันทางการค้าตามกฎระเบียบ EUDR ได้อย่างสมบูรณ์',

@@ -954,47 +954,45 @@ for ($i = 0; $i < $totalPts; $i++) {
 
         <!-- Drawer Navigation Links -->
         <nav class="flex flex-col gap-1.5 pt-4 text-sm font-medium">
-          <a href="index.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>🏠</span> <span data-i18n="nav_home">หน้าแรก</span>
+          <a href="index.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_home">หน้าแรก</span>
           </a>
-          <a href="overview.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>🛰️</span> <span data-i18n="nav_gis">แผนที่ GIS</span>
+          <a href="overview.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_gis">แผนที่ GIS</span>
           </a>
-          <a href="dashboard.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>📊</span> <span data-i18n="nav_dashboard">แดชบอร์ด</span>
+          <a href="dashboard.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_dashboard">แดชบอร์ด</span>
           </a>
-          <a href="map.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>📍</span> <span data-i18n="nav_plots">แปลงปลูก</span>
+          <a href="map.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_plots">แปลงปลูก</span>
           </a>
-          <a href="yields.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>🧪</span> <span data-i18n="nav_yields">ผลผลิต</span>
+          <a href="yields.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_yields">ผลผลิต</span>
           </a>
-          <a href="contact.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center gap-3">
-            <span>📞</span> <span data-i18n="nav_contact">ติดต่อเรา</span>
+          <a href="contact.php" class="px-4 py-2.5 rounded-xl text-slate-700 hover:text-mezenc-teal hover:bg-mezenc-lightCyan/60 transition-all flex items-center">
+            <span data-i18n="nav_contact">ติดต่อเรา</span>
           </a>
         </nav>
       </div>
 
       <!-- Drawer Footer Action -->
-      <div class="pt-4 border-t border-gray-200/70 space-y-2.5">
-        <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600 flex items-center justify-between">
-          <div class="truncate">
-            ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($user_name) ?></strong>
-          </div>
-          <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full font-bold border border-mezenc-mint/40 shrink-0 ml-1"><?= htmlspecialchars($current_role) ?></span>
+      <div class="pt-5 border-t border-gray-200/70 space-y-2.5">
+        <div class="p-3 bg-mezenc-lightCyan/60 rounded-xl border border-mezenc-mint/30 text-xs text-slate-600">
+          ผู้ใช้งาน: <strong class="text-mezenc-teal"><?= htmlspecialchars($user_name) ?></strong> 
+          <span class="text-[10px] bg-white text-mezenc-teal px-2 py-0.5 rounded-full ml-1 font-bold border border-mezenc-mint/40"><?= htmlspecialchars($current_role) ?></span>
         </div>
+        <a href="overview.php" class="w-full py-2.5 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-center block shadow transition-all text-xs uppercase tracking-wider" data-i18n="idx_sec3_btn">
+          เปิดแผนที่ระบบภูมิสารสนเทศ (FULL GIS MAP) ➔
+        </a>
         <?php if ($isLoggedIn): ?>
-        <a href="logout.php" class="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all flex items-center justify-center gap-2" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
-          <span>🚪</span> <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
+        <a href="logout.php" class="w-full py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-center block text-xs transition-all" onclick="return confirm('ต้องการออกจากระบบหรือไม่?');">
+          <span data-i18n="nav_logout">ออกจากระบบ (Logout)</span>
         </a>
         <?php else: ?>
-        <a href="login.php?redirect=<?= urlencode($_SERVER['REQUEST_URI'] ?? 'trace.php') ?>" class="w-full py-2.5 rounded-xl bg-mezenc-teal hover:bg-mezenc-deepTeal text-white font-bold text-center block text-xs transition-all flex items-center justify-center gap-2">
-          <span>🔑</span> <span>เข้าสู่ระบบ (Login)</span>
+        <a href="login.php?redirect=<?= urlencode($_SERVER['REQUEST_URI'] ?? 'trace.php') ?>" class="w-full py-2.5 rounded-xl bg-mezenc-teal hover:bg-mezenc-deepTeal text-white font-bold text-center block text-xs transition-all">
+          <span>เข้าสู่ระบบ (Login)</span>
         </a>
         <?php endif; ?>
-        <div class="text-center text-[11px] text-slate-400 pt-1 font-normal">
-          &copy; 2026 GeoRubber Watch &bull; ม.อ. สุราษฎร์ธานี
-        </div>
       </div>
 
     </div>
@@ -1013,7 +1011,7 @@ for ($i = 0; $i < $totalPts; $i++) {
       <div class="w-full max-w-[840px] bg-gradient-to-r from-amber-500/15 via-teal-500/15 to-emerald-500/15 border-2 border-amber-400/40 backdrop-blur-md rounded-2xl p-4 text-slate-700 text-xs shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 no-print">
         <div class="flex items-start sm:items-center gap-3">
           <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-lg shrink-0 shadow-xs border border-amber-300">
-            🛡️
+            <svg class="w-5 h-5 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
           </div>
           <div>
             <div class="font-bold text-amber-900 text-sm flex items-center gap-2">
@@ -1096,8 +1094,8 @@ for ($i = 0; $i < $totalPts; $i++) {
               <div class="text-lg sm:text-[20px] font-bold tracking-tight text-mezenc-darkNavy">แบบแสดงข้อมูลแปลงที่ดินและพิกัดภูมิสารสนเทศ</div>
               <div class="text-xs sm:text-[13.5px] font-bold text-mezenc-teal mt-0.5">(สำหรับงานระบบสารสนเทศภูมิศาสตร์และการตรวจสอบย้อนกลับมาตรฐาน EUDR)</div>
               <div class="text-[10.5px] text-slate-500 mt-0.5">จัดทำโดยระบบสารสนเทศภูมิศาสตร์อัจฉริยะ GeoRubber Watch มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</div>
-              <!-- ลายประดับเส้นคั่น -->
-              <div class="text-[12px] text-mezenc-teal/60 mt-0.5">❦ ════════ •⊰ 🌲 ⊱• ════════ ❧</div>
+              <!-- เส้นคั่นแบบมืออาชีพ -->
+              <div class="w-36 h-[1.5px] bg-mezenc-teal/30 mx-auto my-1.5"></div>
             </div>
 
             <!-- 1. ข้อมูลแปลงที่ดิน -->
@@ -1344,9 +1342,7 @@ for ($i = 0; $i < $totalPts; $i++) {
 
             <!-- ท้ายกระดาษผู้พัฒนา -->
             <div class="mt-3 text-center text-[10.5px] text-slate-500 font-thai flex items-center justify-center gap-2 border-t border-slate-200 pt-1.5">
-              <span>❧</span>
               <span>GeoRubber Watch &bull; ศูนย์ภูมิสารสนเทศเพื่อการเกษตรยั่งยืน มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี</span>
-              <span>❦</span>
             </div>
 
           </div>
@@ -1405,8 +1401,8 @@ for ($i = 0; $i < $totalPts; $i++) {
             <?php if (!$isLoggedIn): ?>
             <!-- GUEST PRIVACY SHIELD FOR YIELD ANNEX -->
             <div class="p-6 rounded-2xl bg-gradient-to-b from-slate-50 to-emerald-50/40 border-2 border-slate-200 text-center space-y-4 my-2">
-              <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-700 border border-brand-200 flex items-center justify-center mx-auto text-2xl shadow-xs">
-                🔒
+              <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-700 border border-brand-200 flex items-center justify-center mx-auto text-xl shadow-xs">
+                <svg class="w-7 h-7 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
               </div>
               <div class="max-w-md mx-auto space-y-1.5">
                 <h3 class="font-extrabold text-sm text-slate-800">
@@ -1677,9 +1673,9 @@ for ($i = 0; $i < $totalPts; $i++) {
           <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
           <div class="text-[14px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
-            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
+            <div data-i18n="foot_authors"><strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor"><strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div><span data-i18n="foot_email"><strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
           </div>
         </div>
 

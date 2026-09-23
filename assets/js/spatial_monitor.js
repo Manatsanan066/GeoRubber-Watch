@@ -116,7 +116,7 @@ const SpatialMonitor = {
           const props = feature.properties;
           layer.bindPopup(`
             <div style="font-family:'Google Sans', 'Open Sans', 'Sarabun', sans-serif; min-width:200px; padding:4px;">
-              <div style="font-weight:700; color:#b91c1c; font-size:14px; margin-bottom:2px;">🌲 ${props.name_th}</div>
+              <div style="font-weight:700; color:#b91c1c; font-size:14px; margin-bottom:2px;">${props.name_th}</div>
               <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">${props.name_en || ''}</div>
               <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; font-size:12px; margin-bottom:6px;">
                 <div><strong>รหัส:</strong> ${props.forest_code}</div>
@@ -124,7 +124,7 @@ const SpatialMonitor = {
                 <div><strong>ประเภท:</strong> ${props.category}</div>
               </div>
               <div style="font-size:11px; background:#fef2f2; color:#991b1b; padding:4px 8px; border-radius:6px; font-weight:700;">
-                ⚠️ เขตป่าสงวนคุ้มครองตามเกณฑ์ EUDR
+                เขตป่าสงวนคุ้มครองตามเกณฑ์ EUDR
               </div>
             </div>
           `);
@@ -174,16 +174,16 @@ const SpatialMonitor = {
         },
         onEachFeature: (feature, layer) => {
           const props = feature.properties;
-          let statusBadge = '<span style="color:#166534; font-weight:700;">🟢 ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>';
+          let statusBadge = '<span style="color:#166534; font-weight:700;">ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)</span>';
           if (props.eudr_status === 'non_compliant') {
-            statusBadge = '<span style="color:#991b1b; font-weight:700;">🔴 ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>';
+            statusBadge = '<span style="color:#991b1b; font-weight:700;">ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)</span>';
           } else if (props.eudr_status === 'under_review') {
-            statusBadge = '<span style="color:#92400e; font-weight:700;">🟠 โซนเฝ้าระวัง (Buffer < 500 ม.)</span>';
+            statusBadge = '<span style="color:#92400e; font-weight:700;">โซนเฝ้าระวัง (Buffer < 500 ม.)</span>';
           }
 
           layer.bindPopup(`
             <div style="font-family:'Google Sans', 'Open Sans', 'Sarabun', sans-serif; min-width:220px; padding:4px;">
-              <div style="font-weight:700; color:#133e36; font-size:15px; margin-bottom:2px;">🌱 ${props.plot_name}</div>
+              <div style="font-weight:700; color:#133e36; font-size:15px; margin-bottom:2px;">${props.plot_name}</div>
               <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">รหัสแปลง: <strong>${props.plot_code}</strong></div>
               <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:8px; font-size:12px; margin-bottom:8px;">
                 <div><strong>เกษตรกร:</strong> ${props.farmer_name || '-'}</div>
@@ -192,7 +192,7 @@ const SpatialMonitor = {
                 <div><strong>สถานะ:</strong> ${statusBadge}</div>
               </div>
               <a href="trace.php?plot_id=${props.id}" class="btn btn-primary btn-sm" style="width:100%; display:block; text-align:center; padding:6px; font-size:11px;">
-                🛡️ เปิดดู EUDR Passport
+                เปิดดู EUDR Passport
               </a>
             </div>
           `);
@@ -242,12 +242,12 @@ const SpatialMonitor = {
 
       marker.bindPopup(`
         <div style="font-family:'Google Sans', 'Open Sans', 'Sarabun', sans-serif; min-width:210px; padding:4px;">
-          <div style="font-weight:700; color:#1e40af; font-size:14px; margin-bottom:4px;">📡 ${st.name}</div>
+          <div style="font-weight:700; color:#1e40af; font-size:14px; margin-bottom:4px;">${st.name}</div>
           <div style="background:#f0f9ff; border:1px solid #bae6fd; padding:8px 10px; border-radius:8px; font-size:12px; line-height:1.6; margin-bottom:6px;">
             <div><strong>อุณหภูมิ:</strong> ${st.temp}</div>
             <div><strong>ความชื้นสัมพัทธ์:</strong> ${st.hum}</div>
             <div><strong>ดัชนีพืชพรรณ (NDVI):</strong> <span style="font-weight:700; color:#0369a1;">${st.ndvi}</span></div>
-            <div><strong>สถานะโหนด:</strong> <span style="color:#0284c7; font-weight:700;">🟢 กำลังส่งข้อมูลแบบ Real-Time</span></div>
+            <div><strong>สถานะโหนด:</strong> <span style="color:#0284c7; font-weight:700;">กำลังส่งข้อมูลแบบ Real-Time</span></div>
           </div>
         </div>
       `);
@@ -360,7 +360,7 @@ const SpatialMonitor = {
     container.innerHTML = `
       <div class="spatial-alert-pill critical" onclick="SpatialMonitor.flyToPlot(8.7800, 99.3800, 'แปลงสวนยางเขาพุทธทอง K-4')">
         <div>
-          <div style="font-weight:700;">🔴 แปลงเขาพุทธทอง K-4</div>
+          <div style="font-weight:700;">แปลงเขาพุทธทอง K-4</div>
           <div style="font-size:11px; opacity:0.8;">ทับซ้อนแนวเขตป่าสงวนเขาพุทธทอง</div>
         </div>
         <span style="font-size:11px; font-weight:700;">ตรวจด่วน ➔</span>
@@ -368,7 +368,7 @@ const SpatialMonitor = {
 
       <div class="spatial-alert-pill critical" onclick="SpatialMonitor.flyToPlot(8.9150, 98.7550, 'แปลงคลองสก KS-2')">
         <div>
-          <div style="font-weight:700;">🔴 แปลงคลองสก KS-2</div>
+          <div style="font-weight:700;">แปลงคลองสก KS-2</div>
           <div style="font-size:11px; opacity:0.8;">ใกล้ขอบป่าคลองสก (<100ม.)</div>
         </div>
         <span style="font-size:11px; font-weight:700;">ตรวจด่วน ➔</span>
@@ -376,7 +376,7 @@ const SpatialMonitor = {
 
       <div class="spatial-alert-pill warning" onclick="SpatialMonitor.flyToPlot(9.1250, 99.4200, 'แปลงเขาท่าเพชร TP-1')">
         <div>
-          <div style="font-weight:700;">🟠 แปลงเขาท่าเพชร TP-1</div>
+          <div style="font-weight:700;">แปลงเขาท่าเพชร TP-1</div>
           <div style="font-size:11px; opacity:0.8;">อยู่ในระยะ Buffer 350 ม.</div>
         </div>
         <span style="font-size:11px; font-weight:700;">เฝ้าระวัง ➔</span>
@@ -384,7 +384,7 @@ const SpatialMonitor = {
 
       <div class="spatial-alert-pill compliant" onclick="SpatialMonitor.flyToPlot(9.0805, 99.3515, 'แปลงทดลอง ม.อ. สุราษฎร์ธานี X-7')">
         <div>
-          <div style="font-weight:700;">🟢 แปลงทดลอง ม.อ. X-7</div>
+          <div style="font-weight:700;">แปลงทดลอง ม.อ. X-7</div>
           <div style="font-size:11px; opacity:0.8;">ปลอดการบุกรุกป่า 100% (EUDR Ready)</div>
         </div>
         <span style="font-size:11px; font-weight:700;">ดูแปลง ➔</span>

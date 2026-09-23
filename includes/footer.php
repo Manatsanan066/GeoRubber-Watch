@@ -31,9 +31,9 @@
           <div class="font-bold text-[15px] sm:text-[16px] text-mezenc-mint" data-i18n="foot_dev_header">ข้อมูลผู้พัฒนาและช่องทางติดต่อ</div>
           <div class="text-[14px] text-white/75" data-i18n="foot_dev_sub">ระบบภูมิสารสนเทศบริการออนไลน์ตลอด 24 ชั่วโมง</div>
           <div class="pt-1 text-[14px] text-white/90 space-y-1">
-            <div data-i18n="foot_authors">👩‍💻 <strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
-            <div data-i18n="foot_advisor">🎓 <strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
-            <div><span data-i18n="foot_email">✉️ <strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
+            <div data-i18n="foot_authors"><strong>ผู้จัดทำ:</strong> นางสาวมาทินี โรยนรินทร์ และ นางสาวมนัสนันท์ อนันตณรงค์</div>
+            <div data-i18n="foot_advisor"><strong>อาจารย์ที่ปรึกษา:</strong> รศ.ดร.สุพัตรา พุฒิเนาวรัตน์</div>
+            <div><span data-i18n="foot_email"><strong>อีเมล / Email:</strong></span> <a href="mailto:6640011044@psu.ac.th" class="hover:text-mezenc-mint underline">6640011044@psu.ac.th</a></div>
           </div>
         </div>
 
@@ -84,10 +84,10 @@
       <!-- Action Buttons Matching Screenshot -->
       <div style="padding-top: 6px; display: flex; flex-direction: column; gap: 10px;">
         <a id="qr-url-link" href="#" target="_blank" style="width: 100%; box-sizing: border-box; padding: 12px 20px; border-radius: 9999px; background: #00a699; color: #ffffff; font-weight: 700; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,166,153,0.2);">
-          <span>🌐</span> <span>เปิดตรวจสอบหนังสือรับรอง (EUDR Passport)</span>
+          <span>เปิดตรวจสอบหนังสือรับรอง (EUDR Passport)</span>
         </a>
         <button type="button" onclick="App.copyCurrentQrUrl()" style="width: 100%; box-sizing: border-box; padding: 10px 20px; border-radius: 9999px; background: #ffffff; color: #064e3b; font-weight: 700; font-size: 14px; border: 1px solid #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <span>📋</span> <span>คัดลอกลิงก์ตรวจสอบ</span>
+          <span>คัดลอกลิงก์ตรวจสอบ</span>
         </button>
       </div>
     </div>
