@@ -9,8 +9,8 @@ const App = {
   currentPlotName: null,
   currentPlotCode: null,
   currentGeneratedUrl: null,
-  detectedNgrokUrl: 'https://earthling-retype-aroma.ngrok-free.dev',
-  defaultNgrokUrl: 'https://earthling-retype-aroma.ngrok-free.dev',
+  detectedNgrokUrl: null,
+  defaultNgrokUrl: null,
 
   // Initialize App
   init() {
@@ -133,11 +133,24 @@ const App = {
         source: 'custom_url'
       };
     }
-    const ngrokUrl = window.NGROK_PUBLIC_URL || this.detectedNgrokUrl || this.defaultNgrokUrl || 'https://earthling-retype-aroma.ngrok-free.dev';
+    if (window.NGROK_PUBLIC_URL && window.NGROK_PUBLIC_URL.includes('http')) {
+      return {
+        url: window.NGROK_PUBLIC_URL,
+        isNgrok: window.NGROK_PUBLIC_URL.includes('ngrok'),
+        source: 'ngrok_window'
+      };
+    }
+    if (this.detectedNgrokUrl && this.detectedNgrokUrl.includes('http')) {
+      return {
+        url: this.detectedNgrokUrl,
+        isNgrok: true,
+        source: 'ngrok_detected'
+      };
+    }
     return {
-      url: ngrokUrl,
-      isNgrok: true,
-      source: 'ngrok'
+      url: window.location.origin,
+      isNgrok: false,
+      source: 'local'
     };
   },
 
@@ -178,10 +191,13 @@ const App = {
     if (!basePath.startsWith('/')) basePath = '/' + basePath;
     if (basePath === '/') basePath = '';
 
-    // Prioritize ngrok public URL so smartphones can scan across the internet
+    // Local in-browser verify URL (always works directly for current user session)
+    const localVerifyUrl = `${window.location.origin}${basePath}/trace.php?token=${encodeURIComponent(this.currentQRToken)}`;
+
+    // Prioritize ngrok/public URL if available so smartphones can scan across the internet, fallback to local origin
     let cleanBase = (baseUrl && baseUrl.includes('http'))
       ? baseUrl.trim().replace(/\/+$/, '')
-      : (window.NGROK_PUBLIC_URL || this.detectedNgrokUrl || 'https://earthling-retype-aroma.ngrok-free.dev');
+      : window.location.origin;
     
     // Prevent duplicate subpath
     let fullUrl;
@@ -190,12 +206,12 @@ const App = {
     } else {
       fullUrl = `${cleanBase}${basePath}/trace.php?token=${encodeURIComponent(this.currentQRToken)}`;
     }
-    this.currentGeneratedUrl = fullUrl;
+    this.currentGeneratedUrl = (isNgrok || (baseUrl && baseUrl.includes('http') && !baseUrl.includes('localhost') && !baseUrl.includes('127.0.0.1'))) ? fullUrl : localVerifyUrl;
 
-    // Update Links & Displays
+    // Update Links & Displays: Browser button ALWAYS opens localVerifyUrl so user can view certificate without network errors!
     const linkEl = document.getElementById('qr-url-link');
     if (linkEl) {
-      linkEl.href = fullUrl;
+      linkEl.href = localVerifyUrl;
     }
 
     const tokenEl = document.getElementById('qr-token-display');

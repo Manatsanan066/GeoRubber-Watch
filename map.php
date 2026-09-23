@@ -102,7 +102,7 @@ $totalPlotsCount = (int)($pdo->query("SELECT COUNT(*) FROM rubber_plots")->fetch
         ];
     }, $farmersList), JSON_UNESCAPED_UNICODE) ?>;
     window.SERVER_LAN_IP = '192.168.1.139';
-    window.NGROK_PUBLIC_URL = 'https://earthling-retype-aroma.ngrok-free.dev';
+    window.NGROK_PUBLIC_URL = '';
   </script>
 
   <!-- Tailwind Theme Configuration (Exact Mezenc Natural Teal System) -->
@@ -2849,7 +2849,9 @@ $totalPlotsCount = (int)($pdo->query("SELECT COUNT(*) FROM rubber_plots")->fetch
         if (!basePath.startsWith('/')) basePath = '/' + basePath;
         if (basePath === '/') basePath = '';
 
-        const cleanBase = window.NGROK_PUBLIC_URL || 'https://earthling-retype-aroma.ngrok-free.dev';
+        const cleanBase = (window.NGROK_PUBLIC_URL && window.NGROK_PUBLIC_URL.includes('http'))
+          ? window.NGROK_PUBLIC_URL.trim().replace(/\/+$/, '')
+          : window.location.origin;
         let fullUrl;
         if (cleanBase.endsWith(basePath) && basePath !== '') {
           fullUrl = `${cleanBase}/trace.php?token=${encodeURIComponent(token)}`;

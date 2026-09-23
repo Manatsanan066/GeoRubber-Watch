@@ -329,17 +329,12 @@ $displayTokenCode = maskPdpaToken($tokenCode, $isLoggedIn);
 $farmerCode = !empty($plot['farmer_code']) ? $plot['farmer_code'] : 'FM-ST-0889';
 $displayFarmerCode = maskPdpaCode($farmerCode, $isLoggedIn);
 
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https://' : 'http://';
+$host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? ($_SERVER['HTTP_HOST'] ?? 'localhost');
 $dir = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+if ($dir === '/') $dir = '';
 
-// Prioritize ngrok public URL for QR Code and share link so mobile cameras can scan
-$publicBase = 'https://earthling-retype-aroma.ngrok-free.dev';
-if (strpos($host, 'ngrok') !== false) {
-    $verifyUrl = $protocol . $host . $dir . '/trace.php?token=' . rawurlencode($tokenCode);
-} else {
-    $verifyUrl = $publicBase . $dir . '/trace.php?token=' . rawurlencode($tokenCode);
-}
+$verifyUrl = $protocol . $host . $dir . '/trace.php?token=' . rawurlencode($tokenCode);
 
 $ledgerHash = '0x' . hash('sha256', $certNo . $tokenCode . ($plot['created_at'] ?? '2026-03-05'));
 $shortHash = substr($ledgerHash, 0, 8) . '...' . substr($ledgerHash, -6);

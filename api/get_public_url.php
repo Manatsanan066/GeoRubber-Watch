@@ -148,18 +148,17 @@ if (file_exists($configFilePath)) {
     }
 }
 
-// 4. Fallback to active ngrok tunnel
-$defaultNgrok = 'https://earthling-retype-aroma.ngrok-free.dev';
+// 4. Fallback to Local Server / LAN URL when ngrok is not running
 $serverIp = '192.168.1.139';
 $port = !empty($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'], ['80', '443']) ? ':' . $_SERVER['SERVER_PORT'] : '';
 $lanOrigin = "http://{$serverIp}{$port}";
 
 echo json_encode([
     'success' => true,
-    'source' => 'default_ngrok',
-    'is_ngrok' => true,
-    'public_url' => $defaultNgrok,
+    'source' => 'local_fallback',
+    'is_ngrok' => false,
+    'public_url' => "{$proto}://{$host}",
     'lan_url' => $lanOrigin,
     'local_origin' => "{$proto}://{$host}",
-    'message' => 'Active ngrok URL: ' . $defaultNgrok
+    'message' => 'Using local/LAN origin'
 ]);
