@@ -398,7 +398,7 @@ const GeoMap = {
                 </a>
                 `}
               </div>
-              ${(window.IS_ADMIN === true || p.can_delete !== false) ? `
+              ${(window.IS_ADMIN === true) ? `
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                 <button type="button" onclick="event.stopPropagation(); window.openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px;">
                   แก้ไข
@@ -603,14 +603,13 @@ const GeoMap = {
                 </svg>
               </button>
 
-              <!-- Delete Button (Trash Icon) -->
-              ${((window.IS_ADMIN === true) || (p.can_delete !== false)) ? `
+              <!-- Delete Button (Trash Icon) - Only visible for Admin -->
+              ${(window.IS_ADMIN === true) ? `
               <button 
                 type="button" 
-                onclick="GeoMap.deletePlot(${p.id}, '${safeName}')" 
+                onclick="window.deletePlotById(${p.id})" 
                 data-action="delete-plot"
                 data-plot-id="${p.id}"
-                data-plot-name="${safeName}"
                 title="ลบแปลงปลูก" 
                 class="btn-delete-plot-row w-9 h-9 rounded-full text-gray-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
               >

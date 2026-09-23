@@ -426,7 +426,7 @@ if ($method === 'GET') {
                     'centroid' => ['lat' => (float)$p['centroid_lat'], 'lng' => (float)$p['centroid_lng']],
                     'nearest_forest_name' => $p['nearest_forest_name'] ?? 'เขตป่าสงวนแห่งชาติเขาท่าเพชร',
                     'traceability_token' => $p['traceability_token'],
-                    'can_delete' => true,
+                    'can_delete' => (bool)$isUserAdmin,
                     'created_at' => $p['created_at']
                 ],
                 'geometry' => $geometry
@@ -436,7 +436,7 @@ if ($method === 'GET') {
         header('Cache-Control: private, max-age=5, stale-while-revalidate=30');
         echo json_encode([
             'type' => 'FeatureCollection',
-            'can_delete' => true,
+            'can_delete' => (bool)$isUserAdmin,
             'features' => $features
         ], JSON_UNESCAPED_UNICODE);
         exit;
@@ -446,7 +446,7 @@ if ($method === 'GET') {
     echo json_encode([
         'success' => true,
         'count' => count($plots),
-        'can_delete' => true,
+        'can_delete' => (bool)$isUserAdmin,
         'plots' => $plots
     ], JSON_UNESCAPED_UNICODE);
     exit;
@@ -468,6 +468,12 @@ if ($method === 'POST') {
 
         // Handle Delete via POST
         if ($action === 'delete' || $action === 'destroy' || $overrideMethod === 'DELETE') {
+            if (!$isUserAdmin) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถลบข้อมูลแปลงปลูกได้'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
             $id = (int)($data['id'] ?? ($_GET['id'] ?? ($_POST['id'] ?? 0)));
             if ($id <= 0) {
                 http_response_code(400);
@@ -1046,6 +1052,12 @@ if ($method === 'PUT') {
 // -----------------------------------------------------------------------------
 if ($method === 'DELETE') {
     requireAuth();
+    if (!$isUserAdmin) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถลบข้อมูลแปลงปลูกได้'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     $id = (int)($_GET['id'] ?? 0);
     if ($id <= 0) {
         $rawInput = json_decode(file_get_contents('php://input'), true);

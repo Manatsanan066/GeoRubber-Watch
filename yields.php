@@ -2747,7 +2747,7 @@ try {
           }
         }
 
-        const canDelete = data.can_delete === true || window.IS_ADMIN === true;
+        const canDelete = (window.IS_ADMIN === true);
         renderYieldsTable(windowYieldsList, canDelete);
 
       } catch (e) {

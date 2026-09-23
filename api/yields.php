@@ -571,7 +571,7 @@ if ($method === 'GET') {
         echo json_encode([
             'success' => true,
             'role' => $currentUser['role'],
-            'can_delete' => true,
+            'can_delete' => (bool)$isUserAdmin,
             'summary' => $summary,
             'yields' => $logs
         ], JSON_UNESCAPED_UNICODE);
@@ -598,6 +598,12 @@ if ($method === 'POST') {
 
         // Delete Yield Log via POST
         if ($action === 'delete' || $action === 'destroy' || $overrideMethod === 'DELETE') {
+            if (!$isUserAdmin) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถลบข้อมูลผลผลิตได้'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
             $id = (int)($data['id'] ?? ($_GET['id'] ?? ($_POST['id'] ?? 0)));
             if ($id <= 0) {
                 http_response_code(400);
@@ -932,6 +938,12 @@ if ($method === 'PUT') {
 // -----------------------------------------------------------------------------
 if ($method === 'DELETE') {
     try {
+        if (!$isUserAdmin) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถลบข้อมูลผลผลิตได้'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
         $id = (int)($_GET['id'] ?? 0);
         if ($id <= 0) {
             $rawInput = json_decode(file_get_contents('php://input'), true);
