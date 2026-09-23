@@ -675,7 +675,7 @@ $currentUser = getCurrentUser();
         <div class="flex items-center gap-3">
           <div id="modal-badge" class="w-12 h-12 rounded-2xl bg-mezenc-lightCyan text-mezenc-teal flex items-center justify-center text-2xl shrink-0 shadow-inner"></div>
           <div>
-            <div class="text-[11px] font-bold text-mezenc-brightCyan uppercase tracking-wider" data-i18n="modal_badge_tag">รายละเอียดระบบงาน</div>
+            <div id="modal-tag" class="text-[11px] font-bold text-mezenc-brightCyan uppercase tracking-wider">รายละเอียดระบบงาน</div>
             <h3 id="modal-title" class="font-extrabold text-base sm:text-lg text-mezenc-teal leading-snug"></h3>
           </div>
         </div>
@@ -1791,26 +1791,26 @@ $currentUser = getCurrentUser();
     const riskModalData = {
       1: {
         icon: '🔴',
-        title_th: 'สำรวจ 26 แนวเขตป่าสงวนแห่งชาติ',
-        title_en: 'Explore 26 National Forest Reserves',
-        text_th: 'กรุณาเข้าสู่ระบบเพื่อสำรวจและวิเคราะห์แนวเขตป่าสงวนแห่งชาติ 26 แห่งในจังหวัดสุราษฎร์ธานี (Zone C) ตรวจสอบพิกัดความทับซ้อน และข้อมูลเชิงพื้นที่ระบบ GIS อย่างละเอียด',
-        text_en: 'Please log in to explore and analyze 26 National Forest Reserves in Surat Thani (Zone C), verify spatial boundary overlaps, and inspect comprehensive GIS layers.',
+        title_th: 'ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)',
+        title_en: 'Forest Reserve Overlap (Non-Compliant)',
+        text_th: 'การนำชั้นข้อมูลสารสนเทศภูมิศาสตร์ (GIS) มาประยุกต์ใช้เพื่อตรวจสอบพิกัดแนวเขตป่าสงวนแห่งชาติทั้ง 26 แห่งในจังหวัดสุราษฎร์ธานี มีบทบาทสำคัญในการช่วยระบุพื้นที่เปราะบางทางระบบนิเวศ (Zone C) ที่ต้องได้รับการคุ้มครองอย่างเข้มงวด พร้อมทั้งเป็นเครื่องมือวิเคราะห์การเปลี่ยนแปลงสภาพพื้นที่ป่าไม้ผ่านข้อมูลภาพถ่ายดาวเทียมย้อนหลัง เพื่อพิสูจน์ยืนยันความถูกต้องว่าไม่มีการบุกรุกแผ้วถางหลังเส้นตายวันที่ 31 ธันวาคม 2020 ซึ่งไม่เพียงช่วยป้องกันข้อพิพาททางกฎหมายและการรุกล้ำพื้นที่ป่าอนุรักษ์เท่านั้น แต่ยังเป็นการสร้างมาตรฐานการตรวจสอบย้อนกลับ (Traceability) ของผลผลิตทางการเกษตร ให้มีความโปร่งใสและสอดรับกับข้อกำหนดสากลว่าด้วยสินค้าปลอดการทำลายป่า (EUDR) อย่างยั่งยืน',
+        text_en: 'Applying Geographic Information System (GIS) layers to verify coordinates across all 26 National Forest Reserves in Surat Thani plays a crucial role in identifying strictly protected ecologically vulnerable areas (Zone C). It also serves as an analytical tool to assess historical forest changes via satellite imagery, confirming zero-deforestation compliance after the Dec 31, 2020 EUDR cut-off date, preventing legal land tenure disputes, and ensuring transparent and sustainable product traceability under EUDR regulations.',
         link: 'login.php?redirect=overview.php'
       },
       2: {
         icon: '🟠',
-        title_th: 'ตรวจสอบแนวเขตและแปลงพิกัด (Map GIS)',
-        title_en: 'Verify Boundary & Plot Coordinates (GIS Map)',
-        text_th: 'กรุณาเข้าสู่ระบบเพื่อเข้าสู่ระบบแผนที่ GIS สำหรับวาดแปลงพิกัดและตรวจสอบแนวเขตป่าสงวนแห่งชาติ 26 แห่ง พร้อมระบบวิเคราะห์ความเสี่ยงเชิงพื้นที่',
-        text_en: 'Please log in to access the GIS Map system for drawing polygon plots, calculating 500m buffer distances, and auditing spatial forest overlaps.',
+        title_th: 'แนวกันชนประชิดแนวป่าสงวน (เฝ้าระวัง 500 ม.)',
+        title_en: '500m Forest Buffer Zone (Watchlist)',
+        text_th: 'แปลงยางพาราที่มีเอกสารสิทธิ์ถูกต้อง แต่ตั้งอยู่ห่างจากแนวเขตป่าสงวนไม่เกิน 500 เมตร ต้องเฝ้าระวังและวิเคราะห์พิกัดไม่ให้ขยายขอบเขตล่วงล้ำแนวป่า พร้อมตรวจสอบข้อมูลย้อนกลับเชิงพื้นที่ผ่านระบบ GIS',
+        text_en: 'Titled rubber farms located within 500 meters of national forest reserve borders, requiring strict perimeter monitoring and spatial verification via GIS.',
         link: 'login.php?redirect=map.php'
       },
       3: {
         icon: '🟢',
-        title_th: 'ออกเอกสาร EUDR Passport ดิจิทัล',
-        title_en: 'Issue Digital EUDR Passport',
-        text_th: 'กรุณาเข้าสู่ระบบเพื่อสร้างเอกสารรับรองความสอดคล้องตามมาตรฐาน EUDR พร้อม QR Code สำหรับการตรวจสอบย้อนกลับ (Traceability) 100% สำหรับการส่งออกยางพารา',
-        text_en: 'Please log in to generate official EUDR Due Diligence compliance certificates with QR codes for 100% farm-to-export supply chain traceability.',
+        title_th: 'แปลงผ่านเกณฑ์มาตรฐานสากล (ปลอดการทำลายป่า)',
+        title_en: 'EUDR Compliant & Deforestation-Free',
+        text_th: 'แปลงยางพาราที่มีเอกสารสิทธิ์ถูกต้อง อยู่นอกแนวป่าสงวน 100% และปลูกก่อนวันที่ 31 ธ.ค. 2020 ผ่านเกณฑ์การประเมิน EUDR และพร้อมออกหนังสือรับรองและ QR Code ตรวจสอบย้อนกลับได้ทันที',
+        text_en: 'Fully titled rubber farms situated outside forest reserves planted prior to Dec 31, 2020, 100% compliant with EUDR Zero Deforestation criteria and eligible for instant digital passport issuance.',
         link: 'login.php?redirect=trace.php'
       }
     };
@@ -1819,9 +1819,10 @@ $currentUser = getCurrentUser();
       const item = cardData[cardId];
       if (item) {
         const isEn = getCurrentLang() === 'en';
+        const tag = isEn ? 'System Workflow Pipeline' : 'ขั้นตอนการทำงานของระบบ';
         const title = isEn ? item.title_en : item.title_th;
         const text = isEn ? item.text_en : item.text_th;
-        openReadMoreModal(item.icon, title, text, item.link);
+        openReadMoreModal(item.icon, tag, title, text, item.link);
       }
     }
 
@@ -1829,16 +1830,19 @@ $currentUser = getCurrentUser();
       const item = riskModalData[riskId];
       if (item) {
         const isEn = getCurrentLang() === 'en';
+        const tag = isEn ? 'Spatial Risk Classification' : 'ระดับสถานะความเสี่ยงเชิงพื้นที่';
         const title = isEn ? item.title_en : item.title_th;
         const text = isEn ? item.text_en : item.text_th;
-        openReadMoreModal(item.icon, title, text, item.link);
+        openReadMoreModal(item.icon, tag, title, text, item.link);
       }
     }
 
-    function openReadMoreModal(icon, title, text, link) {
+    function openReadMoreModal(icon, tag, title, text, link) {
       const modal = document.getElementById('readmore-modal');
       const modalContent = document.getElementById('readmore-modal-content');
       document.getElementById('modal-badge').innerHTML = icon;
+      const modalTag = document.getElementById('modal-tag');
+      if (modalTag) modalTag.textContent = tag || '';
       document.getElementById('modal-title').textContent = title;
       document.getElementById('modal-text').textContent = text;
       
