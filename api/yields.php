@@ -594,6 +594,32 @@ if ($method === 'POST') {
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data) $data = $_POST;
         $action = $_GET['action'] ?? ($data['action'] ?? '');
+        $overrideMethod = strtoupper($data['_method'] ?? ($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] ?? ''));
+
+        // Delete Yield Log via POST
+        if ($action === 'delete' || $action === 'destroy' || $overrideMethod === 'DELETE') {
+            $id = (int)($data['id'] ?? ($_GET['id'] ?? ($_POST['id'] ?? 0)));
+            if ($id <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Missing ID'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            $chkStmt = $pdo->prepare("SELECT id, farmer_id FROM yield_logs WHERE id = ?");
+            $chkStmt->execute([$id]);
+            $currentYield = $chkStmt->fetch(PDO::FETCH_ASSOC);
+            if (!$currentYield) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลผลผลิตที่ต้องการลบ'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("DELETE FROM yield_logs WHERE id = ?");
+            $stmt->execute([$id]);
+
+            echo json_encode(['success' => true, 'message' => 'ลบข้อมูลผลผลิตเรียบร้อยแล้ว'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
 
         // Suspend Batch for EUDR Anti-Fraud Investigation
         if ($action === 'suspend_audit') {
@@ -907,6 +933,12 @@ if ($method === 'PUT') {
 if ($method === 'DELETE') {
     try {
         $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            $rawInput = json_decode(file_get_contents('php://input'), true);
+            if ($rawInput && !empty($rawInput['id'])) {
+                $id = (int)$rawInput['id'];
+            }
+        }
         if ($id <= 0) {
             http_response_code(400);
             echo json_encode(['error' => 'Missing ID'], JSON_UNESCAPED_UNICODE);

@@ -403,7 +403,7 @@ const GeoMap = {
                 <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).openEditPlotModal(${p.id});" data-action="edit-plot" data-plot-id="${p.id}" class="btn-edit-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #0284c7; border-color: #bae6fd; background-color: #f0f9ff; cursor: pointer; border-radius: 6px;">
                   แก้ไข
                 </button>
-                <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).deletePlot(${p.id}, '${safeName}');" class="btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #e11d48; border-color: #fecdd3; background-color: #fff1f2; cursor: pointer; border-radius: 6px;">
+                <button type="button" onclick="event.stopPropagation(); (window.GeoMap || GeoMap).deletePlot(${p.id}, '${safeName}');" data-action="delete-plot" data-plot-id="${p.id}" data-plot-name="${safeName}" class="btn-delete-plot-popup btn btn-outline btn-sm" style="font-size: 13px; padding: 5px 8px; color: #e11d48; border-color: #fecdd3; background-color: #fff1f2; cursor: pointer; border-radius: 6px;">
                   ลบแปลง
                 </button>
               </div>` : `
@@ -605,9 +605,12 @@ const GeoMap = {
               ${((window.IS_ADMIN === true) || (p.can_delete !== false)) ? `
               <button 
                 type="button" 
-                onclick="GeoMap.deletePlot(${p.id}, '${p.plot_name}')" 
+                onclick="GeoMap.deletePlot(${p.id}, '${safePlotName}')" 
+                data-action="delete-plot"
+                data-plot-id="${p.id}"
+                data-plot-name="${safePlotName}"
                 title="ลบแปลงปลูก" 
-                class="w-9 h-9 rounded-full text-gray-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+                class="btn-delete-plot-row w-9 h-9 rounded-full text-gray-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -628,27 +631,49 @@ const GeoMap = {
 
   // Delete Plot from Database
   async deletePlot(plotId, plotName) {
-    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบแปลงปลูก "${plotName}" ออกจากฐานข้อมูลจริง?`)) return;
+    const targetName = plotName || 'แปลงนี้';
+    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบแปลงปลูก "${targetName}" ออกจากฐานข้อมูลจริง?`)) return;
     
     try {
       if (window.App && typeof window.App.showToast === 'function') {
         App.showToast('กำลังลบข้อมูลแปลงปลูกจากฐานข้อมูล...', 'info');
       }
-      const res = await fetch(`api/plots.php?id=${plotId}`, { method: 'DELETE' });
-      const data = await res.json();
+      
+      let res = await fetch(`api/plots.php?id=${plotId}`, { 
+        method: 'DELETE',
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      // Fallback to POST with action=delete if DELETE is rejected/blocked
+      if (!res.ok && res.status !== 404 && res.status !== 401) {
+        res = await fetch('api/plots.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ action: 'delete', id: plotId })
+        });
+      }
+
+      const data = await res.json().catch(() => ({}));
       
       if (data.success || res.ok) {
-        if (window.App && typeof window.App.showToast === 'function') {
-          App.showToast(`ลบแปลง "${plotName}" เรียบร้อยแล้ว`, 'success');
-        } else {
-          alert(`ลบแปลง "${plotName}" เรียบร้อยแล้ว`);
+        if (this.map) {
+          this.map.closePopup();
         }
-        this.loadRubberPlots();
+        if (window.App && typeof window.App.showToast === 'function') {
+          App.showToast(`ลบแปลง "${targetName}" เรียบร้อยแล้ว`, 'success');
+        } else {
+          alert(`ลบแปลง "${targetName}" เรียบร้อยแล้ว`);
+        }
+        await this.loadRubberPlots();
+        if (typeof GeoOverview !== 'undefined' && typeof GeoOverview.loadPlots === 'function') {
+          GeoOverview.loadPlots();
+        }
       } else {
-        alert(data.message || 'ไม่สามารถลบข้อมูลได้');
+        alert(data.message || data.error || 'ไม่สามารถลบข้อมูลได้');
       }
     } catch (e) {
-      alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+      console.error('Error deleting plot:', e);
+      alert('เกิดข้อผิดพลาดในการลบข้อมูลแปลงปลูก');
     }
   },
 
@@ -1242,6 +1267,19 @@ document.addEventListener('click', function(e) {
     const plotId = btnQr.getAttribute('data-plot-id');
     if (plotId) {
       GeoMap.showPlotQR(plotId);
+    }
+    return;
+  }
+
+  const btnDel = e.target.closest('.btn-delete-plot-popup, .btn-delete-plot-row, [data-action="delete-plot"]');
+  if (btnDel) {
+    e.preventDefault();
+    e.stopPropagation();
+    const plotId = btnDel.getAttribute('data-plot-id');
+    const rawName = btnDel.getAttribute('data-plot-name');
+    const plotName = rawName ? decodeURIComponent(rawName) : 'แปลงปลูก';
+    if (plotId) {
+      GeoMap.deletePlot(plotId, plotName);
     }
     return;
   }

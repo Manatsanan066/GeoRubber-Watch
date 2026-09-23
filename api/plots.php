@@ -463,6 +463,45 @@ if ($method === 'POST') {
         }
 
         $action = $data['action'] ?? ($_GET['action'] ?? '');
+        $overrideMethod = strtoupper($data['_method'] ?? ($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] ?? ''));
+
+        // Handle Delete via POST
+        if ($action === 'delete' || $action === 'destroy' || $overrideMethod === 'DELETE') {
+            $id = (int)($data['id'] ?? ($_GET['id'] ?? ($_POST['id'] ?? 0)));
+            if ($id <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Missing Plot ID'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            $chkPlot = $pdo->prepare("SELECT id, farmer_id FROM rubber_plots WHERE id = ?");
+            $chkPlot->execute([$id]);
+            $currentPlot = $chkPlot->fetch(PDO::FETCH_ASSOC);
+            if (!$currentPlot) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลแปลงปลูกที่ต้องการลบ'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            $pdo->beginTransaction();
+            try {
+                $pdo->prepare("DELETE FROM yield_logs WHERE plot_id = ?")->execute([$id]);
+                $pdo->prepare("DELETE FROM traceability_batches WHERE plot_id = ?")->execute([$id]);
+                $stmt = $pdo->prepare("DELETE FROM rubber_plots WHERE id = ?");
+                $stmt->execute([$id]);
+                $pdo->commit();
+
+                echo json_encode(['success' => true, 'message' => 'ลบข้อมูลแปลงปลูกออกจากฐานข้อมูลเรียบร้อยแล้ว'], JSON_UNESCAPED_UNICODE);
+                exit;
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการลบ: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+        }
 
         // Handle Update via POST if specified
         if ($action === 'update' || (!empty($data['id']) && (int)$data['id'] > 0)) {
@@ -1007,6 +1046,12 @@ if ($method === 'PUT') {
 if ($method === 'DELETE') {
     $id = (int)($_GET['id'] ?? 0);
     if ($id <= 0) {
+        $rawInput = json_decode(file_get_contents('php://input'), true);
+        if ($rawInput && !empty($rawInput['id'])) {
+            $id = (int)$rawInput['id'];
+        }
+    }
+    if ($id <= 0) {
         http_response_code(400);
         echo json_encode(['error' => 'Missing plot ID'], JSON_UNESCAPED_UNICODE);
         exit;
@@ -1023,14 +1068,25 @@ if ($method === 'DELETE') {
     }
 
     // Delete associated yield logs and traceability batches first
-    $pdo->prepare("DELETE FROM yield_logs WHERE plot_id = ?")->execute([$id]);
-    $pdo->prepare("DELETE FROM traceability_batches WHERE plot_id = ?")->execute([$id]);
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare("DELETE FROM yield_logs WHERE plot_id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM traceability_batches WHERE plot_id = ?")->execute([$id]);
 
-    $stmt = $pdo->prepare("DELETE FROM rubber_plots WHERE id = ?");
-    $stmt->execute([$id]);
+        $stmt = $pdo->prepare("DELETE FROM rubber_plots WHERE id = ?");
+        $stmt->execute([$id]);
+        $pdo->commit();
 
-    echo json_encode(['success' => true, 'message' => 'ลบข้อมูลแปลงปลูกออกจากฐานข้อมูลเรียบร้อยแล้ว'], JSON_UNESCAPED_UNICODE);
-    exit;
+        echo json_encode(['success' => true, 'message' => 'ลบข้อมูลแปลงปลูกออกจากฐานข้อมูลเรียบร้อยแล้ว'], JSON_UNESCAPED_UNICODE);
+        exit;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการลบ: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 }
 
 http_response_code(405);

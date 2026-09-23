@@ -2836,9 +2836,26 @@ try {
       if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการผลผลิตนี้?')) return;
 
       try {
-        const res = await fetch(`api/yields.php?id=${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.success) {
+        if (window.App && typeof window.App.showToast === 'function') {
+          App.showToast('กำลังลบข้อมูลผลผลิต...', 'info');
+        }
+
+        let res = await fetch(`api/yields.php?id=${id}`, { 
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        // Fallback to POST if DELETE is not permitted
+        if (!res.ok && res.status !== 404 && res.status !== 401) {
+          res = await fetch('api/yields.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ action: 'delete', id: id })
+          });
+        }
+
+        const data = await res.json().catch(() => ({}));
+        if (data.success || res.ok) {
           if (window.App && typeof window.App.showToast === 'function') {
             App.showToast('ลบรายการผลผลิตแล้ว', 'success');
           } else {
@@ -2846,10 +2863,11 @@ try {
           }
           loadYields();
         } else {
-          alert(data.message || 'ไม่สามารถลบข้อมูลได้');
+          alert(data.message || data.error || 'ไม่สามารถลบข้อมูลได้');
         }
       } catch (e) {
-        alert('ไม่สามารถลบข้อมูลได้');
+        console.error('Error deleting yield:', e);
+        alert('เกิดข้อผิดพลาดในการลบข้อมูลผลผลิต');
       }
     }
 

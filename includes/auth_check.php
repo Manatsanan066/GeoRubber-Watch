@@ -60,11 +60,29 @@ function getCurrentUser(): ?array {
 }
 
 /**
- * Enforce authentication: Redirect to login.php if not authenticated
+ * Enforce authentication: Redirect to login.php if not authenticated (or return JSON 401 for API/AJAX)
  */
 function requireAuth(?string $customRedirect = null): void {
     if (!isLoggedIn()) {
-        $currentPage = $customRedirect ?? basename($_SERVER['PHP_SELF'] ?? 'index.php');
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $script = $_SERVER['SCRIPT_NAME'] ?? ($_SERVER['PHP_SELF'] ?? '');
+        $isApi = (strpos($uri, '/api/') !== false || strpos($script, '/api/') !== false);
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+        $wantsJson = (!empty($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+        
+        if ($isApi || $isAjax || $wantsJson) {
+            http_response_code(401);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => false,
+                'error' => 'Unauthorized',
+                'message' => 'กรุณาเข้าสู่ระบบก่อนทำรายการ',
+                'redirect' => 'login.php'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $currentPage = $customRedirect ?? basename($script ?: 'index.php');
         if (!empty($_SERVER['QUERY_STRING'])) {
             $currentPage .= '?' . $_SERVER['QUERY_STRING'];
         }
