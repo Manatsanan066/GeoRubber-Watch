@@ -350,6 +350,7 @@ function latLngToUtm47N($lat, $lng) {
 
 // Extract Polygon Points & Calculate Boundary Distances
 $polygonPoints = [];
+$geoJsonData = null;
 if (!empty($plot['geojson_geometry'])) {
     $geoData = is_string($plot['geojson_geometry']) ? json_decode($plot['geojson_geometry'], true) : $plot['geojson_geometry'];
     if (!empty($geoData['coordinates'][0])) {
@@ -370,6 +371,7 @@ if (!empty($plot['geojson_geometry'])) {
                 'northing' => $utm['northing']
             ];
         }
+        $geoJsonData = $geoData;
     }
 }
 
@@ -391,6 +393,20 @@ if (empty($polygonPoints)) {
             'lat' => $pt[1],
             'easting' => $utm['easting'],
             'northing' => $utm['northing']
+        ];
+    }
+}
+
+if (!$geoJsonData && !empty($polygonPoints)) {
+    $polyCoords = [];
+    foreach ($polygonPoints as $pt) {
+        $polyCoords[] = [(float)$pt['lng'], (float)$pt['lat']];
+    }
+    if (count($polyCoords) > 0) {
+        $polyCoords[] = $polyCoords[0]; // close ring
+        $geoJsonData = [
+            'type' => 'Polygon',
+            'coordinates' => [$polyCoords]
         ];
     }
 }
@@ -1186,9 +1202,21 @@ for ($i = 0; $i < $totalPts; $i++) {
                   <span class="text-[9.5px] font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">GIS POLYGON</span>
                 </div>
 
-                <!-- Leaflet Real Map Canvas -->
-                <div class="relative w-full h-[180px] sm:h-[200px] rounded border border-slate-300 overflow-hidden shadow-inner bg-slate-200 my-1">
-                  <div id="cert-map" class="w-full h-full z-0"></div>
+                <!-- Leaflet Real Map Canvas (Interactive with Drag & Zoom enabled) -->
+                <div class="relative w-full h-[190px] sm:h-[210px] rounded-lg border border-slate-300 overflow-hidden shadow-inner bg-slate-200 my-1 group">
+                  <div id="cert-map" class="w-full h-full z-0 cursor-grab active:cursor-grabbing"></div>
+                  <!-- Floating Map Controls: Recenter Button -->
+                  <div class="absolute top-2 right-2 z-[400] flex items-center gap-1.5 no-print">
+                    <button 
+                      type="button" 
+                      onclick="centerPlotOnMap()" 
+                      class="bg-white/95 hover:bg-white text-mezenc-teal hover:text-mezenc-deepTeal border border-slate-300/90 rounded-md shadow-md px-2 py-1 text-[10px] font-bold flex items-center gap-1 transition cursor-pointer active:scale-95"
+                      title="จัดตำแหน่งแปลงปลูกให้อยู่กึ่งกลางแผนที่"
+                    >
+                      <i class="fa-solid fa-crosshairs text-emerald-600"></i>
+                      <span>จัดกึ่งกลาง</span>
+                    </button>
+                  </div>
                 </div>
 
                 <!-- กราฟิกมาตราส่วนบรรทัด (Graphic Scale Bar) & พิกัดศูนย์กลาง -->
@@ -1676,9 +1704,9 @@ for ($i = 0; $i < $totalPts; $i++) {
   <script>
     const verifyUrl = <?= json_encode($verifyUrl) ?>;
     const certNo = <?= json_encode($certNo) ?>;
-    const plotGeo = <?= $plot['geojson_geometry'] ?: 'null' ?>;
-    const polygonPoints = <?= json_encode($polygonPoints) ?>;
-    const centroid = [<?= floatval($plot['centroid_lat']) ?>, <?= floatval($plot['centroid_lng']) ?>];
+    const plotGeo = <?= json_encode($geoJsonData, JSON_UNESCAPED_UNICODE) ?>;
+    const polygonPoints = <?= json_encode($polygonPoints, JSON_UNESCAPED_UNICODE) ?>;
+    const centroid = [<?= floatval($plot['centroid_lat'] ?? 9.138240) ?>, <?= floatval($plot['centroid_lng'] ?? 99.321850) ?>];
     const isCompliant = <?= $isCompliant ? 'true' : 'false' ?>;
 
     // Mobile Drawer Toggle
@@ -1726,19 +1754,19 @@ for ($i = 0; $i < $totalPts; $i++) {
       }
     }
 
-    // Initialize Interactive Leaflet Satellite GIS Map inside Section 4 (Auto-Centered)
+    // Initialize Interactive Leaflet Satellite GIS Map inside Section 4 (Drag, Zoom & Auto-Centered)
     document.addEventListener('DOMContentLoaded', () => {
       const mapContainer = document.getElementById('cert-map');
       if (mapContainer) {
         const map = L.map('cert-map', {
           center: centroid,
           zoom: 16,
-          zoomControl: false,
+          zoomControl: true,
           attributionControl: false,
-          dragging: false,
-          scrollWheelZoom: false,
-          doubleClickZoom: false,
-          touchZoom: false
+          dragging: true,
+          scrollWheelZoom: true,
+          doubleClickZoom: true,
+          touchZoom: true
         });
 
         // ESRI World Imagery (Satellite Basemap)
@@ -1747,16 +1775,36 @@ for ($i = 0; $i < $totalPts; $i++) {
         }).addTo(map);
 
         let plotBounds = null;
+        const latLngs = [];
 
-        // Overlay Plot Polygon if valid GeoJSON available
+        // 1. Add Numbered Markers for each vertex point (matching the table 1, 2, 3...)
+        if (Array.isArray(polygonPoints) && polygonPoints.length > 0) {
+          polygonPoints.forEach(pt => {
+            const lat = parseFloat(pt.lat);
+            const lng = parseFloat(pt.lng);
+            if (!isNaN(lat) && !isNaN(lng)) {
+              latLngs.push([lat, lng]);
+              const numberIcon = L.divIcon({
+                className: 'custom-vertex-marker',
+                html: `<div style="background-color: ${isCompliant ? '#0e4d4e' : '#b91c1c'}; color: #ffffff; border: 2px solid #ffffff; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.6); font-family: monospace;">${pt.idx}</div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+              });
+              L.marker([lat, lng], { icon: numberIcon, interactive: false }).addTo(map);
+            }
+          });
+        }
+
+        // 2. Overlay Plot Polygon if valid GeoJSON available
         if (plotGeo && plotGeo.coordinates && plotGeo.coordinates.length > 0) {
           try {
             const plotLayer = L.geoJSON(plotGeo, {
               style: {
                 color: isCompliant ? '#0e4d4e' : '#dc2626',
+                weight: 3.5,
+                opacity: 0.95,
                 fillColor: isCompliant ? '#10b981' : '#ef4444',
-                fillOpacity: 0.35,
-                weight: 2.5
+                fillOpacity: 0.38
               }
             }).addTo(map);
 
@@ -1766,60 +1814,49 @@ for ($i = 0; $i < $totalPts; $i++) {
           }
         }
 
-        // Add Numbered Markers for each vertex point (matching the table 1, 2, 3...)
-        if (Array.isArray(polygonPoints) && polygonPoints.length > 0) {
-          const latLngs = [];
-          polygonPoints.forEach(pt => {
-            latLngs.push([pt.lat, pt.lng]);
-            const numberIcon = L.divIcon({
-              className: 'custom-vertex-marker',
-              html: `<div style="background-color: ${isCompliant ? '#0e4d4e' : '#b91c1c'}; color: #ffffff; border: 1.5px solid #ffffff; width: 17px; height: 17px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.5); font-family: monospace;">${pt.idx}</div>`,
-              iconSize: [17, 17],
-              iconAnchor: [8.5, 8.5]
-            });
-            L.marker([pt.lat, pt.lng], { icon: numberIcon, interactive: false }).addTo(map);
-          });
-
-          if (!plotBounds && latLngs.length > 0) {
-            const polygon = L.polygon(latLngs, {
-              color: isCompliant ? '#0e4d4e' : '#dc2626',
-              fillColor: isCompliant ? '#10b981' : '#ef4444',
-              fillOpacity: 0.35,
-              weight: 2.5
-            }).addTo(map);
-            plotBounds = polygon.getBounds();
-          }
+        // 3. Fallback: Polygon from vertex points if GeoJSON bounds not available
+        if ((!plotBounds || !plotBounds.isValid()) && latLngs.length >= 3) {
+          const fallbackPolygon = L.polygon(latLngs, {
+            color: isCompliant ? '#0e4d4e' : '#dc2626',
+            weight: 3.5,
+            opacity: 0.95,
+            fillColor: isCompliant ? '#10b981' : '#ef4444',
+            fillOpacity: 0.38
+          }).addTo(map);
+          plotBounds = fallbackPolygon.getBounds();
         }
 
-        // Plot Centroid Marker
-        if (centroid && centroid[0] && centroid[1]) {
+        // 4. Plot Centroid Marker
+        if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1]) && centroid[0] !== 0) {
           L.circleMarker(centroid, {
-            radius: 5,
+            radius: 6,
             color: '#ffffff',
             fillColor: isCompliant ? '#059669' : '#dc2626',
             fillOpacity: 1,
-            weight: 2
+            weight: 2.5
           }).addTo(map);
         }
 
-        // Perfectly center plot polygon in the map frame
-        function centerPlotOnMap() {
+        // 5. Perfectly center plot polygon in the map frame
+        window.centerPlotOnMap = function() {
           map.invalidateSize();
           if (plotBounds && plotBounds.isValid()) {
             map.fitBounds(plotBounds, { 
-              padding: [22, 22],
+              padding: [25, 25],
               maxZoom: 18,
-              animate: false 
+              animate: true 
             });
           } else if (centroid && centroid[0] && centroid[1]) {
-            map.setView(centroid, 16, { animate: false });
+            map.setView(centroid, 16, { animate: true });
           }
-        }
+        };
 
+        // Initial centering triggers
         centerPlotOnMap();
         setTimeout(centerPlotOnMap, 100);
         setTimeout(centerPlotOnMap, 300);
         setTimeout(centerPlotOnMap, 600);
+        setTimeout(centerPlotOnMap, 1200);
 
         window.addEventListener('resize', centerPlotOnMap);
         window.addEventListener('beforeprint', centerPlotOnMap);
