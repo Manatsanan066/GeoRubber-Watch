@@ -1726,7 +1726,7 @@ for ($i = 0; $i < $totalPts; $i++) {
       }
     }
 
-    // Initialize Interactive Leaflet Satellite GIS Map inside Card 3
+    // Initialize Interactive Leaflet Satellite GIS Map inside Section 4 (Auto-Centered)
     document.addEventListener('DOMContentLoaded', () => {
       const mapContainer = document.getElementById('cert-map');
       if (mapContainer) {
@@ -1749,7 +1749,7 @@ for ($i = 0; $i < $totalPts; $i++) {
         let plotBounds = null;
 
         // Overlay Plot Polygon if valid GeoJSON available
-        if (plotGeo && plotGeo.coordinates) {
+        if (plotGeo && plotGeo.coordinates && plotGeo.coordinates.length > 0) {
           try {
             const plotLayer = L.geoJSON(plotGeo, {
               style: {
@@ -1761,7 +1761,6 @@ for ($i = 0; $i < $totalPts; $i++) {
             }).addTo(map);
 
             plotBounds = plotLayer.getBounds();
-            map.fitBounds(plotBounds, { padding: [20, 20] });
           } catch (e) {
             console.warn('Could not parse plot geojson bounds:', e);
           }
@@ -1788,18 +1787,42 @@ for ($i = 0; $i < $totalPts; $i++) {
               fillOpacity: 0.35,
               weight: 2.5
             }).addTo(map);
-            map.fitBounds(polygon.getBounds(), { padding: [20, 20] });
+            plotBounds = polygon.getBounds();
           }
         }
 
         // Plot Centroid Marker
-        L.circleMarker(centroid, {
-          radius: 5,
-          color: '#ffffff',
-          fillColor: isCompliant ? '#059669' : '#dc2626',
-          fillOpacity: 1,
-          weight: 2
-        }).addTo(map);
+        if (centroid && centroid[0] && centroid[1]) {
+          L.circleMarker(centroid, {
+            radius: 5,
+            color: '#ffffff',
+            fillColor: isCompliant ? '#059669' : '#dc2626',
+            fillOpacity: 1,
+            weight: 2
+          }).addTo(map);
+        }
+
+        // Perfectly center plot polygon in the map frame
+        function centerPlotOnMap() {
+          map.invalidateSize();
+          if (plotBounds && plotBounds.isValid()) {
+            map.fitBounds(plotBounds, { 
+              padding: [22, 22],
+              maxZoom: 18,
+              animate: false 
+            });
+          } else if (centroid && centroid[0] && centroid[1]) {
+            map.setView(centroid, 16, { animate: false });
+          }
+        }
+
+        centerPlotOnMap();
+        setTimeout(centerPlotOnMap, 100);
+        setTimeout(centerPlotOnMap, 300);
+        setTimeout(centerPlotOnMap, 600);
+
+        window.addEventListener('resize', centerPlotOnMap);
+        window.addEventListener('beforeprint', centerPlotOnMap);
       }
     });
 
