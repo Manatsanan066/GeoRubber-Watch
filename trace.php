@@ -263,18 +263,30 @@ function maskPdpaToken($token, $isLoggedIn) {
 }
 
 $isNonCompliant = (($plot['eudr_status'] ?? '') === 'non_compliant' || ((float)($plot['eudr_overlap_pct'] ?? 0) > 0));
-$isUnderReview = (($plot['eudr_status'] ?? '') === 'under_review');
+$isUnderReview = (!$isNonCompliant && (($plot['eudr_status'] ?? '') === 'under_review' || ((float)($plot['distance_to_forest_m'] ?? 9999) < 500)));
 $isCompliant = (!$isNonCompliant && !$isUnderReview);
 
 if ($isNonCompliant) {
     $statusBadgeText = 'ทับซ้อนป่าสงวน (ไม่ผ่านเกณฑ์)';
     $riskLevelText = 'ความเสี่ยงสูงมาก (High Risk)';
+    $statusTextColor = 'text-red-700';
+    $statusIcon = 'fa-triangle-exclamation text-red-600';
+    $forestStatusText = 'ทับซ้อนเขตป่าสงวนแห่งชาติ';
+    $mapBadgeClass = 'bg-rose-100 text-rose-800 border-rose-200';
 } elseif ($isUnderReview) {
     $statusBadgeText = 'โซนเฝ้าระวัง (Buffer < 500 ม.)';
     $riskLevelText = 'ความเสี่ยงปานกลาง (Under Review)';
+    $statusTextColor = 'text-amber-700';
+    $statusIcon = 'fa-circle-exclamation text-amber-600';
+    $forestStatusText = 'อยู่นอกเขตป่าสงวน (อยู่ในระยะเฝ้าระวัง 500 ม.)';
+    $mapBadgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
 } else {
     $statusBadgeText = 'ผ่านเกณฑ์ EUDR (ปลอดตัดไม้)';
     $riskLevelText = 'ความเสี่ยงต่ำ (Negligible)';
+    $statusTextColor = 'text-emerald-700';
+    $statusIcon = 'fa-circle-check text-emerald-600';
+    $forestStatusText = 'อยู่นอกเขตป่าสงวน 100%';
+    $mapBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
 }
 
 $rawPrefix = $plot['prefix'] ?? 'นางสาว';
@@ -859,9 +871,9 @@ for ($i = 0; $i < $totalPts; $i++) {
     <!-- CLEAN HERO HEADER (กระชับ ชัดเจน ไม่รกรุงรัง) -->
     <div class="relative z-20 w-full max-w-[1440px] 2xl:max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-14 pt-3 pb-6 text-center">
       <div class="max-w-4xl mx-auto space-y-2.5">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-mezenc-mint text-xs font-semibold tracking-wider uppercase shadow-sm">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>EUDR Deforestation-Free Verified</span>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-semibold tracking-wider uppercase shadow-sm">
+          <span class="w-2 h-2 rounded-full <?= $isNonCompliant ? 'bg-rose-400' : ($isUnderReview ? 'bg-amber-400' : 'bg-emerald-400') ?> animate-pulse"></span>
+          <span class="<?= $isNonCompliant ? 'text-rose-200' : ($isUnderReview ? 'text-amber-200' : 'text-mezenc-mint') ?>"><?= $isNonCompliant ? 'EUDR Non-Compliant (ทับซ้อนป่าสงวน)' : ($isUnderReview ? 'EUDR Buffer Zone Review (โซนเฝ้าระวัง)' : 'EUDR Deforestation-Free Verified') ?></span>
         </div>
         <h1 class="text-2xl sm:text-3xl md:text-[34px] font-bold tracking-tight text-white drop-shadow-md leading-tight">
           หนังสือรับรองแหล่งผลิตยางพาราตามมาตรฐาน EUDR
@@ -1163,20 +1175,20 @@ for ($i = 0; $i < $totalPts; $i++) {
               <tr>
                 <td class="cadastral-th">สถานะ EUDR</td>
                 <td class="cadastral-val" style="text-align: left; padding-left: 10px;">
-                  <span class="inline-flex items-center gap-1 font-bold text-emerald-700">
-                    <i class="fa-solid fa-circle-check text-emerald-600"></i> <?=h($statusBadgeText)?>
+                  <span class="inline-flex items-center gap-1 font-bold <?= $statusTextColor ?>">
+                    <i class="fa-solid <?= $statusIcon ?>"></i> <?=h($statusBadgeText)?>
                   </span>
                 </td>
                 <td class="cadastral-th">แนวป่าสงวน 26 แห่ง</td>
                 <td class="cadastral-val" style="text-align: left; padding-left: 10px;">
-                  อยู่นอกเขตป่าสงวน 100% <span class="text-slate-500 font-mono">(ทับซ้อน <?=number_format((float)($plot['eudr_overlap_pct'] ?? 0), 2)?>%)</span>
+                  <?=h($forestStatusText)?> <span class="text-slate-500 font-mono">(ทับซ้อน <?=number_format((float)($plot['eudr_overlap_pct'] ?? 0), 2)?>%)</span>
                 </td>
               </tr>
               <tr>
                 <td class="cadastral-th">ป่าสงวนที่ใกล้ที่สุด</td>
                 <td class="cadastral-val" colspan="3" style="text-align: left; padding-left: 10px;">
                   <?=h($plot['nearest_forest_name'] ?? 'ป่าสงวนแห่งชาติเขาท่าเพชร')?> 
-                  <span class="text-slate-600 ml-2 font-mono">(ระยะห่าง <?=number_format((float)($plot['distance_to_forest_m'] ?? 1250))?> เมตร) &bull; ปลูกก่อน 31 ธ.ค. 2020 (ผ่านเกณฑ์ Cut-off Date)</span>
+                  <span class="text-slate-600 ml-2 font-mono">(ระยะห่าง <?=number_format((float)($plot['distance_to_forest_m'] ?? 1250))?> เมตร) &bull; <?= $isNonCompliant ? '<span class="text-rose-600 font-bold">ไม่ผ่านเกณฑ์การตรวจสอบ (พบการทับซ้อน)</span>' : 'ปลูกก่อน 31 ธ.ค. 2020 (ผ่านเกณฑ์ Cut-off Date)' ?></span>
                 </td>
               </tr>
             </table>
@@ -1199,7 +1211,7 @@ for ($i = 0; $i < $totalPts; $i++) {
                     </div>
                     <span class="text-[11px] font-bold text-mezenc-teal">แผนที่ภาพถ่ายดาวเทียมความละเอียดสูง (ESRI Satellite)</span>
                   </div>
-                  <span class="text-[9.5px] font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">GIS POLYGON</span>
+                  <span class="text-[9.5px] font-mono <?= $mapBadgeClass ?> px-1.5 py-0.5 rounded font-bold">GIS POLYGON</span>
                 </div>
 
                 <!-- Leaflet Real Map Canvas (Interactive with Drag & Zoom enabled) -->
@@ -1707,7 +1719,18 @@ for ($i = 0; $i < $totalPts; $i++) {
     const plotGeo = <?= json_encode($geoJsonData, JSON_UNESCAPED_UNICODE) ?>;
     const polygonPoints = <?= json_encode($polygonPoints, JSON_UNESCAPED_UNICODE) ?>;
     const centroid = [<?= floatval($plot['centroid_lat'] ?? 9.138240) ?>, <?= floatval($plot['centroid_lng'] ?? 99.321850) ?>];
+    const isNonCompliant = <?= $isNonCompliant ? 'true' : 'false' ?>;
+    const isUnderReview = <?= $isUnderReview ? 'true' : 'false' ?>;
     const isCompliant = <?= $isCompliant ? 'true' : 'false' ?>;
+
+    // 3-Tier Status Color Definitions:
+    // 1. ซ้อนทับเขตป่าสงวน (Non-Compliant) -> สีแดง (#dc2626)
+    // 2. อยู่ในโซน 500 เมตร (Under Review / Buffer < 500m) -> สีส้ม (#ea580c)
+    // 3. ไม่ซ้อนทับ / ปลอดภัย (Compliant) -> สีเขียว (#059669 / #0e4d4e)
+    const plotStrokeColor = isNonCompliant ? '#dc2626' : (isUnderReview ? '#ea580c' : '#059669');
+    const plotFillColor = isNonCompliant ? '#ef4444' : (isUnderReview ? '#f97316' : '#10b981');
+    const vertexBgColor = isNonCompliant ? '#dc2626' : (isUnderReview ? '#ea580c' : '#0e4d4e');
+    const centroidFillColor = isNonCompliant ? '#dc2626' : (isUnderReview ? '#ea580c' : '#059669');
 
     // Mobile Drawer Toggle
     function toggleMobileDrawer() {
@@ -1786,7 +1809,7 @@ for ($i = 0; $i < $totalPts; $i++) {
               latLngs.push([lat, lng]);
               const numberIcon = L.divIcon({
                 className: 'custom-vertex-marker',
-                html: `<div style="background-color: ${isCompliant ? '#0e4d4e' : '#b91c1c'}; color: #ffffff; border: 2px solid #ffffff; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.6); font-family: monospace;">${pt.idx}</div>`,
+                html: `<div style="background-color: ${vertexBgColor}; color: #ffffff; border: 2px solid #ffffff; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.6); font-family: monospace;">${pt.idx}</div>`,
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
               });
@@ -1800,11 +1823,11 @@ for ($i = 0; $i < $totalPts; $i++) {
           try {
             const plotLayer = L.geoJSON(plotGeo, {
               style: {
-                color: isCompliant ? '#0e4d4e' : '#dc2626',
+                color: plotStrokeColor,
                 weight: 3.5,
                 opacity: 0.95,
-                fillColor: isCompliant ? '#10b981' : '#ef4444',
-                fillOpacity: 0.38
+                fillColor: plotFillColor,
+                fillOpacity: 0.42
               }
             }).addTo(map);
 
@@ -1817,11 +1840,11 @@ for ($i = 0; $i < $totalPts; $i++) {
         // 3. Fallback: Polygon from vertex points if GeoJSON bounds not available
         if ((!plotBounds || !plotBounds.isValid()) && latLngs.length >= 3) {
           const fallbackPolygon = L.polygon(latLngs, {
-            color: isCompliant ? '#0e4d4e' : '#dc2626',
+            color: plotStrokeColor,
             weight: 3.5,
             opacity: 0.95,
-            fillColor: isCompliant ? '#10b981' : '#ef4444',
-            fillOpacity: 0.38
+            fillColor: plotFillColor,
+            fillOpacity: 0.42
           }).addTo(map);
           plotBounds = fallbackPolygon.getBounds();
         }
@@ -1831,7 +1854,7 @@ for ($i = 0; $i < $totalPts; $i++) {
           L.circleMarker(centroid, {
             radius: 6,
             color: '#ffffff',
-            fillColor: isCompliant ? '#059669' : '#dc2626',
+            fillColor: centroidFillColor,
             fillOpacity: 1,
             weight: 2.5
           }).addTo(map);
