@@ -162,11 +162,11 @@ if (!$plot) {
     ];
 }
 
-// Fetch harvest batch logs (yield_logs)
+// Fetch harvest batch logs (yield_logs) strictly for this specific plot
 $yields = [];
 if ($pdo && !empty($plot['id'])) {
     try {
-        $yieldStmt = $pdo->prepare("SELECT * FROM yield_logs WHERE plot_id = ? ORDER BY harvest_date DESC LIMIT 5");
+        $yieldStmt = $pdo->prepare("SELECT * FROM yield_logs WHERE plot_id = ? ORDER BY harvest_date DESC, id DESC");
         $yieldStmt->execute([$plot['id']]);
         $yields = $yieldStmt->fetchAll();
     } catch (Exception $e) {
@@ -174,52 +174,16 @@ if ($pdo && !empty($plot['id'])) {
     }
 }
 
-// High-fidelity fallback yield records if table empty
-if (empty($yields)) {
-    $yields = [
-        [
-            'harvest_date' => '2026-03-04',
-            'tapping_round' => 14,
-            'fresh_latex_kg' => 148.5,
-            'drc_percent' => 34.0,
-            'dry_rubber_kg' => 50.49,
-            'buyer_name' => 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด'
-        ],
-        [
-            'harvest_date' => '2026-03-02',
-            'tapping_round' => 13,
-            'fresh_latex_kg' => 152.0,
-            'drc_percent' => 33.5,
-            'dry_rubber_kg' => 50.92,
-            'buyer_name' => 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด'
-        ],
-        [
-            'harvest_date' => '2026-02-28',
-            'tapping_round' => 12,
-            'fresh_latex_kg' => 145.0,
-            'drc_percent' => 33.8,
-            'dry_rubber_kg' => 49.01,
-            'buyer_name' => 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด'
-        ],
-        [
-            'harvest_date' => '2026-02-26',
-            'tapping_round' => 11,
-            'fresh_latex_kg' => 150.2,
-            'drc_percent' => 34.2,
-            'dry_rubber_kg' => 51.37,
-            'buyer_name' => 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด'
-        ]
-    ];
-}
-
 // Compute summary totals for Annex Page (Page 2)
 $totalFreshLatex = 0;
 $totalDryRubber = 0;
 $sumDrc = 0;
-foreach ($yields as $y) {
-    $totalFreshLatex += (float)($y['fresh_latex_kg'] ?? 0);
-    $totalDryRubber += (float)($y['dry_rubber_kg'] ?? 0);
-    $sumDrc += (float)($y['drc_percent'] ?? 0);
+if (!empty($yields)) {
+    foreach ($yields as $y) {
+        $totalFreshLatex += (float)($y['fresh_latex_kg'] ?? 0);
+        $totalDryRubber += (float)($y['dry_rubber_kg'] ?? 0);
+        $sumDrc += (float)($y['drc_percent'] ?? 0);
+    }
 }
 $avgDrc = count($yields) > 0 ? ($sumDrc / count($yields)) : 0;
 
@@ -1463,21 +1427,33 @@ for ($i = 0; $i < $totalPts; $i++) {
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-[11px]">
-                  <?php foreach ($yields as $idx => $y): ?>
-                    <tr class="hover:bg-slate-50/70 transition-colors">
-                      <td class="py-2 px-3 font-mono font-bold text-brand-700">R<?=h($y['tapping_round'] ?? ($idx + 1))?></td>
-                      <td class="py-2 px-3 font-mono text-slate-700"><?=date('d/m/Y', strtotime($y['harvest_date']))?></td>
-                      <td class="py-2 px-3 text-right font-mono font-medium text-slate-800"><?=number_format((float)$y['fresh_latex_kg'], 1)?></td>
-                      <td class="py-2 px-3 text-center font-mono font-bold text-emerald-700"><?=number_format((float)$y['drc_percent'], 1)?>%</td>
-                      <td class="py-2 px-3 text-right font-mono font-bold text-brand-800"><?=number_format((float)$y['dry_rubber_kg'], 2)?></td>
-                      <td class="py-2 px-3 text-slate-600 truncate max-w-[150px]" title="<?=h($y['buyer_name'] ?? 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด')?>"><?=h($y['buyer_name'] ?? 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด')?></td>
-                      <td class="py-2 px-3 text-center">
-                        <span class="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                          ✓ ผ่านเกณฑ์
-                        </span>
+                  <?php if (count($yields) === 0): ?>
+                    <tr>
+                      <td colspan="7" class="py-8 px-4 text-center bg-slate-50/40 text-slate-500">
+                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-400 mb-2 shadow-2xs">
+                          <i class="fa-solid fa-clipboard-list text-base"></i>
+                        </div>
+                        <div class="font-semibold text-slate-700 text-xs">ยังไม่มีประวัติการบันทึกผลผลิตสำหรับแปลงนี้</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">เมื่อเกษตรกรหรือจุดรับซื้อทำการบันทึกรอบการกรีด ข้อมูลผลผลิตจะถูกนำมาแสดงในเอกสารฉบับนี้โดยอัตโนมัติ</div>
                       </td>
                     </tr>
-                  <?php endforeach; ?>
+                  <?php else: ?>
+                    <?php foreach ($yields as $idx => $y): ?>
+                      <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-2 px-3 font-mono font-bold text-brand-700">R<?=h($y['tapping_round'] ?? ($idx + 1))?></td>
+                        <td class="py-2 px-3 font-mono text-slate-700"><?=date('d/m/Y', strtotime($y['harvest_date']))?></td>
+                        <td class="py-2 px-3 text-right font-mono font-medium text-slate-800"><?=number_format((float)$y['fresh_latex_kg'], 1)?></td>
+                        <td class="py-2 px-3 text-center font-mono font-bold text-emerald-700"><?=number_format((float)$y['drc_percent'], 1)?>%</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-brand-800"><?=number_format((float)$y['dry_rubber_kg'], 2)?></td>
+                        <td class="py-2 px-3 text-slate-600 truncate max-w-[150px]" title="<?=h($y['buyer_name'] ?? 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด')?>"><?=h($y['buyer_name'] ?? 'สหกรณ์กองทุนสวนยาง ม.อ. สุราษฎร์ธานี จำกัด')?></td>
+                        <td class="py-2 px-3 text-center">
+                          <span class="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                            ✓ ผ่านเกณฑ์
+                          </span>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
                 </tbody>
                 <tfoot class="bg-brand-50/70 border-t-2 border-brand-200 text-xs font-bold text-slate-800">
                   <tr>
@@ -1485,7 +1461,7 @@ for ($i = 0; $i < $totalPts; $i++) {
                     <td class="py-2.5 px-3 text-right font-mono text-brand-900"><?=number_format($totalFreshLatex, 1)?></td>
                     <td class="py-2.5 px-3 text-center font-mono text-emerald-800"><?=number_format($avgDrc, 1)?>% <span class="text-[9px] font-normal text-slate-400 block sm:inline">(เฉลี่ย)</span></td>
                     <td class="py-2.5 px-3 text-right font-mono text-brand-900"><?=number_format($totalDryRubber, 2)?></td>
-                    <td colspan="2" class="py-2.5 px-3 text-[10px] text-slate-500 font-normal">บันทึกผ่านระบบชั่งดิจิทัลและทดสอบ DRC ตามมาตรฐาน</td>
+                    <td colspan="2" class="py-2.5 px-3 text-[10px] text-slate-500 font-normal"><?= count($yields) > 0 ? 'บันทึกผ่านระบบชั่งดิจิทัลและทดสอบ DRC ตามมาตรฐาน' : 'ยังไม่มีการบันทึกรอบผลผลิต' ?></td>
                   </tr>
                 </tfoot>
               </table>
