@@ -402,12 +402,21 @@ $logout_msg = (isset($_GET['msg']) && $_GET['msg'] === 'logged_out') ? 'ออ�
                         })
                     });
 
-                    const data = await res.json();
+                    const rawText = await res.text();
+                    let data = null;
+                    try {
+                        data = JSON.parse(rawText);
+                    } catch (parseErr) {
+                        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) {
+                            try { data = JSON.parse(jsonMatch[0]); } catch (e2) {}
+                        }
+                    }
 
-                    if (data.status === 'success' || data.success === true) {
+                    if (data && (data.status === 'success' || data.success === true)) {
                         const registeredUsername = data.registered_username || username || email;
 
-                        // 1. สลับกลับมาโหมด Sign In ทันทีตามที่ผู้ใช้ต้องการ เพื่อให้ทวนรหัสผ่านอีกครั้ง
+                        // 1. สลับกลับมาโหมด Sign In ทันที เพื่อให้ผู้ใช้กรอกรหัสผ่านเข้าใช้งาน
                         toggleAuthMode(false);
 
                         // 2. คง Username ที่สมัครไว้ในช่อง Input
@@ -416,7 +425,7 @@ $logout_msg = (isset($_GET['msg']) && $_GET['msg'] === 'logged_out') ? 'ออ�
                             usernameField.value = registeredUsername;
                         }
 
-                        // 3. เคลียร์รหัสผ่าน และโฟกัสที่ช่องรหัสผ่านเพื่อให้ผู้ใช้พิมพ์ทบทวนรหัสผ่าน
+                        // 3. เคลียร์รหัสผ่าน และโฟกัสที่ช่องรหัสผ่านเพื่อให้ผู้ใช้กรอกรหัสผ่าน
                         const passwordField = document.getElementById('password');
                         if (passwordField) {
                             passwordField.value = '';
@@ -438,23 +447,25 @@ $logout_msg = (isset($_GET['msg']) && $_GET['msg'] === 'logged_out') ? 'ออ�
                         const agreeBox = document.getElementById('agreeTerms');
                         if (agreeBox) agreeBox.checked = false;
 
-                        // 5. แสดงข้อความแจ้งเตือนสีเขียวชัดเจน
+                        // 5. แสดงข้อความแจ้งเตือนสีเขียว "ลงทะเบียนสำเร็จ!"
                         feedback.className = 'text-xs sm:text-sm rounded-2xl py-3.5 px-4 flex items-center justify-center gap-2.5 font-medium bg-emerald-500/30 backdrop-blur-md text-white border border-emerald-300/50 shadow-lg';
-                        feedback.innerHTML = `${SUCCESS_ICON_SVG} <span>สมัครสมาชิกสำเร็จ! กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบ เป็นการทวนรหัสผ่านอีกครั้ง</span>`;
+                        feedback.innerHTML = `${SUCCESS_ICON_SVG} <span>ลงทะเบียนสำเร็จ! กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบ</span>`;
                         feedback.classList.remove('hidden');
 
                         resetBtn('เข้าสู่ระบบ');
                     } else {
+                        const errorMsg = (data && data.message) ? data.message : 'ไม่สามารถลงทะเบียนได้ กรุณาตรวจสอบข้อมูลอีกครั้ง';
                         feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
-                        feedback.innerHTML = `${ERROR_ICON_SVG} <span>${data.message || 'ไม่สามารถลงทะเบียนได้'}</span>`;
+                        feedback.innerHTML = `${ERROR_ICON_SVG} <span>${errorMsg}</span>`;
                         feedback.classList.remove('hidden');
                         resetBtn('ลงทะเบียน');
                     }
                 } catch (err) {
+                    console.error('Registration error:', err);
                     feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
-                    feedback.innerHTML = `${ERROR_ICON_SVG} <span>เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</span>`;
+                    feedback.innerHTML = `${ERROR_ICON_SVG} <span>เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง</span>`;
                     feedback.classList.remove('hidden');
-                    resetBtn('ลงทะเบียน');
+                    resetBtn(isSignupMode ? 'ลงทะเบียน' : 'เข้าสู่ระบบ');
                 }
 
             } else {
@@ -472,9 +483,18 @@ $logout_msg = (isset($_GET['msg']) && $_GET['msg'] === 'logged_out') ? 'ออ�
                         })
                     });
 
-                    const data = await res.json();
+                    const rawText = await res.text();
+                    let data = null;
+                    try {
+                        data = JSON.parse(rawText);
+                    } catch (parseErr) {
+                        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) {
+                            try { data = JSON.parse(jsonMatch[0]); } catch (e2) {}
+                        }
+                    }
 
-                    if (data.status === 'success' || data.success === true) {
+                    if (data && (data.status === 'success' || data.success === true)) {
                         feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2.5 font-medium bg-white/15 backdrop-blur-md text-white border border-white/30 shadow-lg';
                         feedback.innerHTML = `${SUCCESS_ICON_SVG} <span>เข้าสู่ระบบสำเร็จ กำลังเข้าสู่ระบบ...</span>`;
                         feedback.classList.remove('hidden');
@@ -496,8 +516,9 @@ $logout_msg = (isset($_GET['msg']) && $_GET['msg'] === 'logged_out') ? 'ออ�
                             window.location.href = dest;
                         }, 700);
                     } else {
+                        const errorMsg = (data && data.message) ? data.message : 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
                         feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
-                        feedback.innerHTML = `${ERROR_ICON_SVG} <span>${data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'}</span>`;
+                        feedback.innerHTML = `${ERROR_ICON_SVG} <span>${errorMsg}</span>`;
                         feedback.classList.remove('hidden');
                         resetBtn('เข้าสู่ระบบ');
                         const passwordField = document.getElementById('password');
@@ -507,8 +528,9 @@ $logout_msg = (isset($_GET['msg']) && $_GET['msg'] === 'logged_out') ? 'ออ�
                         }
                     }
                 } catch (err) {
+                    console.error('Login error:', err);
                     feedback.className = 'text-xs sm:text-sm rounded-2xl py-3 px-4 flex items-center justify-center gap-2 font-medium bg-red-500/25 backdrop-blur-md text-white border border-red-300/40 shadow-lg';
-                    feedback.innerHTML = `${ERROR_ICON_SVG} <span>เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</span>`;
+                    feedback.innerHTML = `${ERROR_ICON_SVG} <span>เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง</span>`;
                     feedback.classList.remove('hidden');
                     resetBtn('เข้าสู่ระบบ');
                 }

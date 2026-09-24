@@ -2,8 +2,19 @@
 /**
  * GeoRubber Watch - Authentication API
  */
+ob_start();
 session_start();
 header('Content-Type: application/json; charset=utf-8');
+
+function sendJsonResponse($data, $statusCode = 200) {
+    if (ob_get_length()) {
+        ob_clean();
+    }
+    http_response_code($statusCode);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 require_once __DIR__ . '/../config/database.php';
 initDatabaseIfNeeded();
@@ -323,10 +334,10 @@ if ($method === 'POST' && $action === 'register') {
         // User must return to the Sign In screen and re-enter their password to verify it.
         unset($_SESSION['user_id'], $_SESSION['role'], $_SESSION['full_name'], $_SESSION['farmer_id'], $_SESSION['id_card_num'], $_SESSION['email'], $_SESSION['phone']);
 
-        echo json_encode([
+        sendJsonResponse([
             'status' => 'success',
             'success' => true,
-            'message' => 'ลงทะเบียนเกษตรกรสำเร็จ กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่านเพื่อยืนยันอีกครั้ง',
+            'message' => 'ลงทะเบียนสำเร็จ! กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบ',
             'registered_username' => $username,
             'user' => [
                 'id' => $userId,
@@ -337,16 +348,14 @@ if ($method === 'POST' && $action === 'register') {
                 'farmer_id' => $farmerId,
                 'farmer_code' => $farmerCode
             ]
-        ], JSON_UNESCAPED_UNICODE);
+        ], 200);
     } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode([
+        sendJsonResponse([
             'status' => 'error',
             'success' => false,
             'message' => 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage()
-        ], JSON_UNESCAPED_UNICODE);
+        ], 500);
     }
-    exit;
 }
 
 // Quick Switch Role (Supports 5 Agency Admins + Super Admin + Farmer)
