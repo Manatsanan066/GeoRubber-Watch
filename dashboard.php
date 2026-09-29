@@ -1596,10 +1596,10 @@ if ($isFactory) {
                   $isOverLimit = ($isDailyOver || $isMonthOver);
 
                   if ($isSuspended) {
-                      $eudrBadge = '<a href="yields.php?mode=factory" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border-2 border-amber-400 animate-pulse hover:bg-amber-200 shadow-2xs transition-all" title="รายการนี้ถูกระงับยอดชั่วคราวเพื่อรอตรวจสอบ - คลิกเพื่อดูรายละเอียด"><i class="fa-solid fa-circle-pause mr-1 text-amber-600"></i> ระงับยอดชั่วคราว (รอตรวจสอบ)</a>';
+                      $eudrBadge = '<a href="yields.php?mode=factory" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-900 border-2 border-rose-400 animate-pulse hover:bg-rose-200 shadow-2xs transition-all" title="รายการนี้ถูกระงับยอดชั่วคราวเพื่อรอตรวจสอบ - คลิกเพื่อดูรายละเอียด"><i class="fa-solid fa-circle-pause mr-1 text-rose-600"></i> ระงับยอดชั่วคราว (รอตรวจสอบ)</a>';
                   } elseif ($isOverLimit) {
                       $overReason = $isMonthOver ? "ผลผลิตสะสมเดือนนี้ ({$logCumMonth} กก.) เกินเพดานแปลง ({$logMaxMonth} กก.)" : "ผลผลิตรายวัน ({$logFreshKg} กก.) เกินเกณฑ์ชีวภาพ ({$logMaxDaily} กก./วัน)";
-                      $eudrBadge = '<a href="yields.php?mode=factory" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-900 border-2 border-rose-400 animate-pulse hover:bg-rose-200 shadow-2xs transition-all" title="' . htmlspecialchars($overReason) . ' - คลิกเพื่อตรวจสอบการสวมสิทธิ์"><i class="fa-solid fa-triangle-exclamation mr-1 text-rose-600"></i> ตรวจจับการสวมสิทธิ์ (ให้ตรวจสอบ)</a>';
+                      $eudrBadge = '<a href="yields.php?mode=factory" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border-2 border-amber-400 animate-pulse hover:bg-amber-200 shadow-2xs transition-all" title="' . htmlspecialchars($overReason) . ' - คลิกเพื่อตรวจสอบการสวมสิทธิ์"><i class="fa-solid fa-triangle-exclamation mr-1 text-amber-600"></i> ตรวจจับการสวมสิทธิ์ (ให้ตรวจสอบ)</a>';
                   } elseif (($log['eudr_status'] ?? '') === 'under_review') {
                       $eudrBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"><i class="fa-solid fa-triangle-exclamation mr-1"></i> เฝ้าระวัง (Buffer)</span>';
                   } elseif (($log['eudr_status'] ?? '') === 'non_compliant') {

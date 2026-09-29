@@ -2583,8 +2583,8 @@ try {
                   <i class="fa-solid fa-building text-xs"></i> <span>${y.buyer_name || 'จุดรับซื้อน้ำยางสดประจำตำบล'}</span>
                 </div>
                 ${isSuspended ? `
-                  <span class="text-[10px] text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">
-                    <i class="fa-solid fa-circle-pause text-[10px] mr-0.5 text-amber-600"></i> ระงับยอดชั่วคราว (รอตรวจสอบ)
+                  <span class="text-[10px] text-rose-800 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">
+                    <i class="fa-solid fa-circle-pause text-[10px] mr-0.5 text-rose-600"></i> ระงับยอดชั่วคราว (รอตรวจสอบ)
                   </span>
                 ` : `
                   <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">
@@ -2606,8 +2606,8 @@ try {
                 </div>
               </td>
               <td class="py-4 px-4 text-center whitespace-nowrap">
-                <div class="inline-flex items-center gap-1.5 font-mono text-xs font-bold px-3 py-1 rounded-xl ${isSuspended ? 'bg-amber-50 text-amber-900 border-amber-300' : 'bg-emerald-50 text-emerald-900 border-emerald-300'} border shadow-2xs">
-                  <i class="fa-solid ${isSuspended ? 'fa-circle-pause text-amber-600' : 'fa-shield-halved text-emerald-700'} text-xs"></i> <span>${tokenStr}</span>
+                <div class="inline-flex items-center gap-1.5 font-mono text-xs font-bold px-3 py-1 rounded-xl ${isSuspended ? 'bg-rose-50 text-rose-900 border-rose-300' : 'bg-emerald-50 text-emerald-900 border-emerald-300'} border shadow-2xs">
+                  <i class="fa-solid ${isSuspended ? 'fa-circle-pause text-rose-600' : 'fa-shield-halved text-emerald-700'} text-xs"></i> <span>${tokenStr}</span>
                 </div>
                 <span class="text-[10px] text-gray-400 font-mono block mt-1">ล็อต: ${batchStr}</span>
               </td>
@@ -2616,7 +2616,7 @@ try {
         } else {
           // ADMIN / FACTORY EXTENDED COLUMNS WITH MANAGEMENT & AUDIT
           html += `
-            <tr class="hover:bg-[#f4faf7] transition-colors ${isSuspended ? 'bg-amber-50/40' : (isAnomaly ? 'bg-rose-50/50' : '')}">
+            <tr class="hover:bg-[#f4faf7] transition-colors ${isSuspended ? 'bg-rose-50/50' : (isAnomaly ? 'bg-amber-50/40' : '')}">
               <td class="py-4 px-4 font-bold text-gray-800 whitespace-nowrap">${y.harvest_date}</td>
               <td class="py-4 px-4">
                 <span class="font-bold text-mezenc-teal">${y.plot_name}</span> 
@@ -2650,23 +2650,23 @@ try {
                   <button 
                     type="button" 
                     onclick="openAnomalyModalFromRow(${idx})" 
-                    class="inline-flex items-center gap-1.5 text-[11px] font-black text-amber-950 bg-amber-100 hover:bg-amber-200 border-2 border-amber-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
+                    class="inline-flex items-center gap-1.5 text-[11px] font-black text-rose-900 bg-rose-100 hover:bg-rose-200 border-2 border-rose-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
                     title="รายการนี้ถูกระงับยอดชั่วคราวเพื่อรอตรวจสอบ - คลิกเพื่อดูรายละเอียดและปลดล็อก"
                   >
-                    <i class="fa-solid fa-circle-pause text-amber-600 animate-pulse"></i> 
+                    <i class="fa-solid fa-circle-pause text-rose-600 animate-pulse"></i> 
                     <span>ระงับยอดชั่วคราว (รอตรวจสอบ)</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-amber-600"></i>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-rose-600"></i>
                   </button>
                 ` : isAnomaly ? `
                   <button 
                     type="button" 
                     onclick="openAnomalyModalFromRow(${idx})" 
-                    class="inline-flex items-center gap-1.5 text-[11px] font-black text-rose-900 bg-rose-100 hover:bg-rose-200 border-2 border-rose-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
+                    class="inline-flex items-center gap-1.5 text-[11px] font-black text-amber-950 bg-amber-100 hover:bg-amber-200 border-2 border-amber-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
                     title="ตรวจพบผลผลิตเกินขีดจำกัดชีวภาพ/เสี่ยงสวมสิทธิ์ - คลิกเพื่อเปิดหน้าต่างตรวจสอบ"
                   >
-                    <i class="fa-solid fa-triangle-exclamation text-rose-600 animate-pulse"></i> 
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 animate-pulse"></i> 
                     <span>ตรวจจับการสวมสิทธิ์ (ให้ตรวจสอบ)</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-rose-600"></i>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-amber-600"></i>
                   </button>
                 ` : `
                   <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-full">
