@@ -1916,7 +1916,12 @@ try {
           }
         }
 
-        document.getElementById('factory-rubber-clone').textContent = plot.rubber_clone || 'RRIM 600';
+        if (stats && stats.latest_harvest_date) {
+          const hInput = document.getElementById('factory-harvest-date');
+          if (hInput && stats.current_month_sum > 0) {
+            hInput.value = stats.latest_harvest_date;
+          }
+        }
 
         // Update Biological Capacity Meter
         const roundToDisplay = (stats && stats.next_tapping_round) ? stats.next_tapping_round : ((stats && stats.round_count ? stats.round_count : 0) + 1);
@@ -2047,26 +2052,26 @@ try {
         if (freshInput) {
           freshInput.classList.add('border-rose-500', 'bg-rose-50/40', 'text-rose-900');
         }
-      } else if (isMonthlyExceeded || pct > 100) {
+      } else if (isMonthlyExceeded || pct >= 100) {
         if (bar) {
           bar.className = 'h-full rounded-full bg-rose-600 transition-all duration-500 shadow-sm';
           bar.style.width = '100%';
         }
         if (badge) {
           badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse flex items-center gap-1 shadow-2xs';
-          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> เกินเกณฑ์เดือนนี้ (${pct.toFixed(1)}%)`;
+          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> เต็ม/เกินเพดานเดือนนี้ (${pct.toFixed(1)}%)`;
         }
         if (freshInput) {
           freshInput.classList.add('border-rose-500', 'bg-rose-50/40', 'text-rose-900');
         }
-      } else if (pct > 75) {
+      } else if (pct >= 75) {
         if (bar) {
-          bar.className = 'h-full rounded-full bg-amber-500 transition-all duration-500';
+          bar.className = 'h-full rounded-full bg-amber-500 transition-all duration-500 shadow-sm';
           bar.style.width = `${Math.min(100, Math.max(2, pct))}%`;
         }
         if (badge) {
-          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs';
-          badge.textContent = `เฝ้าระวัง (${pct.toFixed(1)}%)`;
+          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs flex items-center gap-1';
+          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-600"></i> ใกล้เต็มเพดาน (${pct.toFixed(1)}%)`;
         }
         if (freshInput) {
           freshInput.classList.remove('border-rose-500', 'bg-rose-50/40', 'text-rose-900');
@@ -2077,8 +2082,8 @@ try {
           bar.style.width = pct > 0 ? `${Math.min(100, Math.max(2, pct))}%` : '0%';
         }
         if (badge) {
-          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs';
-          badge.textContent = `ปกติ (${pct.toFixed(1)}%)`;
+          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs flex items-center gap-1';
+          badge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> ปกติ (${pct.toFixed(1)}%)`;
         }
         if (freshInput) {
           freshInput.classList.remove('border-rose-500', 'bg-rose-50/40', 'text-rose-900');

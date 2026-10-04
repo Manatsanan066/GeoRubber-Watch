@@ -114,6 +114,24 @@ if ($method === 'GET') {
             $roundCount = (int)($yRow['round_count'] ?? 0);
             $monthMaxRound = (int)($yRow['month_max_round'] ?? 0);
 
+            // If selected month has no records ($currentMonthSum == 0), check if plot has active month records
+            if ($currentMonthSum == 0) {
+                $lStmt = $pdo->prepare("SELECT harvest_date FROM yield_logs WHERE plot_id = ? ORDER BY harvest_date DESC, id DESC LIMIT 1");
+                $lStmt->execute([$plot_id]);
+                $lDate = $lStmt->fetchColumn();
+                if ($lDate) {
+                    $lTs = strtotime($lDate);
+                    $lFirstDay = date('Y-m-01', $lTs);
+                    $lLastDay = date('Y-m-t', $lTs);
+                    $lSumStmt = $pdo->prepare("SELECT COALESCE(SUM(fresh_latex_kg), 0) FROM yield_logs WHERE plot_id = ? AND harvest_date BETWEEN ? AND ?");
+                    $lSumStmt->execute([$plot_id, $lFirstDay, $lLastDay]);
+                    $lSum = (float)($lSumStmt->fetchColumn() ?: 0);
+                    if ($lSum > 0) {
+                        $currentMonthSum = $lSum;
+                    }
+                }
+            }
+
             // Biological thresholds:
             // Monthly max: 4.5 kg/tree/month (200 trees = 900 kg/month)
             // Daily max: 0.35 kg/tree/round (200 trees = 70 kg/round)
@@ -450,11 +468,6 @@ if ($method === 'GET') {
             $nextTappingRound = max($allTimeMax, $allTimeCount, $monthMaxRound, $roundCount) + 1;
             if ($nextTappingRound < 1) $nextTappingRound = 1;
 
-            $maxMonthlyCapacity = round($treeCount * 4.5, 2);
-            $maxDailyCapacity = round($treeCount * 0.35, 2);
-            $remainingQuota = max(0.0, $maxMonthlyCapacity - $currentMonthSum);
-            $capacityPct = $maxMonthlyCapacity > 0 ? round(($currentMonthSum / $maxMonthlyCapacity) * 100, 1) : 0;
-
             $latestLogStmt = $pdo->prepare("
                 SELECT harvest_date 
                 FROM yield_logs 
@@ -464,6 +477,36 @@ if ($method === 'GET') {
             ");
             $latestLogStmt->execute([$plot['id']]);
             $latestHarvestDate = $latestLogStmt->fetchColumn() ?: null;
+
+            // If selected month has no records ($currentMonthSum == 0), fallback to most recent recorded month's stats
+            $effectiveDate = $harvestDateParam;
+            if ($currentMonthSum == 0 && $latestHarvestDate) {
+                $lTs = strtotime($latestHarvestDate);
+                $lFirstDay = date('Y-m-01', $lTs);
+                $lLastDay = date('Y-m-t', $lTs);
+                
+                $lSumStmt = $pdo->prepare("
+                    SELECT COALESCE(SUM(fresh_latex_kg), 0) as l_sum, 
+                           COUNT(*) as l_count,
+                           COALESCE(MAX(tapping_round), 0) as l_max_round
+                    FROM yield_logs
+                    WHERE plot_id = ? AND harvest_date BETWEEN ? AND ?
+                ");
+                $lSumStmt->execute([$plot['id'], $lFirstDay, $lLastDay]);
+                $lRow = $lSumStmt->fetch(PDO::FETCH_ASSOC);
+                $lSum = (float)($lRow['l_sum'] ?? 0);
+                if ($lSum > 0) {
+                    $currentMonthSum = $lSum;
+                    $roundCount = (int)($lRow['l_count'] ?? 0);
+                    $monthMaxRound = (int)($lRow['l_max_round'] ?? 0);
+                    $effectiveDate = $latestHarvestDate;
+                }
+            }
+
+            $maxMonthlyCapacity = round($treeCount * 4.5, 2);
+            $maxDailyCapacity = round($treeCount * 0.35, 2);
+            $remainingQuota = max(0.0, $maxMonthlyCapacity - $currentMonthSum);
+            $capacityPct = $maxMonthlyCapacity > 0 ? round(($currentMonthSum / $maxMonthlyCapacity) * 100, 1) : 0;
 
             echo json_encode([
                 'success' => true,
@@ -479,7 +522,7 @@ if ($method === 'GET') {
                     'capacity_pct' => $capacityPct,
                     'round_count' => $roundCount,
                     'next_tapping_round' => $nextTappingRound,
-                    'latest_harvest_date' => $latestHarvestDate
+                    'latest_harvest_date' => $effectiveDate
                 ]
             ], JSON_UNESCAPED_UNICODE);
             exit;
