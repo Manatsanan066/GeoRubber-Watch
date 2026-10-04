@@ -629,7 +629,7 @@ try {
 
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-center text-xs pt-1">
             <div class="p-2.5 bg-gray-50 rounded-xl border border-gray-200">
-              <span class="text-gray-400 block text-[10px]">ผลผลิตสะสมเดือนนี้</span>
+              <span class="text-gray-400 block text-[10px]" id="factory-month-sum-label">ผลผลิตสะสมเดือนนี้</span>
               <b id="factory-month-sum" class="text-gray-800 text-sm font-mono font-bold">0.0 กก.</b>
             </div>
             <div class="p-2.5 bg-gray-50 rounded-xl border border-gray-200">
@@ -2003,6 +2003,17 @@ try {
         isAnomaly = true;
       }
 
+      // Update dynamic Month Label
+      const hDateVal = document.getElementById('factory-harvest-date')?.value || new Date().toISOString().split('T')[0];
+      const dateParts = hDateVal.split('-');
+      const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      const mIdx = parseInt(dateParts[1] || '1', 10) - 1;
+      const yBE = (parseInt(dateParts[0] || '2026', 10) + 543) % 100;
+      const mLabel = `${thaiMonths[mIdx] || 'เดือนนี้'} '${yBE}`;
+      
+      const elMonthSumLabel = document.getElementById('factory-month-sum-label');
+      if (elMonthSumLabel) elMonthSumLabel.textContent = `ผลผลิตสะสม (${mLabel})`;
+
       // Update text in stat boxes
       const elMonthSum = document.getElementById('factory-month-sum');
       if (elMonthSum) elMonthSum.textContent = `${monthSum.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
@@ -2051,7 +2062,7 @@ try {
       } else if (pct > 75) {
         if (bar) {
           bar.className = 'h-full rounded-full bg-amber-500 transition-all duration-500';
-          bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+          bar.style.width = `${Math.min(100, Math.max(2, pct))}%`;
         }
         if (badge) {
           badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs';
@@ -2063,7 +2074,7 @@ try {
       } else {
         if (bar) {
           bar.className = 'h-full rounded-full bg-emerald-500 transition-all duration-500';
-          bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+          bar.style.width = pct > 0 ? `${Math.min(100, Math.max(2, pct))}%` : '0%';
         }
         if (badge) {
           badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs';
@@ -3085,6 +3096,13 @@ try {
     // Initialize on DOM Ready
     document.addEventListener('DOMContentLoaded', () => {
       loadYields();
+      if (window.IS_FACTORY && Array.isArray(PLOTS_DATA) && PLOTS_DATA.length > 0) {
+        const firstPlot = PLOTS_DATA[0];
+        const pVal = firstPlot.plot_code || firstPlot.id;
+        const queryInput = document.getElementById('factory-search-query');
+        if (queryInput) queryInput.value = pVal;
+        searchPlotPurchasing(pVal, true);
+      }
     });
   </script>
 </body>

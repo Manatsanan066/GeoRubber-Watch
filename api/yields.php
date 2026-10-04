@@ -455,6 +455,16 @@ if ($method === 'GET') {
             $remainingQuota = max(0.0, $maxMonthlyCapacity - $currentMonthSum);
             $capacityPct = $maxMonthlyCapacity > 0 ? round(($currentMonthSum / $maxMonthlyCapacity) * 100, 1) : 0;
 
+            $latestLogStmt = $pdo->prepare("
+                SELECT harvest_date 
+                FROM yield_logs 
+                WHERE plot_id = ? 
+                ORDER BY harvest_date DESC, id DESC 
+                LIMIT 1
+            ");
+            $latestLogStmt->execute([$plot['id']]);
+            $latestHarvestDate = $latestLogStmt->fetchColumn() ?: null;
+
             echo json_encode([
                 'success' => true,
                 'plot' => $plot,
@@ -468,7 +478,8 @@ if ($method === 'GET') {
                     'remaining_quota' => $remainingQuota,
                     'capacity_pct' => $capacityPct,
                     'round_count' => $roundCount,
-                    'next_tapping_round' => $nextTappingRound
+                    'next_tapping_round' => $nextTappingRound,
+                    'latest_harvest_date' => $latestHarvestDate
                 ]
             ], JSON_UNESCAPED_UNICODE);
             exit;
