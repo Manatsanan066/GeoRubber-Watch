@@ -10,15 +10,15 @@ $user_name = $currentUser['full_name'] ?? 'ผู้ใช้งานระบ�
 $pdo = getDatabaseConnection();
 
 $isUserAdmin = isAdmin();
-$isFactory = in_array($current_role, ['factory', 'buyer', 'trader'], true) || (isset($_GET['mode']) && $_GET['mode'] === 'factory');
-$isFarmer = !$isUserAdmin && !$isFactory;
+$isFactory = true;
+$isFarmer = false;
 $factoryCompanyName = 'บริษัท ไทยเจริญเลเท็กซ์ อินดัสทรี จำกัด';
 if (!empty($user_name) && $user_name !== 'ผู้ใช้งานระบบ' && !str_contains($user_name, 'เกษตรกร') && !str_contains($user_name, 'Admin')) {
     $factoryCompanyName = $user_name;
 }
 
 $farmerId = $currentUser['farmer_id'] ?? null;
-if (!$isUserAdmin && !$isFactory && !$farmerId && isset($_SESSION['user_id'])) {
+if (!$farmerId && isset($_SESSION['user_id'])) {
     $fStmt = $pdo->prepare("SELECT id FROM farmers WHERE user_id = ?");
     $fStmt->execute([$_SESSION['user_id']]);
     $farmerId = (int)$fStmt->fetchColumn();
@@ -37,41 +37,20 @@ if (!$isUserAdmin && !$isFactory && !$farmerId && isset($_SESSION['user_id'])) {
     }
 }
 
-// Fetch plots with farmer profile details (RBAC: Farmer only sees own plots, Admin & Factory see all)
+// Fetch all registered rubber plots with farmer profile details (All plots in system)
 $plots = [];
 try {
-    if (!$isUserAdmin && !$isFactory) {
-        $stmt = $pdo->prepare("
-            SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai, p.tree_count, p.eudr_status, p.title_deed_type,
-                   p.centroid_lat, p.centroid_lng, p.title_deed_no, p.traceability_token,
-                   f.id as farmer_id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
-                   f.subdistrict, f.district, f.province
-            FROM rubber_plots p
-            LEFT JOIN farmers f ON f.id = p.farmer_id
-            WHERE p.farmer_id = ?
-            ORDER BY p.plot_name ASC
-        ");
-        $stmt->execute([$farmerId ?: -1]);
-        $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $plots = $pdo->query("
-            SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai, p.tree_count, p.eudr_status, p.title_deed_type,
-                   p.centroid_lat, p.centroid_lng, p.title_deed_no, p.traceability_token,
-                   f.id as farmer_id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
-                   f.subdistrict, f.district, f.province
-            FROM rubber_plots p
-            LEFT JOIN farmers f ON f.id = p.farmer_id
-            ORDER BY p.plot_name ASC
-        ")->fetchAll(PDO::FETCH_ASSOC);
-    }
+    $plots = $pdo->query("
+        SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai, p.tree_count, p.eudr_status, p.title_deed_type,
+               p.centroid_lat, p.centroid_lng, p.title_deed_no, p.traceability_token,
+               f.id as farmer_id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
+               f.subdistrict, f.district, f.province
+        FROM rubber_plots p
+        LEFT JOIN farmers f ON f.id = p.farmer_id
+        ORDER BY p.id ASC, p.plot_name ASC
+    ")->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
-    if (!$isUserAdmin && !$isFactory) {
-        $stmt = $pdo->prepare("SELECT id, plot_code, plot_name, rubber_clone, area_rai, tree_count, eudr_status, title_deed_type FROM rubber_plots WHERE farmer_id = ? ORDER BY plot_name ASC");
-        $stmt->execute([$farmerId ?: -1]);
-        $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $plots = $pdo->query("SELECT id, plot_code, plot_name, rubber_clone, area_rai, tree_count, eudr_status, title_deed_type FROM rubber_plots ORDER BY plot_name ASC")->fetchAll(PDO::FETCH_ASSOC);
-    }
+    $plots = $pdo->query("SELECT id, plot_code, plot_name, rubber_clone, area_rai, tree_count, eudr_status, title_deed_type FROM rubber_plots ORDER BY id ASC, plot_name ASC")->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
 <!DOCTYPE html>
@@ -805,17 +784,20 @@ try {
               class="bg-[#f8faf9] text-gray-800 font-semibold text-xs sm:text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-48 sm:w-64 cursor-pointer" 
               onchange="loadYields()"
             >
-              <option value="">-- ทุกแปลงปลูก <?= $isUserAdmin ? '(ทั้งหมด)' : '(ของฉัน)' ?> --</option>
+              <option value="">-- ทุกแปลงปลูก (ทั้งหมด <?= count($plots) ?> แปลง) --</option>
               <?php foreach ($plots as $p): ?>
+                <?php 
+                  $pFarmer = trim(($p['prefix'] ?? '') . ($p['first_name'] ?? '') . ' ' . ($p['last_name'] ?? ''));
+                  $pLabel = htmlspecialchars($p['plot_name'] . ' (' . ($p['plot_code'] ?: ('ID ' . $p['id'])) . ($pFarmer ? ' • ' . $pFarmer : '') . ')');
+                ?>
                 <option value="<?= $p['id'] ?>">
-                  <?= htmlspecialchars($p['plot_name']) ?> (<?= htmlspecialchars($p['plot_code']) ?>)
+                  <?= $pLabel ?>
                 </option>
               <?php endforeach; ?>
             </select>
           </div>
 
-          <?php if ($isUserAdmin): ?>
-          <!-- Admin Search Inputs (Farmer Name, Plot Code, Title Deed, National ID) -->
+          <!-- Search Inputs (Farmer Name, Plot Code, Title Deed, National ID) -->
           <div class="flex flex-wrap items-center gap-2">
             <!-- Search Farmer Name -->
             <div class="relative">
@@ -859,14 +841,13 @@ try {
             <button 
               type="button" 
               onclick="clearAdminFilters()" 
-              class="px-2.5 py-1.5 text-xs text-gray-400 hover:text-rose-500 underline"
+              class="px-2.5 py-1.5 text-xs text-gray-400 hover:text-rose-500 underline cursor-pointer"
               title="ล้างการค้นหา"
               data-i18n="db_clear_filter"
             >
               ล้างตัวกรอง
             </button>
           </div>
-          <?php endif; ?>
         </div>
 
         <!-- Right Side: Export CSV Button (Only CSV) -->

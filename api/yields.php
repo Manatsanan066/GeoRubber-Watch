@@ -16,10 +16,7 @@ $requestData = !empty($rawInput) ? json_decode($rawInput, true) : [];
 $currentUser = getCurrentUser();
 $currentRole = $currentUser['role'] ?? 'farmer';
 $isUserAdmin = isAdmin();
-$isFactory = in_array($currentRole, ['factory', 'buyer', 'trader', 'admin', 'coop'], true) 
-    || (isset($_GET['mode']) && $_GET['mode'] === 'factory') 
-    || (isset($_POST['mode']) && $_POST['mode'] === 'factory')
-    || (isset($requestData['mode']) && $requestData['mode'] === 'factory');
+$isFactory = true;
 $farmerId = $currentUser['farmer_id'] ?? null;
 
 if (!$isUserAdmin && !$farmerId && isset($_SESSION['user_id'])) {
@@ -66,7 +63,7 @@ if ($method === 'GET') {
                 echo json_encode(['success' => false, 'message' => 'ไม่พบข้อมูลผลผลิต'], JSON_UNESCAPED_UNICODE);
                 exit;
             }
-            if (!$isUserAdmin && (int)$yield['farmer_id'] !== (int)$farmerId) {
+            if (!$isUserAdmin && !$isFactory && (int)$yield['farmer_id'] !== (int)$farmerId) {
                 http_response_code(403);
                 echo json_encode(['success' => false, 'message' => 'ไม่อนุญาต: ท่านสามารถดู/แก้ไขเฉพาะผลผลิตของตนเองเท่านั้น'], JSON_UNESCAPED_UNICODE);
                 exit;
@@ -378,29 +375,38 @@ if ($method === 'GET') {
                 exit;
             }
 
+            $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+            $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
+
             $whereClauses = [];
             $params = [];
 
             $searchLike = "%{$q}%";
             $params[':q'] = $searchLike;
 
-            $whereClauses[] = "p.plot_code LIKE :q";
-            $whereClauses[] = "p.traceability_token LIKE :q";
-            $whereClauses[] = "p.title_deed_no LIKE :q";
-            $whereClauses[] = "p.plot_name LIKE :q";
-            $whereClauses[] = "f.farmer_code LIKE :q";
-            $whereClauses[] = "f.first_name LIKE :q";
-            $whereClauses[] = "f.last_name LIKE :q";
-            $whereClauses[] = "CONCAT(COALESCE(f.prefix, ''), COALESCE(f.first_name, ''), ' ', COALESCE(f.last_name, '')) LIKE :q";
-            $whereClauses[] = "CONCAT(COALESCE(f.first_name, ''), ' ', COALESCE(f.last_name, '')) LIKE :q";
-            $whereClauses[] = "CONCAT(COALESCE(f.first_name, ''), COALESCE(f.last_name, '')) LIKE :q";
-            $whereClauses[] = "f.phone LIKE :q";
+            $whereClauses[] = "p.plot_code {$likeOp} :q";
+            $whereClauses[] = "p.traceability_token {$likeOp} :q";
+            $whereClauses[] = "p.title_deed_no {$likeOp} :q";
+            $whereClauses[] = "p.plot_name {$likeOp} :q";
+            $whereClauses[] = "f.farmer_code {$likeOp} :q";
+            $whereClauses[] = "f.first_name {$likeOp} :q";
+            $whereClauses[] = "f.last_name {$likeOp} :q";
+            if ($driver === 'pgsql' || $driver === 'sqlite') {
+                $whereClauses[] = "(COALESCE(f.prefix, '') || COALESCE(f.first_name, '') || ' ' || COALESCE(f.last_name, '')) {$likeOp} :q";
+                $whereClauses[] = "(COALESCE(f.first_name, '') || ' ' || COALESCE(f.last_name, '')) {$likeOp} :q";
+                $whereClauses[] = "(COALESCE(f.first_name, '') || COALESCE(f.last_name, '')) {$likeOp} :q";
+            } else {
+                $whereClauses[] = "CONCAT(COALESCE(f.prefix, ''), COALESCE(f.first_name, ''), ' ', COALESCE(f.last_name, '')) {$likeOp} :q";
+                $whereClauses[] = "CONCAT(COALESCE(f.first_name, ''), ' ', COALESCE(f.last_name, '')) {$likeOp} :q";
+                $whereClauses[] = "CONCAT(COALESCE(f.first_name, ''), COALESCE(f.last_name, '')) {$likeOp} :q";
+            }
+            $whereClauses[] = "f.phone {$likeOp} :q";
 
             $cleanDigits = preg_replace('/[^0-9]/', '', $q);
             if ($cleanDigits !== '') {
                 $params[':digits'] = "%{$cleanDigits}%";
-                $whereClauses[] = "REPLACE(REPLACE(f.id_card_num, '-', ''), ' ', '') LIKE :digits";
-                $whereClauses[] = "REPLACE(REPLACE(f.phone, '-', ''), ' ', '') LIKE :digits";
+                $whereClauses[] = "REPLACE(REPLACE(f.id_card_num, '-', ''), ' ', '') {$likeOp} :digits";
+                $whereClauses[] = "REPLACE(REPLACE(f.phone, '-', ''), ' ', '') {$likeOp} :digits";
             }
 
             if (ctype_digit($q)) {
@@ -419,9 +425,9 @@ if ($method === 'GET') {
                     WHEN p.plot_code = :q_exact THEN 1
                     WHEN p.plot_name = :q_exact THEN 2
                     WHEN f.id_card_num = :q_exact THEN 3
-                    WHEN p.plot_code LIKE :q_start THEN 4
-                    WHEN p.plot_name LIKE :q_start THEN 5
-                    WHEN f.first_name LIKE :q_start THEN 6
+                    WHEN p.plot_code {$likeOp} :q_start THEN 4
+                    WHEN p.plot_name {$likeOp} :q_start THEN 5
+                    WHEN f.first_name {$likeOp} :q_start THEN 6
                     ELSE 7
                   END,
                   p.id DESC
@@ -535,23 +541,13 @@ if ($method === 'GET') {
 
         // 4. Dropdown Plots Query
         if ($action === 'dropdown_plots') {
-            if (!$isUserAdmin && !$isFactory) {
-                $stmt = $pdo->prepare("
-                    SELECT id, plot_code, plot_name, rubber_clone, area_rai, title_deed_no
-                    FROM rubber_plots
-                    WHERE farmer_id = ?
-                    ORDER BY plot_name ASC
-                ");
-                $stmt->execute([$farmerId ?: -1]);
-            } else {
-                $stmt = $pdo->query("
-                    SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai, p.title_deed_no,
-                           f.prefix, f.first_name, f.last_name, f.farmer_code
-                    FROM rubber_plots p
-                    LEFT JOIN farmers f ON f.id = p.farmer_id
-                    ORDER BY p.plot_name ASC
-                ");
-            }
+            $stmt = $pdo->query("
+                SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai, p.title_deed_no,
+                       f.prefix, f.first_name, f.last_name, f.farmer_code
+                FROM rubber_plots p
+                LEFT JOIN farmers f ON f.id = p.farmer_id
+                ORDER BY p.id ASC, p.plot_name ASC
+            ");
             $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode(['success' => true, 'plots' => $plots], JSON_UNESCAPED_UNICODE);
             exit;
@@ -567,33 +563,28 @@ if ($method === 'GET') {
         $where = [];
         $params = [];
 
-        // RBAC: Farmers only view their own yield history, Admin & Factory can view all
-        if (!$isUserAdmin && !$isFactory) {
-            if ($farmerId > 0) {
-                $where[] = "(y.farmer_id = :farmer_id OR p.farmer_id = :farmer_id)";
-                $params[':farmer_id'] = $farmerId;
-            }
-        } else {
-            $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-            $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
-            // Admin / Factory Search & Filter Options
-            if (!empty($_GET['search_name'])) {
-                $concatExpr = ($driver === 'sqlite' || $driver === 'pgsql') ? "(f.first_name || ' ' || f.last_name)" : "CONCAT(f.first_name, ' ', f.last_name)";
-                $where[] = "(f.first_name {$likeOp} :s_name OR f.last_name {$likeOp} :s_name OR {$concatExpr} {$likeOp} :s_name OR f.farmer_code {$likeOp} :s_name OR f.id_card_num {$likeOp} :s_name)";
-                $params[':s_name'] = '%' . trim($_GET['search_name']) . '%';
-            }
-            if (!empty($_GET['search_plot_code'])) {
-                $where[] = "(p.plot_code {$likeOp} :s_code OR p.plot_name {$likeOp} :s_code OR p.traceability_token {$likeOp} :s_code)";
-                $params[':s_code'] = '%' . trim($_GET['search_plot_code']) . '%';
-            }
-            if (!empty($_GET['search_title_deed'])) {
-                $where[] = "p.title_deed_no {$likeOp} :s_deed";
-                $params[':s_deed'] = '%' . trim($_GET['search_title_deed']) . '%';
-            }
-            if (!empty($_GET['farmer_id'])) {
-                $where[] = "y.farmer_id = :f_id";
-                $params[':f_id'] = (int)$_GET['farmer_id'];
-            }
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
+
+        // Filter by specific farmer if explicitly requested
+        if (!empty($_GET['farmer_id'])) {
+            $where[] = "(y.farmer_id = :f_id OR p.farmer_id = :f_id)";
+            $params[':f_id'] = (int)$_GET['farmer_id'];
+        }
+
+        // Search & Filter Options (Name, National ID, Plot Code, Title Deed)
+        if (!empty($_GET['search_name'])) {
+            $concatExpr = ($driver === 'sqlite' || $driver === 'pgsql') ? "(COALESCE(f.first_name, '') || ' ' || COALESCE(f.last_name, ''))" : "CONCAT(COALESCE(f.first_name, ''), ' ', COALESCE(f.last_name, ''))";
+            $where[] = "(f.first_name {$likeOp} :s_name OR f.last_name {$likeOp} :s_name OR {$concatExpr} {$likeOp} :s_name OR f.farmer_code {$likeOp} :s_name OR f.id_card_num {$likeOp} :s_name)";
+            $params[':s_name'] = '%' . trim($_GET['search_name']) . '%';
+        }
+        if (!empty($_GET['search_plot_code'])) {
+            $where[] = "(p.plot_code {$likeOp} :s_code OR p.plot_name {$likeOp} :s_code OR p.traceability_token {$likeOp} :s_code)";
+            $params[':s_code'] = '%' . trim($_GET['search_plot_code']) . '%';
+        }
+        if (!empty($_GET['search_title_deed'])) {
+            $where[] = "p.title_deed_no {$likeOp} :s_deed";
+            $params[':s_deed'] = '%' . trim($_GET['search_title_deed']) . '%';
         }
 
         if ($plot_id) {
@@ -1038,7 +1029,7 @@ if ($method === 'PUT') {
         }
 
         // RBAC: Check ownership for Farmers
-        if (!$isUserAdmin) {
+        if (!$isUserAdmin && !$isFactory) {
             $chkStmt = $pdo->prepare("SELECT id FROM yield_logs WHERE id = ? AND farmer_id = ?");
             $chkStmt->execute([$id, $farmerId]);
             if (!$chkStmt->fetch()) {
