@@ -37,13 +37,13 @@ if (!$isUserAdmin && !$isFactory && !$farmerId && isset($_SESSION['user_id'])) {
     }
 }
 
-// Fetch plots with farmer profile details (RBAC: Farmer only sees own plots, Admin sees all)
+// Fetch plots with farmer profile details (RBAC: Farmer only sees own plots, Admin & Factory see all)
 $plots = [];
 try {
-    if (!$isUserAdmin) {
+    if (!$isUserAdmin && !$isFactory) {
         $stmt = $pdo->prepare("
             SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai, p.tree_count, p.eudr_status, p.title_deed_type,
-                   p.centroid_lat, p.centroid_lng, p.title_deed_no,
+                   p.centroid_lat, p.centroid_lng, p.title_deed_no, p.traceability_token,
                    f.id as farmer_id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
                    f.subdistrict, f.district, f.province
             FROM rubber_plots p
@@ -56,7 +56,7 @@ try {
     } else {
         $plots = $pdo->query("
             SELECT p.id, p.plot_code, p.plot_name, p.rubber_clone, p.area_rai, p.tree_count, p.eudr_status, p.title_deed_type,
-                   p.centroid_lat, p.centroid_lng, p.title_deed_no,
+                   p.centroid_lat, p.centroid_lng, p.title_deed_no, p.traceability_token,
                    f.id as farmer_id, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
                    f.subdistrict, f.district, f.province
             FROM rubber_plots p
@@ -65,7 +65,7 @@ try {
         ")->fetchAll(PDO::FETCH_ASSOC);
     }
 } catch (Exception $e) {
-    if (!$isUserAdmin) {
+    if (!$isUserAdmin && !$isFactory) {
         $stmt = $pdo->prepare("SELECT id, plot_code, plot_name, rubber_clone, area_rai, tree_count, eudr_status, title_deed_type FROM rubber_plots WHERE farmer_id = ? ORDER BY plot_name ASC");
         $stmt->execute([$farmerId ?: -1]);
         $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -463,43 +463,92 @@ try {
       </div>
 
       <!-- Quick Search / Scan Bar -->
-      <div class="bg-[#f8faf9] p-4 rounded-2xl border border-gray-200/80 space-y-3">
-        <label class="block text-xs sm:text-sm font-bold text-gray-700">
-          สแกน QR Code หรือค้นหาแปลงปลูก (รหัสแปลง / เลขบัตรประชาชน 13 หลัก / เลขที่โฉนด / EUDR Token):
-        </label>
-        <div class="flex flex-col sm:flex-row gap-2.5">
-          <div class="relative flex-1">
-            <input 
-              type="text" 
-              id="factory-search-query" 
-              placeholder="เช่น RB-ST-2026-020 หรือ 1-8499-00123-45-6 หรือ EUDR-TH-ST-84000..." 
-              class="w-full bg-white text-gray-800 font-semibold text-sm rounded-xl pl-4 pr-10 py-3 border-2 border-gray-300 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none shadow-xs" 
-              onkeypress="if(event.key === 'Enter') searchPlotPurchasing()"
+      <div class="bg-[#f8faf9] p-4 sm:p-5 rounded-2xl border-2 border-[#bee6e1]/80 space-y-3.5 shadow-2xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-200/60 pb-2">
+          <label class="block text-xs sm:text-sm font-bold text-mezenc-teal flex items-center gap-2">
+            <i class="fa-solid fa-magnifying-glass-location text-mezenc-brightCyan"></i>
+            <span>ค้นหาหรือเลือกแปลงปลูก (รหัสแปลง / ชื่อแปลง / เกษตรกร / เลขบัตรประชาชน 13 หลัก):</span>
+          </label>
+          <span class="text-[11px] sm:text-xs text-gray-500 font-medium bg-white px-2.5 py-1 rounded-lg border border-gray-200 shadow-2xs">
+            แปลงปลูกในระบบ: <b class="text-mezenc-teal font-bold"><?= count($plots) ?></b> แปลง
+          </span>
+        </div>
+
+        <!-- Quick Select Dropdown for 1-Click Fast Selection -->
+        <div class="grid grid-cols-1 gap-2.5">
+          <div class="relative">
+            <select 
+              id="factory-plot-select" 
+              onchange="if(this.value) { document.getElementById('factory-search-query').value = this.value; searchPlotPurchasing(this.value); }"
+              class="w-full bg-white text-gray-800 font-semibold text-xs sm:text-sm rounded-xl pl-9 pr-8 py-2.5 border-2 border-emerald-200 hover:border-mezenc-brightCyan focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none shadow-2xs transition cursor-pointer"
             >
+              <option value="">-- คลิกเพื่อเลือกแปลงปลูกจากรายการด่วน (Quick Select) --</option>
+              <?php foreach ($plots as $p): ?>
+                <?php 
+                  $pFarmer = trim(($p['prefix'] ?? '') . ($p['first_name'] ?? '') . ' ' . ($p['last_name'] ?? ''));
+                  $pLabel = htmlspecialchars($p['plot_name'] . ' (' . ($p['plot_code'] ?: ('ID ' . $p['id'])) . ' • ' . ($pFarmer ?: 'ไม่ระบุเจ้าของ') . ($p['area_rai'] ? ' • ' . $p['area_rai'] . ' ไร่' : '') . ')');
+                  $pVal = htmlspecialchars($p['plot_code'] ?: $p['id']);
+                ?>
+                <option value="<?= $pVal ?>"><?= $pLabel ?></option>
+              <?php endforeach; ?>
+            </select>
+            <i class="fa-solid fa-list-check absolute left-3 top-1/2 -translate-y-1/2 text-mezenc-brightCyan text-xs pointer-events-none"></i>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-2.5">
+            <div class="relative flex-1">
+              <input 
+                type="text" 
+                id="factory-search-query" 
+                list="plots-search-datalist"
+                placeholder="หรือพิมพ์ค้นหา เช่น แปลง 1, นางสุมาลี, RB-ST-2026-020, หรือเลขบัตร ปชช...." 
+                class="w-full bg-white text-gray-800 font-semibold text-xs sm:text-sm rounded-xl pl-4 pr-10 py-3 border-2 border-gray-300 focus:border-mezenc-brightCyan focus:ring-2 focus:ring-mezenc-brightCyan/20 outline-none shadow-xs" 
+                onkeypress="if(event.key === 'Enter') searchPlotPurchasing()"
+              >
+              <datalist id="plots-search-datalist">
+                <?php foreach ($plots as $p): ?>
+                  <?php 
+                    $pFarmer = trim(($p['prefix'] ?? '') . ($p['first_name'] ?? '') . ' ' . ($p['last_name'] ?? ''));
+                    $pVal = htmlspecialchars($p['plot_code'] ?: $p['id']);
+                    $pText = htmlspecialchars($p['plot_name'] . ' - ' . ($pFarmer ?: '-') . ' (' . ($p['plot_code'] ?: '') . ')');
+                  ?>
+                  <option value="<?= $pVal ?>"><?= $pText ?></option>
+                  <?php if (!empty($p['plot_name'])): ?>
+                    <option value="<?= htmlspecialchars($p['plot_name']) ?>"><?= $pText ?></option>
+                  <?php endif; ?>
+                  <?php if (!empty($pFarmer)): ?>
+                    <option value="<?= htmlspecialchars($pFarmer) ?>"><?= $pText ?></option>
+                  <?php endif; ?>
+                  <?php if (!empty($p['id_card_num'])): ?>
+                    <option value="<?= htmlspecialchars($p['id_card_num']) ?>"><?= $pText ?></option>
+                  <?php endif; ?>
+                <?php endforeach; ?>
+              </datalist>
+              <button 
+                type="button" 
+                onclick="searchPlotPurchasing()" 
+                class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-mezenc-brightCyan hover:bg-mezenc-teal text-white flex items-center justify-center transition shadow-xs cursor-pointer"
+                title="ค้นหาแปลง"
+              >
+                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+              </button>
+            </div>
+            <button 
+              type="button" 
+              onclick="openQrScannerModal()" 
+              class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer shrink-0 border border-emerald-500"
+              title="เปิดกล้องสแกน QR Code แปลงปลูกเกษตรกร"
+            >
+              <i class="fa-solid fa-qrcode text-base"></i> <span>สแกน QR Code</span>
+            </button>
             <button 
               type="button" 
               onclick="searchPlotPurchasing()" 
-              class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-mezenc-brightCyan hover:bg-mezenc-teal text-white flex items-center justify-center transition shadow-xs cursor-pointer"
-              title="ค้นหาแปลง"
+              class="px-6 py-3 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer shrink-0"
             >
-              <i class="fa-solid fa-magnifying-glass text-xs"></i>
+              <i class="fa-solid fa-bolt"></i> <span>ค้นหาและตรวจสอบสิทธิ์</span>
             </button>
           </div>
-          <button 
-            type="button" 
-            onclick="openQrScannerModal()" 
-            class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer shrink-0 border border-emerald-500"
-            title="เปิดกล้องสแกน QR Code แปลงปลูกเกษตรกร"
-          >
-            <i class="fa-solid fa-qrcode text-base"></i> <span>สแกน QR Code</span>
-          </button>
-          <button 
-            type="button" 
-            onclick="searchPlotPurchasing()" 
-            class="px-6 py-3 rounded-xl bg-mezenc-brightCyan hover:bg-mezenc-teal text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer shrink-0"
-          >
-            <i class="fa-solid fa-bolt"></i> <span>ค้นหาและตรวจสอบสิทธิ์</span>
-          </button>
         </div>
       </div>
 
@@ -716,6 +765,7 @@ try {
                 type="date" 
                 id="factory-harvest-date" 
                 value="<?= date('Y-m-d') ?>" 
+                onchange="onFactoryHarvestDateChange()"
                 class="w-full bg-white text-gray-800 rounded-xl px-3 py-2 border border-gray-300 focus:border-mezenc-brightCyan outline-none"
               >
             </div>
@@ -1768,22 +1818,32 @@ try {
       searchPlotPurchasing(parsed);
     }
 
+    // Trigger when user changes purchasing/harvest date
+    function onFactoryHarvestDateChange() {
+      if (currentFactoryPlot && currentFactoryPlot.plot) {
+        const query = currentFactoryPlot.plot.plot_code || currentFactoryPlot.plot.id;
+        searchPlotPurchasing(query, true);
+      }
+    }
+
     // Search Plot for Factory Purchasing / QR Scan
     async function searchPlotPurchasing(overrideQuery = null, silent = false) {
       const q = (overrideQuery || document.getElementById('factory-search-query').value).trim();
       if (!q) {
         if (!silent) {
           if (window.App && typeof window.App.showToast === 'function') {
-            App.showToast('กรุณากรอกรหัสแปลง, เลขบัตร ปชช. 13 หลัก หรือเลขที่โฉนดเพื่อค้นหา', 'warning');
+            App.showToast('กรุณากรอกรหัสแปลง, เลขบัตร ปชช. 13 หลัก หรือเลือกแปลงปลูกเพื่อค้นหา', 'warning');
           } else {
-            alert('กรุณากรอกรหัสแปลง, เลขบัตร ปชช. 13 หลัก หรือเลขที่โฉนดเพื่อค้นหา');
+            alert('กรุณากรอกรหัสแปลง, เลขบัตร ปชช. 13 หลัก หรือเลือกแปลงปลูกเพื่อค้นหา');
           }
         }
         return;
       }
 
+      const harvestDate = document.getElementById('factory-harvest-date') ? document.getElementById('factory-harvest-date').value : '';
+
       try {
-        const res = await fetch(`api/yields.php?action=search_plot_for_purchasing&q=${encodeURIComponent(q)}`);
+        const res = await fetch(`api/yields.php?action=search_plot_for_purchasing&q=${encodeURIComponent(q)}&harvest_date=${encodeURIComponent(harvestDate)}`);
         const data = await res.json();
         if (!data.success || !data.plot) {
           if (!silent) {
@@ -1799,6 +1859,15 @@ try {
         const plot = data.plot;
         const stats = data.stats;
         currentFactoryPlot = { plot, stats };
+
+        // Sync quick dropdown if option exists
+        const selectEl = document.getElementById('factory-plot-select');
+        if (selectEl) {
+          const matchOpt = Array.from(selectEl.options).find(opt => opt.value == plot.plot_code || opt.value == plot.id || opt.value == plot.traceability_token);
+          if (matchOpt) {
+            selectEl.value = matchOpt.value;
+          }
+        }
 
         // Auto-fill Plot & Farmer Data
         document.getElementById('factory-plot-id').value = plot.id;
@@ -1843,7 +1912,14 @@ try {
         document.getElementById('factory-rubber-clone').textContent = plot.rubber_clone || 'RRIM 600';
 
         // Update Biological Capacity Meter
-        updateFactoryCapacityUI(stats.current_month_sum, stats.max_monthly_capacity, stats.remaining_quota, stats.capacity_pct, stats.round_count);
+        const roundToDisplay = (stats && stats.next_tapping_round) ? stats.next_tapping_round : ((stats && stats.round_count ? stats.round_count : 0) + 1);
+        updateFactoryCapacityUI(
+          stats ? stats.current_month_sum : 0, 
+          stats ? stats.max_monthly_capacity : 0, 
+          stats ? stats.remaining_quota : 0, 
+          stats ? stats.capacity_pct : 0, 
+          roundToDisplay
+        );
 
         document.getElementById('factory-result-box').classList.remove('hidden');
 
@@ -1853,18 +1929,20 @@ try {
 
           // Toast notification
           if (window.App && typeof window.App.showToast === 'function') {
-            App.showToast(`สแกนพบ: ${plot.plot_name} (${fName})`, 'success');
+            App.showToast(`เลือกแปลง: ${plot.plot_name} (${fName})`, 'success');
           }
 
           // Smooth scroll to quick form and focus on fresh weight input
           const quickForm = document.getElementById('factory-quick-form');
           if (quickForm) {
-            quickForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            quickForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
           setTimeout(() => {
             const freshInput = document.getElementById('factory-fresh-kg');
             if (freshInput) freshInput.focus();
           }, 350);
+        } else {
+          onFactoryFreshKgInput();
         }
 
       } catch (err) {
@@ -1880,28 +1958,36 @@ try {
     }
 
     function updateFactoryCapacityUI(monthSum, limit, remaining, pct, roundCount) {
-      document.getElementById('factory-month-sum').textContent = `${parseFloat(monthSum).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
-      document.getElementById('factory-month-limit').textContent = `${parseFloat(limit).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
-      document.getElementById('factory-month-remaining').textContent = `${parseFloat(remaining).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
-      document.getElementById('factory-round-count').textContent = `รอบที่ ${parseInt(roundCount) || 1}`;
+      const numMonthSum = parseFloat(monthSum) || 0;
+      const numLimit = parseFloat(limit) || 0;
+      const numRemaining = parseFloat(remaining) || 0;
+      const numPct = parseFloat(pct) || 0;
+      const numRound = parseInt(roundCount) || 1;
+
+      document.getElementById('factory-month-sum').textContent = `${numMonthSum.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
+      document.getElementById('factory-month-limit').textContent = `${numLimit.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
+      document.getElementById('factory-month-remaining').textContent = `${numRemaining.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
+      document.getElementById('factory-round-count').textContent = `รอบที่ ${numRound}`;
 
       const bar = document.getElementById('factory-capacity-bar');
       const badge = document.getElementById('factory-capacity-badge');
-      const displayPct = Math.min(100, Math.max(0, pct));
-      bar.style.width = `${displayPct}%`;
+      const displayPct = Math.min(100, Math.max(0, numPct));
+      if (bar) bar.style.width = `${displayPct}%`;
 
-      if (pct > 100) {
-        bar.className = 'h-full rounded-full bg-rose-600 transition-all duration-500';
-        badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse flex items-center gap-1';
-        badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> เกินเกณฑ์ (${pct}%)`;
-      } else if (pct > 75) {
-        bar.className = 'h-full rounded-full bg-amber-500 transition-all duration-500';
-        badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300';
-        badge.textContent = `เฝ้าระวัง (${pct}%)`;
-      } else {
-        bar.className = 'h-full rounded-full bg-emerald-500 transition-all duration-500';
-        badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
-        badge.textContent = `ปกติ (${pct}%)`;
+      if (badge && bar) {
+        if (numPct > 100) {
+          bar.className = 'h-full rounded-full bg-rose-600 transition-all duration-500';
+          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse flex items-center gap-1';
+          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> เกินเกณฑ์ (${numPct.toFixed(1)}%)`;
+        } else if (numPct > 75) {
+          bar.className = 'h-full rounded-full bg-amber-500 transition-all duration-500';
+          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300';
+          badge.textContent = `เฝ้าระวัง (${numPct.toFixed(1)}%)`;
+        } else {
+          bar.className = 'h-full rounded-full bg-emerald-500 transition-all duration-500';
+          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+          badge.textContent = `ปกติ (${numPct.toFixed(1)}%)`;
+        }
       }
     }
 
@@ -1932,19 +2018,26 @@ try {
           const qData = await res.json();
           if (qData.success) {
             currentFactoryAnomalyData = qData;
+            const currentSum = parseFloat(qData.current_month_sum || (currentFactoryPlot.stats ? currentFactoryPlot.stats.current_month_sum : 0)) || 0;
+            const projTotal = (freshKg > 0) ? (currentSum + freshKg) : currentSum;
+            const maxCap = parseFloat(qData.max_monthly_capacity || (currentFactoryPlot.stats ? currentFactoryPlot.stats.max_monthly_capacity : 0)) || 1;
+            const capPct = maxCap > 0 ? ((projTotal / maxCap) * 100) : 0;
+            const remaining = Math.max(0, maxCap - projTotal);
+            const nextRound = qData.next_tapping_round || (currentFactoryPlot.stats ? (currentFactoryPlot.stats.next_tapping_round || (currentFactoryPlot.stats.round_count + 1)) : 1);
+
             updateFactoryCapacityUI(
-              qData.projected_total, 
-              qData.max_monthly_capacity, 
-              Math.max(0, qData.max_monthly_capacity - qData.projected_total), 
-              qData.capacity_pct, 
-              (currentFactoryPlot.stats.round_count || 0) + 1
+              projTotal, 
+              maxCap, 
+              remaining, 
+              capPct, 
+              nextRound
             );
 
             const alertBox = document.getElementById('factory-anomaly-alert');
             const alertText = document.getElementById('factory-anomaly-text');
             if (qData.is_anomaly) {
               alertBox.classList.remove('hidden');
-              alertText.textContent = qData.warning_message || 'ผลผลิตต่อวันเกินเกณฑ์ชีวภาพสูงสุดที่ควรเป็นไปได้ หรือมีอัตราเพิ่มขึ้นก้าวกระโดดผิดธรรมชาติ';
+              alertText.textContent = qData.warning_message || (qData.reasons && qData.reasons.length ? qData.reasons.join(' • ') : 'ผลผลิตต่อวันเกินเกณฑ์ชีวภาพสูงสุดที่ควรเป็นไปได้ หรือมีอัตราเพิ่มขึ้นก้าวกระโดดผิดธรรมชาติ');
             } else {
               alertBox.classList.add('hidden');
             }

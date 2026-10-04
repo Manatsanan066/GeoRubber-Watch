@@ -12,7 +12,9 @@ initDatabaseIfNeeded();
 $pdo = getDatabaseConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 $currentUser = getCurrentUser();
+$currentRole = $currentUser['role'] ?? 'farmer';
 $isUserAdmin = isAdmin();
+$isFactory = in_array($currentRole, ['factory', 'buyer', 'trader', 'admin', 'coop'], true) || (isset($_GET['mode']) && $_GET['mode'] === 'factory') || (isset($_POST['mode']) && $_POST['mode'] === 'factory');
 $farmerId = $currentUser['farmer_id'] ?? null;
 
 if (!$isUserAdmin && !$farmerId && isset($_SESSION['user_id'])) {
@@ -94,11 +96,15 @@ if ($method === 'GET') {
 
             $areaRai = max(0.5, (float)$plot['area_rai']);
             $treeCount = !empty($plot['tree_count']) ? (int)$plot['tree_count'] : (int)round($areaRai * 75);
-            $firstDay = date('Y-m-01', strtotime($harvest_date));
-            $lastDay = date('Y-m-t', strtotime($harvest_date));
+            $ts = strtotime($harvest_date);
+            if (!$ts) $ts = time();
+            $firstDay = date('Y-m-01', $ts);
+            $lastDay = date('Y-m-t', $ts);
 
             $ySumStmt = $pdo->prepare("
-                SELECT COALESCE(SUM(fresh_latex_kg), 0) as month_sum, COUNT(*) as round_count
+                SELECT COALESCE(SUM(fresh_latex_kg), 0) as month_sum, 
+                       COUNT(*) as round_count,
+                       COALESCE(MAX(tapping_round), 0) as month_max_round
                 FROM yield_logs
                 WHERE plot_id = ? AND harvest_date BETWEEN ? AND ?
             ");
@@ -106,6 +112,7 @@ if ($method === 'GET') {
             $yRow = $ySumStmt->fetch(PDO::FETCH_ASSOC);
             $currentMonthSum = (float)($yRow['month_sum'] ?? 0);
             $roundCount = (int)($yRow['round_count'] ?? 0);
+            $monthMaxRound = (int)($yRow['month_max_round'] ?? 0);
 
             // Biological thresholds:
             // Monthly max: 4.5 kg/tree/month (200 trees = 900 kg/month)
@@ -117,6 +124,7 @@ if ($method === 'GET') {
             $newMonthPerTree = $treeCount > 0 ? round($newMonthSum / $treeCount, 2) : 0;
             $currentMonthPerTree = $treeCount > 0 ? round($currentMonthSum / $treeCount, 2) : 0;
             $currentRoundPerTree = $treeCount > 0 ? round($fresh_kg / $treeCount, 2) : 0;
+            $capacityPct = $maxMonthlyCapacity > 0 ? round(($newMonthSum / $maxMonthlyCapacity) * 100, 1) : 0;
 
             $isDailyExceeded = ($fresh_kg > 0 && $fresh_kg > $maxDailyCapacity);
             $isMonthlyExceeded = ($newMonthSum > $maxMonthlyCapacity && $newMonthSum > 0);
@@ -163,11 +171,21 @@ if ($method === 'GET') {
             }
 
             $isAnomaly = ($isMonthlyExceeded || $isDailyExceeded || $isSurge);
+            $warningMessage = !empty($reasons) ? implode(' • ', $reasons) : '';
 
-            $rStmt = $pdo->prepare("SELECT COALESCE(MAX(tapping_round), 0) as max_round, COUNT(*) as round_count FROM yield_logs WHERE plot_id = ? AND harvest_date BETWEEN ? AND ?");
-            $rStmt->execute([$plot_id, $firstDay, $lastDay]);
-            $rData = $rStmt->fetch(PDO::FETCH_ASSOC);
-            $nextTappingRound = max((int)($rData['max_round'] ?? 0), (int)($rData['round_count'] ?? 0)) + 1;
+            $allTimeStmt = $pdo->prepare("
+                SELECT COALESCE(MAX(tapping_round), 0) as all_time_max,
+                       COUNT(*) as all_time_count
+                FROM yield_logs
+                WHERE plot_id = ?
+            ");
+            $allTimeStmt->execute([$plot_id]);
+            $allTimeRow = $allTimeStmt->fetch(PDO::FETCH_ASSOC);
+            $allTimeMax = (int)($allTimeRow['all_time_max'] ?? 0);
+            $allTimeCount = (int)($allTimeRow['all_time_count'] ?? 0);
+
+            $nextTappingRound = max($allTimeMax, $allTimeCount, $monthMaxRound, $roundCount) + 1;
+            if ($nextTappingRound < 1) $nextTappingRound = 1;
 
             echo json_encode([
                 'success' => true,
@@ -181,6 +199,10 @@ if ($method === 'GET') {
                 'max_daily_capacity' => $maxDailyCapacity,
                 'current_month_sum' => $currentMonthSum,
                 'new_month_sum' => $newMonthSum,
+                'projected_total' => $newMonthSum,
+                'remaining_quota' => max(0.0, $maxMonthlyCapacity - $newMonthSum),
+                'capacity_pct' => $capacityPct,
+                'warning_message' => $warningMessage,
                 'current_month_per_tree' => $currentMonthPerTree,
                 'new_month_per_tree' => $newMonthPerTree,
                 'overflow_month_kg' => $overflowMonthKg,
@@ -194,6 +216,7 @@ if ($method === 'GET') {
                 'is_anomaly' => $isAnomaly,
                 'risk_level' => $isAnomaly ? 'high_risk' : 'normal',
                 'reasons' => $reasons,
+                'round_count' => $roundCount,
                 'next_tapping_round' => $nextTappingRound
             ], JSON_UNESCAPED_UNICODE);
             exit;
@@ -202,6 +225,7 @@ if ($method === 'GET') {
         // 3. QR Scan Plot Lookup (Fast Single Query)
         if ($action === 'lookup_plot_by_token') {
             $token = trim($_GET['token'] ?? '');
+            $harvestDateParam = trim($_GET['harvest_date'] ?? date('Y-m-d'));
             if (empty($token)) {
                 echo json_encode(['success' => false, 'message' => 'Missing token']);
                 exit;
@@ -240,11 +264,16 @@ if ($method === 'GET') {
 
             $areaRai = max(0.5, (float)$plot['area_rai']);
             $treeCount = !empty($plot['tree_count']) ? (int)$plot['tree_count'] : (int)round($areaRai * 75);
-            $firstDay = date('Y-m-01');
-            $lastDay = date('Y-m-t');
+
+            $ts = strtotime($harvestDateParam);
+            if (!$ts) $ts = time();
+            $firstDay = date('Y-m-01', $ts);
+            $lastDay = date('Y-m-t', $ts);
 
             $ySumStmt = $pdo->prepare("
-                SELECT COALESCE(SUM(fresh_latex_kg), 0) as month_sum, COUNT(*) as round_count
+                SELECT COALESCE(SUM(fresh_latex_kg), 0) as month_sum, 
+                       COUNT(*) as round_count,
+                       COALESCE(MAX(tapping_round), 0) as month_max_round
                 FROM yield_logs
                 WHERE plot_id = ? AND harvest_date BETWEEN ? AND ?
             ");
@@ -252,14 +281,26 @@ if ($method === 'GET') {
             $yRow = $ySumStmt->fetch(PDO::FETCH_ASSOC);
             $currentMonthSum = (float)($yRow['month_sum'] ?? 0);
             $roundCount = (int)($yRow['round_count'] ?? 0);
+            $monthMaxRound = (int)($yRow['month_max_round'] ?? 0);
 
-            $rStmt = $pdo->prepare("SELECT COALESCE(MAX(tapping_round), 0) as max_round, COUNT(*) as round_count FROM yield_logs WHERE plot_id = ? AND harvest_date BETWEEN ? AND ?");
-            $rStmt->execute([$plot['id'], $firstDay, $lastDay]);
-            $rData = $rStmt->fetch(PDO::FETCH_ASSOC);
-            $nextTappingRound = max((int)($rData['max_round'] ?? 0), (int)($rData['round_count'] ?? 0)) + 1;
+            $allTimeStmt = $pdo->prepare("
+                SELECT COALESCE(MAX(tapping_round), 0) as all_time_max,
+                       COUNT(*) as all_time_count
+                FROM yield_logs
+                WHERE plot_id = ?
+            ");
+            $allTimeStmt->execute([$plot['id']]);
+            $allTimeRow = $allTimeStmt->fetch(PDO::FETCH_ASSOC);
+            $allTimeMax = (int)($allTimeRow['all_time_max'] ?? 0);
+            $allTimeCount = (int)($allTimeRow['all_time_count'] ?? 0);
+
+            $nextTappingRound = max($allTimeMax, $allTimeCount, $monthMaxRound, $roundCount) + 1;
+            if ($nextTappingRound < 1) $nextTappingRound = 1;
 
             $maxMonthlyCapacity = round($treeCount * 4.5, 2);
             $maxDailyCapacity = round($treeCount * 0.35, 2);
+            $remainingQuota = max(0.0, $maxMonthlyCapacity - $currentMonthSum);
+            $capacityPct = $maxMonthlyCapacity > 0 ? round(($currentMonthSum / $maxMonthlyCapacity) * 100, 1) : 0;
 
             echo json_encode([
                 'success' => true,
@@ -285,6 +326,20 @@ if ($method === 'GET') {
                     'round_count' => $roundCount,
                     'max_monthly_capacity' => $maxMonthlyCapacity,
                     'max_daily_capacity' => $maxDailyCapacity,
+                    'remaining_quota' => $remainingQuota,
+                    'capacity_pct' => $capacityPct,
+                    'next_tapping_round' => $nextTappingRound
+                ],
+                'stats' => [
+                    'area_rai' => $areaRai,
+                    'tree_count' => $treeCount,
+                    'current_month_sum' => $currentMonthSum,
+                    'projected_total' => $currentMonthSum,
+                    'max_monthly_capacity' => $maxMonthlyCapacity,
+                    'max_daily_capacity' => $maxDailyCapacity,
+                    'remaining_quota' => $remainingQuota,
+                    'capacity_pct' => $capacityPct,
+                    'round_count' => $roundCount,
                     'next_tapping_round' => $nextTappingRound
                 ]
             ], JSON_UNESCAPED_UNICODE);
@@ -294,35 +349,66 @@ if ($method === 'GET') {
         // 3.5. Search Plot for Factory Purchasing / Live Search
         if ($action === 'search_plot_for_purchasing') {
             $q = trim($_GET['q'] ?? '');
+            $harvestDateParam = trim($_GET['harvest_date'] ?? date('Y-m-d'));
             if ($q === '') {
-                echo json_encode(['success' => false, 'message' => 'กรุณาระบุรหัสแปลง หรือเลขบัตรประชาชน']);
+                echo json_encode(['success' => false, 'message' => 'กรุณาระบุรหัสแปลง, ชื่อแปลง, หรือเลขบัตรประชาชน']);
                 exit;
             }
-            $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-            $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
 
-            $cleanId = preg_replace('/[^0-9]/', '', $q);
+            $whereClauses = [];
+            $params = [];
+
+            $searchLike = "%{$q}%";
+            $params[':q'] = $searchLike;
+
+            $whereClauses[] = "p.plot_code LIKE :q";
+            $whereClauses[] = "p.traceability_token LIKE :q";
+            $whereClauses[] = "p.title_deed_no LIKE :q";
+            $whereClauses[] = "p.plot_name LIKE :q";
+            $whereClauses[] = "f.farmer_code LIKE :q";
+            $whereClauses[] = "f.first_name LIKE :q";
+            $whereClauses[] = "f.last_name LIKE :q";
+            $whereClauses[] = "CONCAT(COALESCE(f.prefix, ''), COALESCE(f.first_name, ''), ' ', COALESCE(f.last_name, '')) LIKE :q";
+            $whereClauses[] = "CONCAT(COALESCE(f.first_name, ''), ' ', COALESCE(f.last_name, '')) LIKE :q";
+            $whereClauses[] = "CONCAT(COALESCE(f.first_name, ''), COALESCE(f.last_name, '')) LIKE :q";
+            $whereClauses[] = "f.phone LIKE :q";
+
+            $cleanDigits = preg_replace('/[^0-9]/', '', $q);
+            if ($cleanDigits !== '') {
+                $params[':digits'] = "%{$cleanDigits}%";
+                $whereClauses[] = "REPLACE(REPLACE(f.id_card_num, '-', ''), ' ', '') LIKE :digits";
+                $whereClauses[] = "REPLACE(REPLACE(f.phone, '-', ''), ' ', '') LIKE :digits";
+            }
+
+            if (ctype_digit($q)) {
+                $params[':exact_id'] = (int)$q;
+                $whereClauses[] = "p.id = :exact_id";
+            }
 
             $sql = "
                 SELECT p.*, f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone,
                        f.subdistrict as f_subdistrict, f.district as f_district, f.province as f_province
                 FROM rubber_plots p
                 LEFT JOIN farmers f ON f.id = p.farmer_id
-                WHERE p.plot_code {$likeOp} ?
-                   OR p.traceability_token {$likeOp} ?
-                   OR p.title_deed_no {$likeOp} ?
-                   OR p.plot_name {$likeOp} ?
-                   OR f.id_card_num {$likeOp} ?
-                   OR f.farmer_code {$likeOp} ?
-                   OR f.phone {$likeOp} ?
-                   OR (f.first_name || ' ' || f.last_name) {$likeOp} ?
-                ORDER BY p.id DESC
+                WHERE " . implode(" OR ", $whereClauses) . "
+                ORDER BY 
+                  CASE 
+                    WHEN p.plot_code = :q_exact THEN 1
+                    WHEN p.plot_name = :q_exact THEN 2
+                    WHEN f.id_card_num = :q_exact THEN 3
+                    WHEN p.plot_code LIKE :q_start THEN 4
+                    WHEN p.plot_name LIKE :q_start THEN 5
+                    WHEN f.first_name LIKE :q_start THEN 6
+                    ELSE 7
+                  END,
+                  p.id DESC
                 LIMIT 1
             ";
-            $searchP = "%{$q}%";
-            $searchIdP = "%{$cleanId}%";
+            $params[':q_exact'] = $q;
+            $params[':q_start'] = "{$q}%";
+
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$searchP, $searchP, $searchP, $searchP, $searchIdP, $searchP, $searchP, $searchP]);
+            $stmt->execute($params);
             $plot = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$plot) {
                 echo json_encode(['success' => false, 'message' => "ไม่พบข้อมูลแปลงปลูกหรือเกษตรกรที่ค้นหา '{$q}'"]);
@@ -331,11 +417,16 @@ if ($method === 'GET') {
 
             $areaRai = max(0.5, (float)$plot['area_rai']);
             $treeCount = !empty($plot['tree_count']) ? (int)$plot['tree_count'] : (int)round($areaRai * 75);
-            $firstDay = date('Y-m-01');
-            $lastDay = date('Y-m-t');
+
+            $ts = strtotime($harvestDateParam);
+            if (!$ts) $ts = time();
+            $firstDay = date('Y-m-01', $ts);
+            $lastDay = date('Y-m-t', $ts);
 
             $ySumStmt = $pdo->prepare("
-                SELECT COALESCE(SUM(fresh_latex_kg), 0) as month_sum, COUNT(*) as round_count
+                SELECT COALESCE(SUM(fresh_latex_kg), 0) as month_sum, 
+                       COUNT(*) as round_count,
+                       COALESCE(MAX(tapping_round), 0) as month_max_round
                 FROM yield_logs
                 WHERE plot_id = ? AND harvest_date BETWEEN ? AND ?
             ");
@@ -343,13 +434,24 @@ if ($method === 'GET') {
             $yRow = $ySumStmt->fetch(PDO::FETCH_ASSOC);
             $currentMonthSum = (float)($yRow['month_sum'] ?? 0);
             $roundCount = (int)($yRow['round_count'] ?? 0);
+            $monthMaxRound = (int)($yRow['month_max_round'] ?? 0);
 
-            $rStmt = $pdo->prepare("SELECT COALESCE(MAX(tapping_round), 0) as max_round, COUNT(*) as round_count FROM yield_logs WHERE plot_id = ? AND harvest_date BETWEEN ? AND ?");
-            $rStmt->execute([$plot['id'], $firstDay, $lastDay]);
-            $rData = $rStmt->fetch(PDO::FETCH_ASSOC);
-            $nextTappingRound = max((int)($rData['max_round'] ?? 0), (int)($rData['round_count'] ?? 0)) + 1;
+            $allTimeStmt = $pdo->prepare("
+                SELECT COALESCE(MAX(tapping_round), 0) as all_time_max,
+                       COUNT(*) as all_time_count
+                FROM yield_logs
+                WHERE plot_id = ?
+            ");
+            $allTimeStmt->execute([$plot['id']]);
+            $allTimeRow = $allTimeStmt->fetch(PDO::FETCH_ASSOC);
+            $allTimeMax = (int)($allTimeRow['all_time_max'] ?? 0);
+            $allTimeCount = (int)($allTimeRow['all_time_count'] ?? 0);
+
+            $nextTappingRound = max($allTimeMax, $allTimeCount, $monthMaxRound, $roundCount) + 1;
+            if ($nextTappingRound < 1) $nextTappingRound = 1;
 
             $maxMonthlyCapacity = round($treeCount * 4.5, 2);
+            $maxDailyCapacity = round($treeCount * 0.35, 2);
             $remainingQuota = max(0.0, $maxMonthlyCapacity - $currentMonthSum);
             $capacityPct = $maxMonthlyCapacity > 0 ? round(($currentMonthSum / $maxMonthlyCapacity) * 100, 1) : 0;
 
@@ -360,7 +462,9 @@ if ($method === 'GET') {
                     'area_rai' => $areaRai,
                     'tree_count' => $treeCount,
                     'current_month_sum' => $currentMonthSum,
+                    'projected_total' => $currentMonthSum,
                     'max_monthly_capacity' => $maxMonthlyCapacity,
+                    'max_daily_capacity' => $maxDailyCapacity,
                     'remaining_quota' => $remainingQuota,
                     'capacity_pct' => $capacityPct,
                     'round_count' => $roundCount,
@@ -372,7 +476,7 @@ if ($method === 'GET') {
 
         // 4. Dropdown Plots Query
         if ($action === 'dropdown_plots') {
-            if (!$isUserAdmin) {
+            if (!$isUserAdmin && !$isFactory) {
                 $stmt = $pdo->prepare("
                     SELECT id, plot_code, plot_name, rubber_clone, area_rai, title_deed_no
                     FROM rubber_plots
@@ -699,8 +803,8 @@ if ($method === 'POST') {
             exit;
         }
 
-        // RBAC: Farmers can only record yields for their own plots
-        if (!$isUserAdmin && (int)$plot['farmer_id'] !== (int)$farmerId) {
+        // RBAC: Farmers can only record yields for their own plots (Admin and Factory can record for any plot)
+        if (!$isUserAdmin && !$isFactory && (int)$plot['farmer_id'] !== (int)$farmerId) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'ไม่อนุญาต: ท่านสามารถบันทึกผลผลิตได้เฉพาะแปลงของตนเองเท่านั้น'], JSON_UNESCAPED_UNICODE);
             exit;
