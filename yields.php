@@ -11,7 +11,7 @@ $pdo = getDatabaseConnection();
 
 $isUserAdmin = isAdmin();
 $isFactory = in_array($current_role, ['factory', 'buyer', 'trader'], true) || (isset($_GET['mode']) && $_GET['mode'] === 'factory');
-$isFarmer = ($current_role === 'farmer') || (!$isUserAdmin && !$isFactory);
+$isFarmer = !$isUserAdmin && !$isFactory;
 $factoryCompanyName = 'บริษัท ไทยเจริญเลเท็กซ์ อินดัสทรี จำกัด';
 if (!empty($user_name) && $user_name !== 'ผู้ใช้งานระบบ' && !str_contains($user_name, 'เกษตรกร') && !str_contains($user_name, 'Admin')) {
     $factoryCompanyName = $user_name;
@@ -2203,6 +2203,7 @@ try {
       const priceVal = parseFloat(document.getElementById('factory-price-kg').value) || 72.0;
 
       const payload = {
+        mode: 'factory',
         plot_id: plotId,
         harvest_date: document.getElementById('factory-harvest-date').value,
         fresh_latex_kg: freshKgVal,
@@ -2213,7 +2214,7 @@ try {
       };
 
       try {
-        const res = await fetch('api/yields.php', {
+        const res = await fetch('api/yields.php?mode=factory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -2250,11 +2251,14 @@ try {
             freshInput.focus();
           }
 
-          // Non-blocking background sync
-          setTimeout(() => {
-            searchPlotPurchasing(null, true);
-            loadYields(true);
-          }, 150);
+          // Synchronous refresh of meter & table history
+          const activePlotQuery = (currentFactoryPlot && currentFactoryPlot.plot) 
+            ? (currentFactoryPlot.plot.plot_code || currentFactoryPlot.plot.id) 
+            : (document.getElementById('factory-search-query')?.value || '');
+          if (activePlotQuery) {
+            await searchPlotPurchasing(activePlotQuery, true);
+          }
+          await loadYields(true);
         } else {
           if (window.App && typeof window.App.showToast === 'function') {
             App.showToast(data.message || 'ไม่สามารถบันทึกได้', 'error');
@@ -3035,10 +3039,7 @@ try {
           document.getElementById('plot-dynamic-card').classList.add('hidden');
           document.getElementById('calc-revenue-display').textContent = '฿0.00';
 
-          // Non-blocking background sync
-          setTimeout(() => {
-            loadYields(true);
-          }, 150);
+          await loadYields(true);
         } else {
           if (window.App && typeof window.App.showToast === 'function') {
             App.showToast(data.message || 'บันทึกไม่สำเร็จ', 'error');
@@ -3101,13 +3102,6 @@ try {
     // Initialize on DOM Ready
     document.addEventListener('DOMContentLoaded', () => {
       loadYields();
-      if (window.IS_FACTORY && Array.isArray(PLOTS_DATA) && PLOTS_DATA.length > 0) {
-        const firstPlot = PLOTS_DATA[0];
-        const pVal = firstPlot.plot_code || firstPlot.id;
-        const queryInput = document.getElementById('factory-search-query');
-        if (queryInput) queryInput.value = pVal;
-        searchPlotPurchasing(pVal, true);
-      }
     });
   </script>
 </body>

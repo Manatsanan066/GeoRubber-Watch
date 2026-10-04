@@ -11,10 +11,15 @@ initDatabaseIfNeeded();
 
 $pdo = getDatabaseConnection();
 $method = $_SERVER['REQUEST_METHOD'];
+$rawInput = file_get_contents('php://input');
+$requestData = !empty($rawInput) ? json_decode($rawInput, true) : [];
 $currentUser = getCurrentUser();
 $currentRole = $currentUser['role'] ?? 'farmer';
 $isUserAdmin = isAdmin();
-$isFactory = in_array($currentRole, ['factory', 'buyer', 'trader', 'admin', 'coop'], true) || (isset($_GET['mode']) && $_GET['mode'] === 'factory') || (isset($_POST['mode']) && $_POST['mode'] === 'factory');
+$isFactory = in_array($currentRole, ['factory', 'buyer', 'trader', 'admin', 'coop'], true) 
+    || (isset($_GET['mode']) && $_GET['mode'] === 'factory') 
+    || (isset($_POST['mode']) && $_POST['mode'] === 'factory')
+    || (isset($requestData['mode']) && $requestData['mode'] === 'factory');
 $farmerId = $currentUser['farmer_id'] ?? null;
 
 if (!$isUserAdmin && !$farmerId && isset($_SESSION['user_id'])) {
@@ -749,8 +754,7 @@ if ($method === 'GET') {
 // -----------------------------------------------------------------------------
 if ($method === 'POST') {
     try {
-        $data = json_decode(file_get_contents('php://input'), true);
-        if (!$data) $data = $_POST;
+        $data = !empty($requestData) ? $requestData : (json_decode(file_get_contents('php://input'), true) ?: $_POST);
         $action = $_GET['action'] ?? ($data['action'] ?? '');
         $overrideMethod = strtoupper($data['_method'] ?? ($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] ?? ''));
 
