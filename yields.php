@@ -627,20 +627,24 @@ try {
             <div id="factory-capacity-bar" class="h-full rounded-full bg-emerald-500 transition-all duration-500" style="width: 0%;"></div>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs pt-1">
-            <div class="p-2 bg-gray-50 rounded-xl border border-gray-200">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-center text-xs pt-1">
+            <div class="p-2.5 bg-gray-50 rounded-xl border border-gray-200">
               <span class="text-gray-400 block text-[10px]">ผลผลิตสะสมเดือนนี้</span>
               <b id="factory-month-sum" class="text-gray-800 text-sm font-mono font-bold">0.0 กก.</b>
             </div>
-            <div class="p-2 bg-gray-50 rounded-xl border border-gray-200">
-              <span class="text-gray-400 block text-[10px]">ขีดจำกัดสูงสุด (Cap)</span>
-              <b id="factory-month-limit" class="text-mezenc-teal text-sm font-mono font-bold">0.0 กก.</b>
+            <div class="p-2.5 bg-gray-50 rounded-xl border border-gray-200">
+              <span class="text-gray-400 block text-[10px]">เพดานต่อวัน (Daily Cap)</span>
+              <b id="factory-daily-limit" class="text-amber-700 text-sm font-mono font-bold">0.0 กก./วัน</b>
             </div>
-            <div class="p-2 bg-gray-50 rounded-xl border border-gray-200">
+            <div class="p-2.5 bg-gray-50 rounded-xl border border-gray-200">
+              <span class="text-gray-400 block text-[10px]">เพดานต่อเดือน (Monthly Cap)</span>
+              <b id="factory-month-limit" class="text-mezenc-teal text-sm font-mono font-bold">0.0 กก./เดือน</b>
+            </div>
+            <div class="p-2.5 bg-gray-50 rounded-xl border border-gray-200">
               <span class="text-gray-400 block text-[10px]">สิทธิ์ที่ส่งมอบได้อีก</span>
               <b id="factory-month-remaining" class="text-emerald-700 text-sm font-mono font-bold">0.0 กก.</b>
             </div>
-            <div class="p-2 bg-gray-50 rounded-xl border border-gray-200">
+            <div class="p-2.5 bg-gray-50 rounded-xl border border-gray-200 col-span-2 sm:col-span-1">
               <span class="text-gray-400 block text-[10px]">รอบรับซื้อ (อัตโนมัติ)</span>
               <b id="factory-round-count" class="text-mezenc-teal text-sm font-mono font-bold">รอบที่ 1</b>
             </div>
@@ -1913,13 +1917,16 @@ try {
 
         // Update Biological Capacity Meter
         const roundToDisplay = (stats && stats.next_tapping_round) ? stats.next_tapping_round : ((stats && stats.round_count ? stats.round_count : 0) + 1);
-        updateFactoryCapacityUI(
-          stats ? stats.current_month_sum : 0, 
-          stats ? stats.max_monthly_capacity : 0, 
-          stats ? stats.remaining_quota : 0, 
-          stats ? stats.capacity_pct : 0, 
-          roundToDisplay
-        );
+        updateFactoryCapacityUI({
+          monthSum: stats ? stats.current_month_sum : 0,
+          monthlyLimit: stats ? stats.max_monthly_capacity : 0,
+          dailyLimit: stats ? stats.max_daily_capacity : 0,
+          remaining: stats ? stats.remaining_quota : 0,
+          pct: stats ? stats.capacity_pct : 0,
+          roundCount: roundToDisplay,
+          freshKg: 0,
+          isAnomaly: false
+        });
 
         document.getElementById('factory-result-box').classList.remove('hidden');
 
@@ -1957,41 +1964,136 @@ try {
       }
     }
 
-    function updateFactoryCapacityUI(monthSum, limit, remaining, pct, roundCount) {
-      const numMonthSum = parseFloat(monthSum) || 0;
-      const numLimit = parseFloat(limit) || 0;
-      const numRemaining = parseFloat(remaining) || 0;
-      const numPct = parseFloat(pct) || 0;
-      const numRound = parseInt(roundCount) || 1;
+    function updateFactoryCapacityUI(params) {
+      let monthSum = 0, monthlyLimit = 0, dailyLimit = 0, remaining = 0, pct = 0, roundCount = 1;
+      let isDailyExceeded = false, isMonthlyExceeded = false, isAnomaly = false, anomalyReason = '';
+      let freshKg = 0;
 
-      document.getElementById('factory-month-sum').textContent = `${numMonthSum.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
-      document.getElementById('factory-month-limit').textContent = `${numLimit.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
-      document.getElementById('factory-month-remaining').textContent = `${numRemaining.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
-      document.getElementById('factory-round-count').textContent = `รอบที่ ${numRound}`;
+      if (typeof params === 'object' && params !== null) {
+        monthSum = parseFloat(params.monthSum ?? params.current_month_sum ?? params.projected_total) || 0;
+        monthlyLimit = parseFloat(params.monthlyLimit ?? params.max_monthly_capacity) || 0;
+        dailyLimit = parseFloat(params.dailyLimit ?? params.max_daily_capacity) || 0;
+        remaining = parseFloat(params.remaining ?? params.remaining_quota) || 0;
+        pct = parseFloat(params.pct ?? params.capacity_pct) || 0;
+        roundCount = parseInt(params.roundCount ?? params.next_tapping_round ?? params.round_count) || 1;
+        isDailyExceeded = Boolean(params.isDailyExceeded ?? params.is_daily_exceeded);
+        isMonthlyExceeded = Boolean(params.isMonthlyExceeded ?? params.is_monthly_exceeded);
+        isAnomaly = Boolean(params.isAnomaly ?? params.is_anomaly ?? (isDailyExceeded || isMonthlyExceeded));
+        anomalyReason = params.anomalyReason ?? params.warning_message ?? '';
+        freshKg = parseFloat(params.freshKg ?? params.fresh_kg) || 0;
+      } else {
+        monthSum = parseFloat(arguments[0]) || 0;
+        monthlyLimit = parseFloat(arguments[1]) || 0;
+        remaining = parseFloat(arguments[2]) || 0;
+        pct = parseFloat(arguments[3]) || 0;
+        roundCount = parseInt(arguments[4]) || 1;
+        dailyLimit = parseFloat(arguments[5]) || (currentFactoryPlot && currentFactoryPlot.stats ? currentFactoryPlot.stats.max_daily_capacity : 0);
+      }
 
+      // Check daily limit exceed if freshKg is given
+      if (freshKg > 0 && dailyLimit > 0 && freshKg > dailyLimit) {
+        isDailyExceeded = true;
+        isAnomaly = true;
+      }
+      if (monthlyLimit > 0 && monthSum > monthlyLimit && monthSum > 0) {
+        isMonthlyExceeded = true;
+        isAnomaly = true;
+      }
+
+      // Update text in stat boxes
+      const elMonthSum = document.getElementById('factory-month-sum');
+      if (elMonthSum) elMonthSum.textContent = `${monthSum.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
+
+      const elDailyLimit = document.getElementById('factory-daily-limit');
+      if (elDailyLimit) elDailyLimit.textContent = `${dailyLimit.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก./วัน`;
+
+      const elMonthLimit = document.getElementById('factory-month-limit');
+      if (elMonthLimit) elMonthLimit.textContent = `${monthlyLimit.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก./เดือน`;
+
+      const elRemaining = document.getElementById('factory-month-remaining');
+      if (elRemaining) elRemaining.textContent = `${Math.max(0, remaining).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} กก.`;
+
+      const elRound = document.getElementById('factory-round-count');
+      if (elRound) elRound.textContent = `รอบที่ ${roundCount}`;
+
+      // Update progress bar & badge
       const bar = document.getElementById('factory-capacity-bar');
       const badge = document.getElementById('factory-capacity-badge');
-      const displayPct = Math.min(100, Math.max(0, numPct));
-      if (bar) bar.style.width = `${displayPct}%`;
+      const freshInput = document.getElementById('factory-fresh-kg');
 
-      if (badge && bar) {
-        if (numPct > 100) {
-          bar.className = 'h-full rounded-full bg-rose-600 transition-all duration-500';
-          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse flex items-center gap-1';
-          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> เกินเกณฑ์ (${numPct.toFixed(1)}%)`;
-        } else if (numPct > 75) {
+      if (isDailyExceeded) {
+        if (bar) {
+          bar.className = 'h-full rounded-full bg-rose-600 transition-all duration-500 shadow-sm';
+          bar.style.width = '100%';
+        }
+        if (badge) {
+          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse flex items-center gap-1 shadow-2xs';
+          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> เกินเกณฑ์ต่อวัน (${freshKg}/${dailyLimit} กก.)`;
+        }
+        if (freshInput) {
+          freshInput.classList.add('border-rose-500', 'bg-rose-50/40', 'text-rose-900');
+        }
+      } else if (isMonthlyExceeded || pct > 100) {
+        if (bar) {
+          bar.className = 'h-full rounded-full bg-rose-600 transition-all duration-500 shadow-sm';
+          bar.style.width = '100%';
+        }
+        if (badge) {
+          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse flex items-center gap-1 shadow-2xs';
+          badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> เกินเกณฑ์เดือนนี้ (${pct.toFixed(1)}%)`;
+        }
+        if (freshInput) {
+          freshInput.classList.add('border-rose-500', 'bg-rose-50/40', 'text-rose-900');
+        }
+      } else if (pct > 75) {
+        if (bar) {
           bar.className = 'h-full rounded-full bg-amber-500 transition-all duration-500';
-          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300';
-          badge.textContent = `เฝ้าระวัง (${numPct.toFixed(1)}%)`;
-        } else {
+          bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+        }
+        if (badge) {
+          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs';
+          badge.textContent = `เฝ้าระวัง (${pct.toFixed(1)}%)`;
+        }
+        if (freshInput) {
+          freshInput.classList.remove('border-rose-500', 'bg-rose-50/40', 'text-rose-900');
+        }
+      } else {
+        if (bar) {
           bar.className = 'h-full rounded-full bg-emerald-500 transition-all duration-500';
-          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
-          badge.textContent = `ปกติ (${numPct.toFixed(1)}%)`;
+          bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+        }
+        if (badge) {
+          badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs';
+          badge.textContent = `ปกติ (${pct.toFixed(1)}%)`;
+        }
+        if (freshInput) {
+          freshInput.classList.remove('border-rose-500', 'bg-rose-50/40', 'text-rose-900');
+        }
+      }
+
+      // Update Anomaly alert banner
+      const alertBox = document.getElementById('factory-anomaly-alert');
+      const alertText = document.getElementById('factory-anomaly-text');
+      if (alertBox && alertText) {
+        if (isAnomaly) {
+          alertBox.classList.remove('hidden');
+          if (anomalyReason) {
+            alertText.textContent = anomalyReason;
+          } else if (isDailyExceeded) {
+            const treeC = (currentFactoryPlot && currentFactoryPlot.stats) ? currentFactoryPlot.stats.tree_count : '-';
+            const overKg = (freshKg - dailyLimit).toFixed(1);
+            alertText.textContent = `ผลผลิตรอบนี้ (${freshKg} กก.) เกินเกณฑ์ชีวภาพสูงสุดที่ต้นยาง ${treeC} ต้นจะผลิตได้ต่อวัน (เพดานปกติไม่เกิน ${dailyLimit} กก./วัน หรือ 0.35 กก./ต้น/วัน) โดยเกินไป +${overKg} กก. เสี่ยงต่อการสวมสิทธิ์`;
+          } else if (isMonthlyExceeded) {
+            alertText.textContent = `ผลผลิตสะสมรวมยอดนี้ (${monthSum} กก.) เกินเพดานชีวภาพประจำเดือน (${monthlyLimit} กก./เดือน) เสี่ยงต่อการนำยางนอกแปลงมาสวมสิทธิ์`;
+          }
+        } else {
+          alertBox.classList.add('hidden');
         }
       }
     }
 
     // Factory Real-time Calculations and Quota Check
+    let quotaCheckTimer = null;
     let currentFactoryAnomalyData = null;
     let windowYieldsList = [];
     let currentInspectingAnomaly = null;
@@ -2009,6 +2111,33 @@ try {
 
       if (!currentFactoryPlot || !currentFactoryPlot.plot) return;
 
+      const stats = currentFactoryPlot.stats || {};
+      const currentSum = parseFloat(stats.current_month_sum || 0);
+      const monthlyLimit = parseFloat(stats.max_monthly_capacity || 0);
+      const dailyLimit = parseFloat(stats.max_daily_capacity || 0);
+      const roundCount = stats.next_tapping_round || ((stats.round_count || 0) + 1);
+
+      const projTotal = (freshKg > 0) ? (currentSum + freshKg) : currentSum;
+      const capPct = monthlyLimit > 0 ? ((projTotal / monthlyLimit) * 100) : 0;
+      const remaining = Math.max(0, monthlyLimit - projTotal);
+      const isDailyExceeded = (freshKg > 0 && dailyLimit > 0 && freshKg > dailyLimit);
+      const isMonthlyExceeded = (monthlyLimit > 0 && projTotal > monthlyLimit && projTotal > 0);
+
+      // Instant 0ms Preview update
+      updateFactoryCapacityUI({
+        monthSum: projTotal,
+        monthlyLimit: monthlyLimit,
+        dailyLimit: dailyLimit,
+        remaining: remaining,
+        pct: capPct,
+        roundCount: roundCount,
+        freshKg: freshKg,
+        isDailyExceeded: isDailyExceeded,
+        isMonthlyExceeded: isMonthlyExceeded,
+        isAnomaly: (isDailyExceeded || isMonthlyExceeded)
+      });
+
+      // Async verification with backend for surge anomaly
       clearTimeout(quotaCheckTimer);
       quotaCheckTimer = setTimeout(async () => {
         const plotId = currentFactoryPlot.plot.id;
@@ -2018,29 +2147,19 @@ try {
           const qData = await res.json();
           if (qData.success) {
             currentFactoryAnomalyData = qData;
-            const currentSum = parseFloat(qData.current_month_sum || (currentFactoryPlot.stats ? currentFactoryPlot.stats.current_month_sum : 0)) || 0;
-            const projTotal = (freshKg > 0) ? (currentSum + freshKg) : currentSum;
-            const maxCap = parseFloat(qData.max_monthly_capacity || (currentFactoryPlot.stats ? currentFactoryPlot.stats.max_monthly_capacity : 0)) || 1;
-            const capPct = maxCap > 0 ? ((projTotal / maxCap) * 100) : 0;
-            const remaining = Math.max(0, maxCap - projTotal);
-            const nextRound = qData.next_tapping_round || (currentFactoryPlot.stats ? (currentFactoryPlot.stats.next_tapping_round || (currentFactoryPlot.stats.round_count + 1)) : 1);
-
-            updateFactoryCapacityUI(
-              projTotal, 
-              maxCap, 
-              remaining, 
-              capPct, 
-              nextRound
-            );
-
-            const alertBox = document.getElementById('factory-anomaly-alert');
-            const alertText = document.getElementById('factory-anomaly-text');
-            if (qData.is_anomaly) {
-              alertBox.classList.remove('hidden');
-              alertText.textContent = qData.warning_message || (qData.reasons && qData.reasons.length ? qData.reasons.join(' • ') : 'ผลผลิตต่อวันเกินเกณฑ์ชีวภาพสูงสุดที่ควรเป็นไปได้ หรือมีอัตราเพิ่มขึ้นก้าวกระโดดผิดธรรมชาติ');
-            } else {
-              alertBox.classList.add('hidden');
-            }
+            updateFactoryCapacityUI({
+              monthSum: qData.projected_total,
+              monthlyLimit: qData.max_monthly_capacity,
+              dailyLimit: qData.max_daily_capacity,
+              remaining: qData.remaining_quota,
+              pct: qData.capacity_pct,
+              roundCount: qData.next_tapping_round,
+              freshKg: freshKg,
+              isDailyExceeded: qData.is_daily_exceeded,
+              isMonthlyExceeded: qData.is_monthly_exceeded,
+              isAnomaly: qData.is_anomaly,
+              anomalyReason: qData.warning_message
+            });
           }
         } catch (e) {
           console.warn('Quota live check error:', e);
