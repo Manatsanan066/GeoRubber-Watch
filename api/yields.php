@@ -569,8 +569,10 @@ if ($method === 'GET') {
 
         // RBAC: Farmers only view their own yield history, Admin & Factory can view all
         if (!$isUserAdmin && !$isFactory) {
-            $where[] = "(y.farmer_id = :farmer_id OR p.farmer_id = :farmer_id)";
-            $params[':farmer_id'] = $farmerId ?: -1;
+            if ($farmerId > 0) {
+                $where[] = "(y.farmer_id = :farmer_id OR p.farmer_id = :farmer_id)";
+                $params[':farmer_id'] = $farmerId;
+            }
         } else {
             $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
             $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
@@ -614,7 +616,7 @@ if ($method === 'GET') {
                        f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone as farmer_phone
                 FROM yield_logs y
                 LEFT JOIN rubber_plots p ON p.id = y.plot_id
-                LEFT JOIN farmers f ON f.id = y.farmer_id
+                LEFT JOIN farmers f ON f.id = COALESCE(y.farmer_id, p.farmer_id)
                 {$whereClause}
             )
             SELECT * FROM ranked_logs
@@ -724,7 +726,7 @@ if ($method === 'GET') {
                    COALESCE(AVG(price_per_kg), 0) as avg_price
             FROM yield_logs y
             LEFT JOIN rubber_plots p ON p.id = y.plot_id
-            LEFT JOIN farmers f ON f.id = y.farmer_id
+            LEFT JOIN farmers f ON f.id = COALESCE(y.farmer_id, p.farmer_id)
             {$whereClause}
         ";
         $sumStmt = $pdo->prepare($sumSql);
@@ -820,11 +822,16 @@ if ($method === 'POST') {
         }
 
         $plot_id = (int)($data['plot_id'] ?? 0);
-        $harvest_date = $data['harvest_date'] ?? date('Y-m-d');
+        $harvest_date = !empty($data['harvest_date']) ? trim($data['harvest_date']) : date('Y-m-d');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $harvest_date)) {
+            $harvest_date = date('Y-m-d');
+        }
         $tapping_round = (int)($data['tapping_round'] ?? 0);
         $fresh_latex_kg = (float)($data['fresh_latex_kg'] ?? 0);
         $drc_percent = (float)($data['drc_percent'] ?? 33.5);
+        if ($drc_percent <= 0) $drc_percent = 33.5;
         $price_per_kg = (float)($data['price_per_kg'] ?? 65.0);
+        if ($price_per_kg <= 0) $price_per_kg = 72.0;
         $buyer_name = trim($data['buyer_name'] ?? 'จุดรับซื้อน้ำยางสดประจำตำบล');
         $notes = trim($data['notes'] ?? '');
 
@@ -862,13 +869,13 @@ if ($method === 'POST') {
         }
 
         // RBAC: Farmers can only record yields for their own plots (Admin and Factory can record for any plot)
-        if (!$isUserAdmin && !$isFactory && (int)$plot['farmer_id'] !== (int)$farmerId) {
+        if (!$isUserAdmin && !$isFactory && $farmerId > 0 && !empty($plot['farmer_id']) && (int)$plot['farmer_id'] !== (int)$farmerId) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'ไม่อนุญาต: ท่านสามารถบันทึกผลผลิตได้เฉพาะแปลงของตนเองเท่านั้น'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
-        $target_farmer_id = (int)$plot['farmer_id'];
+        $target_farmer_id = !empty($plot['farmer_id']) ? (int)$plot['farmer_id'] : ($farmerId ?: 1);
         
         // Auto Calculate Total Revenue (Fresh Latex kg * Price per kg)
         $total_revenue = round($fresh_latex_kg * $price_per_kg, 2);

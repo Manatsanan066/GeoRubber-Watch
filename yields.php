@@ -2788,6 +2788,7 @@ try {
         const deedText = y.title_deed_no ? `${y.title_deed_type || 'โฉนดที่ดิน'} เลขที่ ${y.title_deed_no}` : '-';
         const tokenStr = y.traceability_token || ('EUDR-TX-' + y.id);
         const batchStr = y.batch_code || '-';
+        const farmerDisplayName = y.farmer_name || `${y.prefix || ''}${y.first_name || ''} ${y.last_name || ''}`.trim() || 'เกษตรกร';
 
         if (window.IS_FARMER) {
           // 7 DEDICATED COLUMNS FOR FARMER (READ-ONLY VIEW)
@@ -2858,7 +2859,7 @@ try {
                 </span>
               </td>
               <td class="py-4 px-4 text-gray-800 font-medium">
-                <div class="font-bold">${y.prefix || ''}${y.first_name} ${y.last_name}</div>
+                <div class="font-bold">${farmerDisplayName}</div>
                 <div class="text-[10.5px] text-mezenc-teal font-mono">ปชช: ${idCardFormatted}</div>
                 <span class="text-[10px] text-gray-400 font-mono">${y.farmer_code || ''}</span>
               </td>
@@ -3008,9 +3009,10 @@ try {
         buyer_name: document.getElementById('yield-buyer').value,
         notes: document.getElementById('yield-notes').value
       };
+      if (window.IS_FACTORY) payload.mode = 'factory';
 
       try {
-        const res = await fetch('api/yields.php', {
+        const res = await fetch('api/yields.php' + (window.IS_FACTORY ? '?mode=factory' : ''), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
