@@ -508,27 +508,24 @@ if ($method === 'GET') {
         $where = [];
         $params = [];
 
-        // RBAC: Farmers only view their own yield history
-        if (!$isUserAdmin) {
+        // RBAC: Farmers only view their own yield history, Admin & Factory can view all
+        if (!$isUserAdmin && !$isFactory) {
             $where[] = "(y.farmer_id = :farmer_id OR p.farmer_id = :farmer_id)";
             $params[':farmer_id'] = $farmerId ?: -1;
         } else {
-            // Admin Search & Filter Options
+            $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+            $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
+            // Admin / Factory Search & Filter Options
             if (!empty($_GET['search_name'])) {
-                $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-                $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
-                $where[] = "(f.first_name {$likeOp} :s_name OR f.last_name {$likeOp} :s_name OR (f.first_name || ' ' || f.last_name) {$likeOp} :s_name OR f.farmer_code {$likeOp} :s_name OR f.id_card_num {$likeOp} :s_name)";
+                $concatExpr = ($driver === 'sqlite' || $driver === 'pgsql') ? "(f.first_name || ' ' || f.last_name)" : "CONCAT(f.first_name, ' ', f.last_name)";
+                $where[] = "(f.first_name {$likeOp} :s_name OR f.last_name {$likeOp} :s_name OR {$concatExpr} {$likeOp} :s_name OR f.farmer_code {$likeOp} :s_name OR f.id_card_num {$likeOp} :s_name)";
                 $params[':s_name'] = '%' . trim($_GET['search_name']) . '%';
             }
             if (!empty($_GET['search_plot_code'])) {
-                $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-                $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
                 $where[] = "(p.plot_code {$likeOp} :s_code OR p.plot_name {$likeOp} :s_code OR p.traceability_token {$likeOp} :s_code)";
                 $params[':s_code'] = '%' . trim($_GET['search_plot_code']) . '%';
             }
             if (!empty($_GET['search_title_deed'])) {
-                $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-                $likeOp = ($driver === 'pgsql') ? 'ILIKE' : 'LIKE';
                 $where[] = "p.title_deed_no {$likeOp} :s_deed";
                 $params[':s_deed'] = '%' . trim($_GET['search_title_deed']) . '%';
             }
@@ -543,13 +540,16 @@ if ($method === 'GET') {
             $params[':p_id'] = (int)$plot_id;
         }
 
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $dateMonthExpr = ($driver === 'pgsql') ? "SUBSTRING(CAST(y.harvest_date AS VARCHAR(10)), 1, 7)" : "SUBSTR(y.harvest_date, 1, 7)";
+
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
         $sql = "
             WITH ranked_logs AS (
                 SELECT y.*, 
                        LAG(y.fresh_latex_kg) OVER (PARTITION BY y.plot_id ORDER BY y.harvest_date ASC, y.id ASC) AS prev_fresh_kg,
                        LAG(y.harvest_date) OVER (PARTITION BY y.plot_id ORDER BY y.harvest_date ASC, y.id ASC) AS prev_harvest_date,
-                       SUM(y.fresh_latex_kg) OVER (PARTITION BY y.plot_id, SUBSTR(CAST(y.harvest_date AS TEXT), 1, 7) ORDER BY y.harvest_date ASC, y.id ASC) AS cumulative_month_kg,
+                       SUM(y.fresh_latex_kg) OVER (PARTITION BY y.plot_id, {$dateMonthExpr} ORDER BY y.harvest_date ASC, y.id ASC) AS cumulative_month_kg,
                        p.plot_code, p.plot_name, p.rubber_clone, p.tree_count, p.title_deed_no, p.title_deed_type, p.area_rai,
                        p.traceability_token as plot_token,
                        f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone as farmer_phone
