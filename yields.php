@@ -58,6 +58,7 @@ $initialYields = [];
 try {
     $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
     $dateMonthExpr = ($driver === 'pgsql') ? "SUBSTRING(CAST(y.harvest_date AS VARCHAR(10)), 1, 7)" : "SUBSTR(y.harvest_date, 1, 7)";
+    $orderExpr = ($driver === 'pgsql') ? "ORDER BY created_at DESC NULLS LAST, id DESC" : "ORDER BY created_at DESC, id DESC";
     $sqlLogs = "
         WITH ranked_logs AS (
             SELECT y.*, 
@@ -72,18 +73,19 @@ try {
             LEFT JOIN farmers f ON f.id = COALESCE(y.farmer_id, p.farmer_id)
         )
         SELECT * FROM ranked_logs
-        ORDER BY harvest_date DESC, id DESC
+        {$orderExpr}
     ";
     $initialYields = $pdo->query($sqlLogs)->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     try {
+        $orderExpr = ($driver === 'pgsql') ? "ORDER BY y.created_at DESC NULLS LAST, y.id DESC" : "ORDER BY y.created_at DESC, y.id DESC";
         $initialYields = $pdo->query("
             SELECT y.*, p.plot_code, p.plot_name, p.rubber_clone, p.tree_count, p.title_deed_no, p.title_deed_type, p.area_rai,
                    f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone as farmer_phone
             FROM yield_logs y
             LEFT JOIN rubber_plots p ON p.id = y.plot_id
             LEFT JOIN farmers f ON f.id = COALESCE(y.farmer_id, p.farmer_id)
-            ORDER BY y.harvest_date DESC, y.id DESC
+            {$orderExpr}
         ")->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $ex) {
         $initialYields = [];
@@ -895,7 +897,7 @@ unset($logItem);
             <select 
               id="filter-yield-plot" 
               class="bg-[#f8faf9] text-gray-800 font-semibold text-xs sm:text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:border-mezenc-brightCyan focus:bg-white outline-none shadow-xs w-48 sm:w-64 cursor-pointer" 
-              onchange="loadYields()"
+              onchange="loadYields(false, true)"
             >
               <option value="">-- ทุกแปลงปลูก (ทั้งหมด <?= count($plots) ?> แปลง) --</option>
               <?php foreach ($plots as $p): ?>
@@ -1033,14 +1035,20 @@ unset($logItem);
             <?php endif; ?>
           </thead>
           <tbody id="yields-table-body" class="divide-y divide-gray-100 text-gray-700">
+            <?php 
+              $totalInitial = count($initialYields);
+              $initialPageSize = 20;
+              $initialPageList = array_slice($initialYields, 0, $initialPageSize);
+              $initialTotalPages = max(1, (int)ceil($totalInitial / $initialPageSize));
+            ?>
             <?php if (empty($initialYields)): ?>
               <tr>
-                <td colspan="11" class="text-center py-12 text-gray-400 text-xs">
+                <td colspan="<?= $isFarmer ? 7 : 11 ?>" class="text-center py-12 text-gray-400 text-xs">
                   ยังไม่มีข้อมูลผลผลิตในระบบ
                 </td>
               </tr>
             <?php else: ?>
-              <?php foreach ($initialYields as $idx => $y): ?>
+              <?php foreach ($initialPageList as $idx => $y): ?>
                 <?php
                   $idCardFormatted = '-';
                   if (!empty($y['id_card_num'])) {
@@ -1057,90 +1065,229 @@ unset($logItem);
                   $deedText = !empty($y['title_deed_no']) ? (($y['title_deed_type'] ?: 'โฉนดที่ดิน') . ' เลขที่ ' . $y['title_deed_no']) : '-';
                   $farmerDisplayName = trim(($y['prefix'] ?? '') . ($y['first_name'] ?? '') . ' ' . ($y['last_name'] ?? '')) ?: 'เกษตรกร';
                 ?>
-                <tr class="hover:bg-[#f4faf7] transition-colors <?= $isSuspended ? 'bg-rose-50/50' : ($isAnomaly ? 'bg-amber-50/40' : '') ?>">
-                  <td class="py-4 px-4 font-bold text-gray-800 whitespace-nowrap"><?= htmlspecialchars($y['harvest_date']) ?></td>
-                  <td class="py-4 px-4">
-                    <span class="font-bold text-mezenc-teal"><?= htmlspecialchars($y['plot_name'] ?: '-') ?></span> 
-                    <span class="text-[11px] text-gray-400 font-mono block">(<?= htmlspecialchars($y['plot_code'] ?: '-') ?>) • <?= htmlspecialchars($deedText) ?></span>
-                  </td>
-                  <td class="py-4 px-4 whitespace-nowrap">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f8faf9] text-gray-700 border border-gray-200">
-                      <?= htmlspecialchars($y['rubber_clone'] ?: 'RRIM 600') ?>
-                    </span>
-                  </td>
-                  <td class="py-4 px-4 text-gray-800 font-medium">
-                    <div class="font-bold"><?= htmlspecialchars($farmerDisplayName) ?></div>
-                    <div class="text-[10.5px] text-mezenc-teal font-mono">ปชช: <?= htmlspecialchars($idCardFormatted) ?></div>
-                    <span class="text-[10px] text-gray-400 font-mono"><?= htmlspecialchars($y['farmer_code'] ?: '') ?></span>
-                  </td>
-                  <td class="py-4 px-4 text-right font-extrabold text-mezenc-teal whitespace-nowrap text-sm sm:text-base">
-                    <?= number_format((float)$y['fresh_latex_kg'], 1) ?>
-                  </td>
-                  <td class="py-4 px-4 text-center whitespace-nowrap font-mono text-xs">
-                    <span class="font-bold text-emerald-700"><?= number_format((float)($y['drc_percent'] ?: 33.5), 1) ?>%</span>
-                    <span class="text-[10px] text-gray-400 block font-normal">(<?= $dryKg ?> กก.ยางแห้ง)</span>
-                  </td>
-                  <td class="py-4 px-4 text-right font-medium text-gray-700 whitespace-nowrap">
-                    ฿<?= number_format((float)$y['price_per_kg'], 2) ?>
-                  </td>
-                  <td class="py-4 px-4 text-right font-black text-emerald-600 whitespace-nowrap text-sm sm:text-base">
-                    ฿<?= number_format((float)$y['total_revenue'], 2) ?>
-                  </td>
-                  <td class="py-4 px-4 text-center whitespace-nowrap">
-                    <?php if ($isSuspended): ?>
-                      <button 
-                        type="button" 
-                        onclick="openAnomalyModalFromRow(<?= $idx ?>)" 
-                        class="inline-flex items-center gap-1.5 text-[11px] font-black text-rose-900 bg-rose-100 hover:bg-rose-200 border-2 border-rose-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
-                        title="รายการนี้ถูกระงับยอดชั่วคราวเพื่อรอตรวจสอบ - คลิกเพื่อดูรายละเอียดและปลดล็อก"
-                      >
-                        <i class="fa-solid fa-circle-pause text-rose-600 animate-pulse"></i> 
-                        <span>ระงับยอดชั่วคราว (รอตรวจสอบ)</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-rose-600"></i>
-                      </button>
-                    <?php elseif ($isAnomaly): ?>
-                      <button 
-                        type="button" 
-                        onclick="openAnomalyModalFromRow(<?= $idx ?>)" 
-                        class="inline-flex items-center gap-1.5 text-[11px] font-black text-amber-950 bg-amber-100 hover:bg-amber-200 border-2 border-amber-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
-                        title="ตรวจพบผลผลิตเกินขีดจำกัดชีวภาพ/เสี่ยงสวมสิทธิ์ - คลิกเพื่อเปิดหน้าต่างตรวจสอบ"
-                      >
-                        <i class="fa-solid fa-triangle-exclamation text-amber-600 animate-pulse"></i> 
-                        <span>ตรวจจับการสวมสิทธิ์ (ให้ตรวจสอบ)</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-amber-600"></i>
-                      </button>
-                    <?php else: ?>
-                      <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-full">
-                        <i class="fa-solid fa-circle-check text-emerald-600"></i> ปกติ (EUDR)
+                <?php if ($isFarmer): ?>
+                  <tr class="hover:bg-[#f4faf7] transition-colors">
+                    <td class="py-4 px-4 font-bold text-gray-800 whitespace-nowrap">
+                      <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-day text-mezenc-teal"></i>
+                        <span><?= htmlspecialchars($y['harvest_date']) ?></span>
+                      </div>
+                      <span class="text-[10px] text-gray-400 block pl-5 font-medium">รอบกรีดที่ <?= (int)($y['tapping_round'] ?? 1) ?></span>
+                    </td>
+                    <td class="py-4 px-4">
+                      <div class="font-extrabold text-mezenc-teal text-sm"><?= htmlspecialchars($y['plot_name'] ?: '-') ?></div>
+                      <div class="text-xs text-gray-600 flex flex-wrap items-center gap-1.5 mt-0.5">
+                        <span class="font-mono text-gray-500 font-bold"><?= htmlspecialchars($y['plot_code'] ?: '-') ?></span>
+                        <span class="text-gray-300">•</span>
+                        <span class="text-emerald-700 font-medium"><i class="fa-solid fa-file-lines text-xs mr-1"></i><?= htmlspecialchars($deedText) ?></span>
+                      </div>
+                    </td>
+                    <td class="py-4 px-4 text-gray-800 text-xs sm:text-sm font-semibold">
+                      <div class="flex items-center gap-1.5 text-mezenc-teal font-bold">
+                        <i class="fa-solid fa-building text-xs"></i> <span><?= htmlspecialchars($y['buyer_name'] ?: 'จุดรับซื้อน้ำยางสดประจำตำบล') ?></span>
+                      </div>
+                      <?php if ($isSuspended): ?>
+                        <span class="text-[10px] text-rose-800 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">
+                          <i class="fa-solid fa-circle-pause text-[10px] mr-0.5 text-rose-600"></i> ระงับยอดชั่วคราว (รอตรวจสอบ)
+                        </span>
+                      <?php else: ?>
+                        <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">
+                          <i class="fa-solid fa-check text-[10px] mr-0.5"></i> รับซื้อเรียบร้อย
+                        </span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="py-4 px-4 text-right font-black text-mezenc-teal whitespace-nowrap text-sm sm:text-base">
+                      <?= number_format((float)$y['fresh_latex_kg'], 1) ?> <span class="text-xs font-normal text-gray-500">กก.</span>
+                    </td>
+                    <td class="py-4 px-4 text-center whitespace-nowrap text-xs">
+                      <span class="font-extrabold text-emerald-700 font-mono text-sm"><?= number_format((float)($y['drc_percent'] ?: 33.5), 1) ?>%</span>
+                      <span class="text-[11px] text-gray-500 block font-mono mt-0.5">(<?= $dryKg ?> กก. ยางแห้ง)</span>
+                    </td>
+                    <td class="py-4 px-4 text-right whitespace-nowrap">
+                      <div class="text-xs text-gray-500 font-medium">฿<?= number_format((float)$y['price_per_kg'], 2) ?> / กก.</div>
+                      <div class="font-black text-emerald-600 text-sm sm:text-base mt-0.5">
+                        ฿<?= number_format((float)$y['total_revenue'], 2) ?>
+                      </div>
+                    </td>
+                    <td class="py-4 px-4 text-center whitespace-nowrap">
+                      <div class="inline-flex items-center gap-1.5 font-mono text-xs font-bold px-3 py-1 rounded-xl <?= $isSuspended ? 'bg-rose-50 text-rose-900 border-rose-300' : 'bg-emerald-50 text-emerald-900 border-emerald-300' ?> border shadow-2xs">
+                        <i class="fa-solid <?= $isSuspended ? 'fa-circle-pause text-rose-600' : 'fa-shield-halved text-emerald-700' ?> text-xs"></i> <span><?= htmlspecialchars($y['traceability_token'] ?: ('EUDR-TX-' . $y['id'])) ?></span>
+                      </div>
+                      <span class="text-[10px] text-gray-400 font-mono block mt-1">ล็อต: <?= htmlspecialchars($y['batch_code'] ?: '-') ?></span>
+                    </td>
+                  </tr>
+                <?php else: ?>
+                  <tr class="hover:bg-[#f4faf7] transition-colors <?= $isSuspended ? 'bg-rose-50/50' : ($isAnomaly ? 'bg-amber-50/40' : '') ?>">
+                    <td class="py-4 px-4 font-bold text-gray-800 whitespace-nowrap"><?= htmlspecialchars($y['harvest_date']) ?></td>
+                    <td class="py-4 px-4">
+                      <span class="font-bold text-mezenc-teal"><?= htmlspecialchars($y['plot_name'] ?: '-') ?></span> 
+                      <span class="text-[11px] text-gray-400 font-mono block">(<?= htmlspecialchars($y['plot_code'] ?: '-') ?>) • <?= htmlspecialchars($deedText) ?></span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f8faf9] text-gray-700 border border-gray-200">
+                        <?= htmlspecialchars($y['rubber_clone'] ?: 'RRIM 600') ?>
                       </span>
-                    <?php endif; ?>
-                  </td>
-                  <td class="py-4 px-4 text-gray-600 text-xs max-w-[180px] truncate" title="<?= htmlspecialchars($y['buyer_name'] ?: '-') ?>">
-                    <?= htmlspecialchars($y['buyer_name'] ?: '-') ?>
-                  </td>
-                  <td class="py-4 px-4 text-center whitespace-nowrap">
-                    <div class="flex items-center justify-center gap-1.5">
-                      <button 
-                        onclick="openEditYieldModal(<?= (int)$y['id'] ?>)" 
-                        class="w-8 h-8 rounded-full bg-[#dcf5f5] hover:bg-[#00a699] text-[#00a699] hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer"
-                        title="แก้ไขผลผลิตรอบนี้"
-                      >
-                        <i class="fa-solid fa-pen-to-square text-xs"></i>
-                      </button>
-                      <button 
-                        onclick="deleteYield(<?= (int)$y['id'] ?>)" 
-                        class="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-all shadow-xs cursor-pointer"
-                        title="ลบรายการนี้"
-                      >
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                    <td class="py-4 px-4 text-gray-800 font-medium">
+                      <div class="font-bold"><?= htmlspecialchars($farmerDisplayName) ?></div>
+                      <div class="text-[10.5px] text-mezenc-teal font-mono">ปชช: <?= htmlspecialchars($idCardFormatted) ?></div>
+                      <span class="text-[10px] text-gray-400 font-mono"><?= htmlspecialchars($y['farmer_code'] ?: '') ?></span>
+                    </td>
+                    <td class="py-4 px-4 text-right font-extrabold text-mezenc-teal whitespace-nowrap text-sm sm:text-base">
+                      <?= number_format((float)$y['fresh_latex_kg'], 1) ?>
+                    </td>
+                    <td class="py-4 px-4 text-center whitespace-nowrap font-mono text-xs">
+                      <span class="font-bold text-emerald-700"><?= number_format((float)($y['drc_percent'] ?: 33.5), 1) ?>%</span>
+                      <span class="text-[10px] text-gray-400 block font-normal">(<?= $dryKg ?> กก.ยางแห้ง)</span>
+                    </td>
+                    <td class="py-4 px-4 text-right font-medium text-gray-700 whitespace-nowrap">
+                      ฿<?= number_format((float)$y['price_per_kg'], 2) ?>
+                    </td>
+                    <td class="py-4 px-4 text-right font-black text-emerald-600 whitespace-nowrap text-sm sm:text-base">
+                      ฿<?= number_format((float)$y['total_revenue'], 2) ?>
+                    </td>
+                    <td class="py-4 px-4 text-center whitespace-nowrap">
+                      <?php if ($isSuspended): ?>
+                        <button 
+                          type="button" 
+                          onclick="openAnomalyModalFromRow(<?= $idx ?>)" 
+                          class="inline-flex items-center gap-1.5 text-[11px] font-black text-rose-900 bg-rose-100 hover:bg-rose-200 border-2 border-rose-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
+                          title="รายการนี้ถูกระงับยอดชั่วคราวเพื่อรอตรวจสอบ - คลิกเพื่อดูรายละเอียดและปลดล็อก"
+                        >
+                          <i class="fa-solid fa-circle-pause text-rose-600 animate-pulse"></i> 
+                          <span>ระงับยอดชั่วคราว (รอตรวจสอบ)</span>
+                          <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-rose-600"></i>
+                        </button>
+                      <?php elseif ($isAnomaly): ?>
+                        <button 
+                          type="button" 
+                          onclick="openAnomalyModalFromRow(<?= $idx ?>)" 
+                          class="inline-flex items-center gap-1.5 text-[11px] font-black text-amber-950 bg-amber-100 hover:bg-amber-200 border-2 border-amber-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
+                          title="ตรวจพบผลผลิตเกินขีดจำกัดชีวภาพ/เสี่ยงสวมสิทธิ์ - คลิกเพื่อเปิดหน้าต่างตรวจสอบ"
+                        >
+                          <i class="fa-solid fa-triangle-exclamation text-amber-600 animate-pulse"></i> 
+                          <span>ตรวจจับการสวมสิทธิ์ (ให้ตรวจสอบ)</span>
+                          <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-amber-600"></i>
+                        </button>
+                      <?php else: ?>
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-full">
+                          <i class="fa-solid fa-circle-check text-emerald-600"></i> ปกติ (EUDR)
+                        </span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="py-4 px-4 text-gray-600 text-xs max-w-[180px] truncate" title="<?= htmlspecialchars($y['buyer_name'] ?: '-') ?>">
+                      <?= htmlspecialchars($y['buyer_name'] ?: '-') ?>
+                    </td>
+                    <td class="py-4 px-4 text-center whitespace-nowrap">
+                      <div class="flex items-center justify-center gap-1.5">
+                        <button 
+                          onclick="openEditYieldModal(<?= (int)$y['id'] ?>)" 
+                          class="w-8 h-8 rounded-full bg-[#dcf5f5] hover:bg-[#00a699] text-[#00a699] hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer"
+                          title="แก้ไขผลผลิตรอบนี้"
+                        >
+                          <i class="fa-solid fa-pen-to-square text-xs"></i>
+                        </button>
+                        <button 
+                          onclick="deleteYield(<?= (int)$y['id'] ?>)" 
+                          class="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-all shadow-xs cursor-pointer"
+                          title="ลบรายการนี้"
+                        >
+                          <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                <?php endif; ?>
               <?php endforeach; ?>
             <?php endif; ?>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination Footer Bar (Supabase Dashboard Style) -->
+      <div id="yield-pagination-container" class="p-4 sm:p-5 border-t border-gray-100 bg-[#f8faf9]/80 flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm">
+        
+        <!-- Left Side: Record Range & Total -->
+        <div class="flex items-center gap-3 text-gray-600 font-medium">
+          <div class="flex items-center gap-1">
+            <span>แสดง</span>
+            <span id="page-range-start" class="font-black text-mezenc-teal"><?= $totalInitial > 0 ? 1 : 0 ?></span>
+            <span>-</span>
+            <span id="page-range-end" class="font-black text-mezenc-teal"><?= min($initialPageSize, $totalInitial) ?></span>
+            <span>จากทั้งหมด</span>
+            <span id="page-total-records" class="font-black text-gray-900"><?= number_format($totalInitial) ?></span>
+            <span>รายการ</span>
+          </div>
+          <span class="text-gray-300 hidden sm:inline">•</span>
+          <div class="text-gray-500 hidden sm:block">
+            หน้า <span id="current-page-num" class="font-bold text-mezenc-teal">1</span> / <span id="total-pages-num" class="font-bold text-gray-800"><?= $initialTotalPages ?></span>
+          </div>
+        </div>
+
+        <!-- Right Side: Supabase Style Navigation Controls -->
+        <div class="flex items-center gap-1.5 ml-auto">
+          <!-- First Page Button -->
+          <button 
+            type="button" 
+            id="btn-page-first"
+            onclick="goToPage(1)" 
+            class="w-8 h-8 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition flex items-center justify-center cursor-pointer shadow-2xs"
+            title="หน้าแรกสุด"
+            disabled
+          >
+            <i class="fa-solid fa-angles-left text-xs"></i>
+          </button>
+
+          <!-- Prev Page Button -->
+          <button 
+            type="button" 
+            id="btn-page-prev"
+            onclick="goToPage(currentPage - 1)" 
+            class="px-3 h-8 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed font-bold text-xs transition flex items-center gap-1 cursor-pointer shadow-2xs"
+            disabled
+          >
+            <i class="fa-solid fa-chevron-left text-[11px]"></i> <span>ก่อนหน้า</span>
+          </button>
+
+          <!-- Dynamic Numbered Page Buttons Container -->
+          <div id="pagination-pages-list" class="flex items-center gap-1">
+            <?php for ($p = 1; $p <= min(7, $initialTotalPages); $p++): ?>
+              <?php if ($p === 1): ?>
+                <button type="button" class="w-8 h-8 rounded-lg bg-mezenc-teal text-white font-black text-xs shadow-xs border border-mezenc-teal flex items-center justify-center cursor-default">1</button>
+              <?php else: ?>
+                <button type="button" onclick="goToPage(<?= $p ?>)" class="w-8 h-8 rounded-lg bg-white hover:bg-[#e6f7f6] hover:border-mezenc-brightCyan text-gray-700 font-bold text-xs border border-gray-200 transition flex items-center justify-center cursor-pointer"><?= $p ?></button>
+              <?php endif; ?>
+            <?php endfor; ?>
+            <?php if ($initialTotalPages > 7): ?>
+              <span class="px-1 text-gray-400 font-bold select-none">...</span>
+              <button type="button" onclick="goToPage(<?= $initialTotalPages ?>)" class="w-8 h-8 rounded-lg bg-white hover:bg-[#e6f7f6] hover:border-mezenc-brightCyan text-gray-700 font-bold text-xs border border-gray-200 transition flex items-center justify-center cursor-pointer"><?= $initialTotalPages ?></button>
+            <?php endif; ?>
+          </div>
+
+          <!-- Next Page Button -->
+          <button 
+            type="button" 
+            id="btn-page-next"
+            onclick="goToPage(currentPage + 1)" 
+            class="px-3 h-8 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed font-bold text-xs transition flex items-center gap-1 cursor-pointer shadow-2xs"
+            <?= ($initialTotalPages <= 1) ? 'disabled' : '' ?>
+          >
+            <span>ถัดไป</span> <i class="fa-solid fa-chevron-right text-[11px]"></i>
+          </button>
+
+          <!-- Last Page Button -->
+          <button 
+            type="button" 
+            id="btn-page-last"
+            onclick="goToPage(<?= $initialTotalPages ?>)" 
+            class="w-8 h-8 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition flex items-center justify-center cursor-pointer shadow-2xs"
+            title="หน้าสุดท้าย"
+            <?= ($initialTotalPages <= 1) ? 'disabled' : '' ?>
+          >
+            <i class="fa-solid fa-angles-right text-xs"></i>
+          </button>
+        </div>
+
       </div>
 
     </div>
@@ -1833,6 +1980,8 @@ unset($logItem);
     let currentFactoryAnomalyData = null;
     let windowYieldsList = <?= json_encode($initialYields, JSON_UNESCAPED_UNICODE) ?>;
     let currentInspectingAnomaly = null;
+    let currentPage = 1;
+    const itemsPerPage = 20;
 
     // Toggle Export Dropdown Menu
     function toggleExportMenu(e) {
@@ -2421,6 +2570,7 @@ unset($logItem);
           // Instant Optimistic Table Update (Zero Delay)
           if (data.yield) {
             windowYieldsList.unshift(data.yield);
+            currentPage = 1;
             renderYieldsTable(windowYieldsList, window.IS_ADMIN);
             updateSummaryQuickAdd(freshKgVal, freshKgVal * priceVal);
           }
@@ -2477,7 +2627,7 @@ unset($logItem);
     function debounceLoadYields() {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
-        loadYields();
+        loadYields(false, true);
       }, 350);
     }
 
@@ -2486,7 +2636,7 @@ unset($logItem);
       if (document.getElementById('search-plot-code')) document.getElementById('search-plot-code').value = '';
       if (document.getElementById('search-title-deed')) document.getElementById('search-title-deed').value = '';
       if (document.getElementById('filter-yield-plot')) document.getElementById('filter-yield-plot').value = '';
-      loadYields();
+      loadYields(false, true);
     }
 
     // Mobile Drawer Toggle
@@ -2965,17 +3115,123 @@ unset($logItem);
       } catch (e) {}
     }
 
+    function renderPaginationControls(totalItems) {
+      const paginationContainer = document.getElementById('yield-pagination-container');
+      if (!paginationContainer) return;
+
+      if (!totalItems || totalItems === 0) {
+        paginationContainer.classList.add('hidden');
+        return;
+      }
+      paginationContainer.classList.remove('hidden');
+
+      const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const start = (currentPage - 1) * itemsPerPage + 1;
+      const end = Math.min(currentPage * itemsPerPage, totalItems);
+
+      const rangeStartEl = document.getElementById('page-range-start');
+      const rangeEndEl = document.getElementById('page-range-end');
+      const totalRecEl = document.getElementById('page-total-records');
+      const curPageEl = document.getElementById('current-page-num');
+      const totalPagesEl = document.getElementById('total-pages-num');
+
+      if (rangeStartEl) rangeStartEl.textContent = start.toLocaleString();
+      if (rangeEndEl) rangeEndEl.textContent = end.toLocaleString();
+      if (totalRecEl) totalRecEl.textContent = totalItems.toLocaleString();
+      if (curPageEl) curPageEl.textContent = currentPage.toLocaleString();
+      if (totalPagesEl) totalPagesEl.textContent = totalPages.toLocaleString();
+
+      const btnFirst = document.getElementById('btn-page-first');
+      const btnPrev = document.getElementById('btn-page-prev');
+      const btnNext = document.getElementById('btn-page-next');
+      const btnLast = document.getElementById('btn-page-last');
+
+      if (btnFirst) btnFirst.disabled = (currentPage <= 1);
+      if (btnPrev) btnPrev.disabled = (currentPage <= 1);
+      if (btnNext) btnNext.disabled = (currentPage >= totalPages);
+      if (btnLast) btnLast.disabled = (currentPage >= totalPages);
+
+      const pagesListEl = document.getElementById('pagination-pages-list');
+      if (!pagesListEl) return;
+
+      let pages = [];
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        if (currentPage <= 4) {
+          pages = [1, 2, 3, 4, 5, '...', totalPages];
+        } else if (currentPage >= totalPages - 3) {
+          pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        } else {
+          pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+        }
+      }
+
+      let html = '';
+      pages.forEach(p => {
+        if (p === '...') {
+          html += `<span class="px-1 text-gray-400 font-bold select-none">...</span>`;
+        } else if (p === currentPage) {
+          html += `
+            <button 
+              type="button" 
+              class="w-8 h-8 rounded-lg bg-mezenc-teal text-white font-black text-xs shadow-xs border border-mezenc-teal flex items-center justify-center cursor-default"
+            >
+              ${p}
+            </button>
+          `;
+        } else {
+          html += `
+            <button 
+              type="button" 
+              onclick="goToPage(${p})" 
+              class="w-8 h-8 rounded-lg bg-white hover:bg-[#e6f7f6] hover:border-mezenc-brightCyan text-gray-700 font-bold text-xs border border-gray-200 transition flex items-center justify-center cursor-pointer shadow-2xs"
+            >
+              ${p}
+            </button>
+          `;
+        }
+      });
+
+      pagesListEl.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      const totalPages = Math.max(1, Math.ceil((windowYieldsList ? windowYieldsList.length : 0) / itemsPerPage));
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderYieldsTable(windowYieldsList, window.IS_ADMIN);
+
+      const toolbar = document.getElementById('yield-toolbar-panel');
+      if (toolbar) {
+        toolbar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
     function renderYieldsTable(yieldsList, canDelete = false) {
       const tbody = document.getElementById('yields-table-body');
       if (!tbody) return;
       if (!yieldsList || yieldsList.length === 0) {
         const colSpan = window.IS_FARMER ? 7 : 11;
         tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center py-12 text-gray-400 text-xs">ยังไม่มีข้อมูลผลผลิตในเงื่อนไขนี้</td></tr>`;
+        renderPaginationControls(0);
         return;
       }
 
+      const totalItems = yieldsList.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const startIdx = (currentPage - 1) * itemsPerPage;
+      const pageItems = yieldsList.slice(startIdx, startIdx + itemsPerPage);
+
       let html = '';
-      yieldsList.forEach((y, idx) => {
+      pageItems.forEach((y, pageIdx) => {
+        const globalIdx = startIdx + pageIdx;
         const idCardFormatted = formatNationalId(y.id_card_num);
         const isAnomaly = y.is_anomaly === true;
         const isSuspended = Boolean(y.notes && y.notes.includes('ระงับยอดชั่วคราว'));
@@ -3075,7 +3331,7 @@ unset($logItem);
                 ${isSuspended ? `
                   <button 
                     type="button" 
-                    onclick="openAnomalyModalFromRow(${idx})" 
+                    onclick="openAnomalyModalFromRow(${globalIdx})" 
                     class="inline-flex items-center gap-1.5 text-[11px] font-black text-rose-900 bg-rose-100 hover:bg-rose-200 border-2 border-rose-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
                     title="รายการนี้ถูกระงับยอดชั่วคราวเพื่อรอตรวจสอบ - คลิกเพื่อดูรายละเอียดและปลดล็อก"
                   >
@@ -3086,7 +3342,7 @@ unset($logItem);
                 ` : isAnomaly ? `
                   <button 
                     type="button" 
-                    onclick="openAnomalyModalFromRow(${idx})" 
+                    onclick="openAnomalyModalFromRow(${globalIdx})" 
                     class="inline-flex items-center gap-1.5 text-[11px] font-black text-amber-950 bg-amber-100 hover:bg-amber-200 border-2 border-amber-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
                     title="ตรวจพบผลผลิตเกินขีดจำกัดชีวภาพ/เสี่ยงสวมสิทธิ์ - คลิกเพื่อเปิดหน้าต่างตรวจสอบ"
                   >
@@ -3128,10 +3384,12 @@ unset($logItem);
       });
 
       tbody.innerHTML = html;
+      renderPaginationControls(totalItems);
     }
 
     // Load Yields Table via AJAX (Optimized Single Network Request)
-    async function loadYields(silent = false) {
+    async function loadYields(silent = false, resetPage = false) {
+      if (resetPage) currentPage = 1;
       const plotId = document.getElementById('filter-yield-plot') ? document.getElementById('filter-yield-plot').value : '';
       const sName = document.getElementById('search-name') ? document.getElementById('search-name').value.trim() : '';
       const sCode = document.getElementById('search-plot-code') ? document.getElementById('search-plot-code').value.trim() : '';
@@ -3218,6 +3476,7 @@ unset($logItem);
           // Instant Optimistic Table Update (Zero Delay)
           if (data.yield) {
             windowYieldsList.unshift(data.yield);
+            currentPage = 1;
             renderYieldsTable(windowYieldsList, window.IS_ADMIN);
             updateSummaryQuickAdd(freshKgVal, freshKgVal * priceVal);
           }

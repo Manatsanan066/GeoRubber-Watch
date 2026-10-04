@@ -594,6 +594,7 @@ if ($method === 'GET') {
 
         $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $dateMonthExpr = ($driver === 'pgsql') ? "SUBSTRING(CAST(y.harvest_date AS VARCHAR(10)), 1, 7)" : "SUBSTR(y.harvest_date, 1, 7)";
+        $orderExpr = ($driver === 'pgsql') ? "ORDER BY created_at DESC NULLS LAST, id DESC" : "ORDER BY created_at DESC, id DESC";
 
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
         $sql = "
@@ -611,7 +612,7 @@ if ($method === 'GET') {
                 {$whereClause}
             )
             SELECT * FROM ranked_logs
-            ORDER BY harvest_date DESC, id DESC
+            {$orderExpr}
             LIMIT {$limit}
         ";
 
