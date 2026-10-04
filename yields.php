@@ -52,6 +52,119 @@ try {
 } catch (Exception $e) {
     $plots = $pdo->query("SELECT id, plot_code, plot_name, rubber_clone, area_rai, tree_count, eudr_status, title_deed_type FROM rubber_plots ORDER BY id ASC, plot_name ASC")->fetchAll(PDO::FETCH_ASSOC);
 }
+
+// Fetch initial yield logs for immediate server-side rendering (SSR)
+$initialYields = [];
+try {
+    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    $dateMonthExpr = ($driver === 'pgsql') ? "SUBSTRING(CAST(y.harvest_date AS VARCHAR(10)), 1, 7)" : "SUBSTR(y.harvest_date, 1, 7)";
+    $sqlLogs = "
+        WITH ranked_logs AS (
+            SELECT y.*, 
+                   LAG(y.fresh_latex_kg) OVER (PARTITION BY y.plot_id ORDER BY y.harvest_date ASC, y.id ASC) AS prev_fresh_kg,
+                   LAG(y.harvest_date) OVER (PARTITION BY y.plot_id ORDER BY y.harvest_date ASC, y.id ASC) AS prev_harvest_date,
+                   SUM(y.fresh_latex_kg) OVER (PARTITION BY y.plot_id, {$dateMonthExpr} ORDER BY y.harvest_date ASC, y.id ASC) AS cumulative_month_kg,
+                   p.plot_code, p.plot_name, p.rubber_clone, p.tree_count, p.title_deed_no, p.title_deed_type, p.area_rai,
+                   p.traceability_token as plot_token,
+                   f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone as farmer_phone
+            FROM yield_logs y
+            LEFT JOIN rubber_plots p ON p.id = y.plot_id
+            LEFT JOIN farmers f ON f.id = COALESCE(y.farmer_id, p.farmer_id)
+        )
+        SELECT * FROM ranked_logs
+        ORDER BY harvest_date DESC, id DESC
+    ";
+    $initialYields = $pdo->query($sqlLogs)->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    try {
+        $initialYields = $pdo->query("
+            SELECT y.*, p.plot_code, p.plot_name, p.rubber_clone, p.tree_count, p.title_deed_no, p.title_deed_type, p.area_rai,
+                   f.farmer_code, f.prefix, f.first_name, f.last_name, f.id_card_num, f.phone as farmer_phone
+            FROM yield_logs y
+            LEFT JOIN rubber_plots p ON p.id = y.plot_id
+            LEFT JOIN farmers f ON f.id = COALESCE(y.farmer_id, p.farmer_id)
+            ORDER BY y.harvest_date DESC, y.id DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $ex) {
+        $initialYields = [];
+    }
+}
+
+foreach ($initialYields as &$logItem) {
+    $plotArea = max(0.5, (float)($logItem['area_rai'] ?? 10));
+    $treeCount = !empty($logItem['tree_count']) ? (int)$logItem['tree_count'] : (int)round($plotArea * 75);
+    $maxPlotMonthCapacity = round($treeCount * 4.5, 2);
+    $maxDailyCapacity = round($treeCount * 0.35, 2);
+    $freshKg = (float)($logItem['fresh_latex_kg'] ?? 0);
+    $cumMonthKg = isset($logItem['cumulative_month_kg']) ? (float)$logItem['cumulative_month_kg'] : $freshKg;
+    $perTreeKg = $treeCount > 0 ? round($freshKg / $treeCount, 2) : 0;
+    $hDate = $logItem['harvest_date'] ?? date('Y-m-d');
+    $yId = (int)$logItem['id'];
+    $pId = (int)($logItem['plot_id'] ?? 0);
+
+    $prevKg = isset($logItem['prev_fresh_kg']) && $logItem['prev_fresh_kg'] !== null ? (float)$logItem['prev_fresh_kg'] : 0.0;
+    $prevDate = $logItem['prev_harvest_date'] ?? null;
+    $prevPerTree = ($treeCount > 0 && $prevKg > 0) ? round($prevKg / $treeCount, 2) : 0.0;
+    $diffDays = 2;
+    $surgePct = 0.0;
+
+    if ($prevKg > 0 && $prevDate) {
+        $diffDays = max(1, (int)round((strtotime($hDate) - strtotime($prevDate)) / 86400));
+        $surgePct = round((($freshKg - $prevKg) / $prevKg) * 100, 1);
+    }
+
+    $isMonthlyLimitExceeded = ($cumMonthKg > $maxPlotMonthCapacity && $cumMonthKg > 0);
+    $overflowMonthKg = round(max(0, $cumMonthKg - $maxPlotMonthCapacity), 1);
+    $isDailyLimitExceeded = ($freshKg > 0 && $freshKg > $maxDailyCapacity);
+    $isSurgeAnomaly = ($prevKg > 0 && $surgePct >= 80.0 && $freshKg > 35.0);
+
+    $isAnomaly = ($isMonthlyLimitExceeded || $isDailyLimitExceeded || $isSurgeAnomaly);
+    $reasons = [];
+    if ($isMonthlyLimitExceeded) {
+        $reasons[] = "ผลผลิตสะสมเดือนนี้ ({$cumMonthKg} กก.) เกินเพดานชีวภาพของแปลง ({$maxPlotMonthCapacity} กก./เดือน สำหรับ {$treeCount} ต้น) โดยเกินลิมิตไปแล้ว +{$overflowMonthKg} กก.";
+    }
+    if ($isDailyLimitExceeded) {
+        $reasons[] = "ผลผลิตต่อวัน ({$freshKg} กก.) เกินเกณฑ์ชีวภาพสูงสุดที่ต้นยาง {$treeCount} ต้นจะผลิตได้ (ปกติไม่เกิน {$maxDailyCapacity} กก./วัน)";
+    }
+    if ($isSurgeAnomaly) {
+        $reasons[] = "ปริมาณเพิ่มขึ้นก้าวกระโดดผิดธรรมชาติของรอบกรีด (+{$surgePct}%) เทียบกับ {$diffDays} วันก่อน ({$prevKg} กก.)";
+    }
+
+    $logItem['is_anomaly'] = $isAnomaly;
+    $logItem['risk_level'] = $isAnomaly ? 'high_risk' : 'normal';
+    $logItem['anomaly_desc'] = $isAnomaly ? implode(' • ', $reasons) : 'ปกติ สอดคล้องตามเกณฑ์ชีวภาพ';
+    $logItem['anomaly_data'] = [
+        'risk_level' => $isAnomaly ? 'high_risk' : 'normal',
+        'title' => 'ตรวจพบความผิดปกติของปริมาณผลผลิต (High Risk)',
+        'area_rai' => $plotArea,
+        'tree_count' => $treeCount,
+        'max_monthly_capacity' => $maxPlotMonthCapacity,
+        'max_daily_capacity' => $maxDailyCapacity,
+        'cumulative_month_kg' => $cumMonthKg,
+        'overflow_month_kg' => $overflowMonthKg,
+        'is_monthly_exceeded' => $isMonthlyLimitExceeded,
+        'latest_kg' => $freshKg,
+        'latest_per_tree' => $perTreeKg,
+        'prev_kg' => $prevKg,
+        'prev_per_tree' => $prevPerTree,
+        'diff_days' => $diffDays,
+        'surge_pct' => $surgePct,
+        'reasons' => $reasons,
+        'plot_code' => $logItem['plot_code'] ?? '',
+        'plot_name' => $logItem['plot_name'] ?? '',
+        'title_deed_no' => $logItem['title_deed_no'] ?? '',
+        'title_deed_type' => $logItem['title_deed_type'] ?? '',
+        'farmer_name' => trim(($logItem['prefix'] ?? '') . ($logItem['first_name'] ?? '') . ' ' . ($logItem['last_name'] ?? ''))
+    ];
+
+    if (empty($logItem['traceability_token'])) {
+        $logItem['traceability_token'] = 'EUDR-TX-' . strtoupper(substr(md5($yId . $pId . $hDate), 0, 8));
+    }
+    if (empty($logItem['batch_code'])) {
+        $logItem['batch_code'] = 'DDS-TH-ST-' . date('Ymd', strtotime($hDate)) . '-' . str_pad((string)$yId, 4, '0', STR_PAD_LEFT);
+    }
+}
+unset($logItem);
 ?>
 <!DOCTYPE html>
 <html lang="th" class="scroll-smooth">
@@ -920,11 +1033,112 @@ try {
             <?php endif; ?>
           </thead>
           <tbody id="yields-table-body" class="divide-y divide-gray-100 text-gray-700">
-            <tr>
-              <td colspan="<?= $isFarmer ? '7' : '11' ?>" class="text-center py-12 text-gray-400 text-xs" data-i18n="lbl_loading">
-                กำลังโหลดข้อมูลผลผลิต...
-              </td>
-            </tr>
+            <?php if (empty($initialYields)): ?>
+              <tr>
+                <td colspan="11" class="text-center py-12 text-gray-400 text-xs">
+                  ยังไม่มีข้อมูลผลผลิตในระบบ
+                </td>
+              </tr>
+            <?php else: ?>
+              <?php foreach ($initialYields as $idx => $y): ?>
+                <?php
+                  $idCardFormatted = '-';
+                  if (!empty($y['id_card_num'])) {
+                      $d = preg_replace('/[^0-9]/', '', $y['id_card_num']);
+                      if (strlen($d) === 13) {
+                          $idCardFormatted = substr($d, 0, 1) . '-' . substr($d, 1, 4) . '-' . substr($d, 5, 5) . '-' . substr($d, 10, 2) . '-' . substr($d, 12, 1);
+                      } else {
+                          $idCardFormatted = $y['id_card_num'];
+                      }
+                  }
+                  $isAnomaly = !empty($y['is_anomaly']);
+                  $isSuspended = (!empty($y['notes']) && str_contains($y['notes'], 'ระงับยอดชั่วคราว'));
+                  $dryKg = number_format((float)($y['dry_rubber_kg'] ?: ($y['fresh_latex_kg'] * (($y['drc_percent'] ?: 33.5) / 100.0))), 2);
+                  $deedText = !empty($y['title_deed_no']) ? (($y['title_deed_type'] ?: 'โฉนดที่ดิน') . ' เลขที่ ' . $y['title_deed_no']) : '-';
+                  $farmerDisplayName = trim(($y['prefix'] ?? '') . ($y['first_name'] ?? '') . ' ' . ($y['last_name'] ?? '')) ?: 'เกษตรกร';
+                ?>
+                <tr class="hover:bg-[#f4faf7] transition-colors <?= $isSuspended ? 'bg-rose-50/50' : ($isAnomaly ? 'bg-amber-50/40' : '') ?>">
+                  <td class="py-4 px-4 font-bold text-gray-800 whitespace-nowrap"><?= htmlspecialchars($y['harvest_date']) ?></td>
+                  <td class="py-4 px-4">
+                    <span class="font-bold text-mezenc-teal"><?= htmlspecialchars($y['plot_name'] ?: '-') ?></span> 
+                    <span class="text-[11px] text-gray-400 font-mono block">(<?= htmlspecialchars($y['plot_code'] ?: '-') ?>) • <?= htmlspecialchars($deedText) ?></span>
+                  </td>
+                  <td class="py-4 px-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#f8faf9] text-gray-700 border border-gray-200">
+                      <?= htmlspecialchars($y['rubber_clone'] ?: 'RRIM 600') ?>
+                    </span>
+                  </td>
+                  <td class="py-4 px-4 text-gray-800 font-medium">
+                    <div class="font-bold"><?= htmlspecialchars($farmerDisplayName) ?></div>
+                    <div class="text-[10.5px] text-mezenc-teal font-mono">ปชช: <?= htmlspecialchars($idCardFormatted) ?></div>
+                    <span class="text-[10px] text-gray-400 font-mono"><?= htmlspecialchars($y['farmer_code'] ?: '') ?></span>
+                  </td>
+                  <td class="py-4 px-4 text-right font-extrabold text-mezenc-teal whitespace-nowrap text-sm sm:text-base">
+                    <?= number_format((float)$y['fresh_latex_kg'], 1) ?>
+                  </td>
+                  <td class="py-4 px-4 text-center whitespace-nowrap font-mono text-xs">
+                    <span class="font-bold text-emerald-700"><?= number_format((float)($y['drc_percent'] ?: 33.5), 1) ?>%</span>
+                    <span class="text-[10px] text-gray-400 block font-normal">(<?= $dryKg ?> กก.ยางแห้ง)</span>
+                  </td>
+                  <td class="py-4 px-4 text-right font-medium text-gray-700 whitespace-nowrap">
+                    ฿<?= number_format((float)$y['price_per_kg'], 2) ?>
+                  </td>
+                  <td class="py-4 px-4 text-right font-black text-emerald-600 whitespace-nowrap text-sm sm:text-base">
+                    ฿<?= number_format((float)$y['total_revenue'], 2) ?>
+                  </td>
+                  <td class="py-4 px-4 text-center whitespace-nowrap">
+                    <?php if ($isSuspended): ?>
+                      <button 
+                        type="button" 
+                        onclick="openAnomalyModalFromRow(<?= $idx ?>)" 
+                        class="inline-flex items-center gap-1.5 text-[11px] font-black text-rose-900 bg-rose-100 hover:bg-rose-200 border-2 border-rose-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
+                        title="รายการนี้ถูกระงับยอดชั่วคราวเพื่อรอตรวจสอบ - คลิกเพื่อดูรายละเอียดและปลดล็อก"
+                      >
+                        <i class="fa-solid fa-circle-pause text-rose-600 animate-pulse"></i> 
+                        <span>ระงับยอดชั่วคราว (รอตรวจสอบ)</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-rose-600"></i>
+                      </button>
+                    <?php elseif ($isAnomaly): ?>
+                      <button 
+                        type="button" 
+                        onclick="openAnomalyModalFromRow(<?= $idx ?>)" 
+                        class="inline-flex items-center gap-1.5 text-[11px] font-black text-amber-950 bg-amber-100 hover:bg-amber-200 border-2 border-amber-400 px-3 py-1 rounded-full shadow-xs cursor-pointer transition transform hover:scale-105 active:scale-95" 
+                        title="ตรวจพบผลผลิตเกินขีดจำกัดชีวภาพ/เสี่ยงสวมสิทธิ์ - คลิกเพื่อเปิดหน้าต่างตรวจสอบ"
+                      >
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600 animate-pulse"></i> 
+                        <span>ตรวจจับการสวมสิทธิ์ (ให้ตรวจสอบ)</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[9.5px] text-amber-600"></i>
+                      </button>
+                    <?php else: ?>
+                      <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-full">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i> ปกติ (EUDR)
+                      </span>
+                    <?php endif; ?>
+                  </td>
+                  <td class="py-4 px-4 text-gray-600 text-xs max-w-[180px] truncate" title="<?= htmlspecialchars($y['buyer_name'] ?: '-') ?>">
+                    <?= htmlspecialchars($y['buyer_name'] ?: '-') ?>
+                  </td>
+                  <td class="py-4 px-4 text-center whitespace-nowrap">
+                    <div class="flex items-center justify-center gap-1.5">
+                      <button 
+                        onclick="openEditYieldModal(<?= (int)$y['id'] ?>)" 
+                        class="w-8 h-8 rounded-full bg-[#dcf5f5] hover:bg-[#00a699] text-[#00a699] hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer"
+                        title="แก้ไขผลผลิตรอบนี้"
+                      >
+                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                      </button>
+                      <button 
+                        onclick="deleteYield(<?= (int)$y['id'] ?>)" 
+                        class="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-all shadow-xs cursor-pointer"
+                        title="ลบรายการนี้"
+                      >
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </tbody>
         </table>
       </div>
@@ -1617,7 +1831,7 @@ try {
     let quotaCheckTimer = null;
     let html5QrScannerInstance = null;
     let currentFactoryAnomalyData = null;
-    let windowYieldsList = [];
+    let windowYieldsList = <?= json_encode($initialYields, JSON_UNESCAPED_UNICODE) ?>;
     let currentInspectingAnomaly = null;
 
     // Toggle Export Dropdown Menu
