@@ -1635,6 +1635,9 @@ try {
     let currentFactoryPlot = null;
     let quotaCheckTimer = null;
     let html5QrScannerInstance = null;
+    let currentFactoryAnomalyData = null;
+    let windowYieldsList = [];
+    let currentInspectingAnomaly = null;
 
     // Toggle Export Dropdown Menu
     function toggleExportMenu(e) {
@@ -2093,11 +2096,6 @@ try {
     }
 
     // Factory Real-time Calculations and Quota Check
-    let quotaCheckTimer = null;
-    let currentFactoryAnomalyData = null;
-    let windowYieldsList = [];
-    let currentInspectingAnomaly = null;
-
     function onFactoryFreshKgInput() {
       const freshKg = parseFloat(document.getElementById('factory-fresh-kg').value) || 0;
       const drcPct = parseFloat(document.getElementById('factory-drc-pct').value) || 33.5;
@@ -2924,6 +2922,7 @@ try {
       const sDeed = document.getElementById('search-title-deed') ? document.getElementById('search-title-deed').value.trim() : '';
 
       let params = new URLSearchParams();
+      if (window.IS_FACTORY) params.append('mode', 'factory');
       if (plotId) params.append('plot_id', plotId);
       if (sName) params.append('search_name', sName);
       if (sCode) params.append('search_plot_code', sCode);
